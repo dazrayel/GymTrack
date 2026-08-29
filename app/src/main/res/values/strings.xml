@@ -1,0 +1,43 @@
+<resources>
+    <string name="app_name">GymTrack</string>
+    <string name="home_welcome_message">Seu companheiro de treino</string>
+
+    <!-- Bottom navigation labels -->
+    <string name="nav_home">Início</string>
+    <string name="nav_workouts">Treinos</string>
+    <string name="nav_history">Histórico</string>
+    <string name="nav_settings">Configurações</string>
+
+    <!-- Screen titles -->
+    <string name="workouts_title">Meus treinos</string>
+    <string name="history_title">Histórico</string>
+    <string name="settings_title">Configurações</string>
+
+    <!-- Home quick access -->
+    <string name="home_quick_access">Acesso rápido</string>
+    <string name="home_exercises_description">Gerencie sua biblioteca de exercícios</string>
+
+    <!-- Exercises screen -->
+    <string name="exercises_title">Exercícios</string>
+    <string name="search_exercises">Buscar exercícios</string>
+    <string name="empty_exercises">Nenhum exercício cadastrado</string>
+    <string name="empty_exercises_hint">Toque no botão + para adicionar seu primeiro exercício</string>
+
+    <!-- Exercise fields -->
+    <string name="exercise_name">Nome</string>
+    <string name="exercise_muscle_group">Grupo muscular</string>
+    <string name="exercise_equipment_type">Tipo de equipamento</string>
+
+    <!-- Exercise actions -->
+    <string name="add_exercise">Adicionar exercício</string>
+    <string name="edit_exercise">Editar exercício</string>
+    <string name="delete_exercise">Excluir exercício</string>
+    <string name="delete_exercise_confirmation">Tem certeza que deseja excluir o exercício \"%1$s\"?</string>
+
+    <!-- Common actions -->
+    <string name="save">Salvar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Excluir</string>
+    <string name="back">Voltar</string>
+    <string name="field_required">Campo obrigatório</string>
+</resources>
