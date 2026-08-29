@@ -305,4 +305,95 @@ class WorkoutRepositoryImplTest {
         val result = repository.getExercises(workoutId).first()
         assertTrue(result.all { it is WorkoutExercise })
     }
+
+    // ─── WorkoutExercise: update positions ────────────────────────────────────
+
+    @Test
+    fun updateExercisePositions_updatesMultipleExercises() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Push Day"))
+        val ex2 = db.exerciseDao().insert(ExerciseEntity(name = "Squat", muscleGroup = "Legs", equipmentType = "Barbell"))
+        val id0 = repository.addExercise(
+            WorkoutExercise(workoutId = workoutId, exerciseId = exerciseId, position = 0, sets = 3, minRepetitions = 8, maxRepetitions = 12, weight = 60.0, restSeconds = 90),
+        )
+        val id1 = repository.addExercise(
+            WorkoutExercise(workoutId = workoutId, exerciseId = ex2, position = 1, sets = 4, minRepetitions = 6, maxRepetitions = 10, weight = 80.0, restSeconds = 120, notes = "Notas"),
+        )
+
+        repository.updateExercisePositions(mapOf(id0 to 1, id1 to 0))
+
+        val result = repository.getExercises(workoutId).first()
+        assertEquals(2, result.size)
+        assertEquals(id1, result[0].id)
+        assertEquals(0, result[0].position)
+        assertEquals(id0, result[1].id)
+        assertEquals(1, result[1].position)
+    }
+
+    @Test
+    fun updateExercisePositions_preservesOtherFields() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Push Day"))
+        val id = repository.addExercise(
+            WorkoutExercise(
+                workoutId = workoutId,
+                exerciseId = exerciseId,
+                position = 0,
+                sets = 4,
+                minRepetitions = 6,
+                maxRepetitions = 10,
+                weight = 75.5,
+                restSeconds = 90,
+                notes = "Manter",
+            ),
+        )
+
+        repository.updateExercisePositions(mapOf(id to 2))
+
+        val result = repository.getExercises(workoutId).first().first()
+        assertEquals(2, result.position)
+        assertEquals(workoutId, result.workoutId)
+        assertEquals(exerciseId, result.exerciseId)
+        assertEquals(4, result.sets)
+        assertEquals(6, result.minRepetitions)
+        assertEquals(10, result.maxRepetitions)
+        assertEquals(75.5, result.weight, 0.001)
+        assertEquals(90, result.restSeconds)
+        assertEquals("Manter", result.notes)
+    }
+
+    @Test
+    fun updateExercisePositions_doesNotAffectOtherWorkout() = runBlocking {
+        val workoutA = repository.save(Workout(name = "A"))
+        val workoutB = repository.save(Workout(name = "B"))
+        val ex2 = db.exerciseDao().insert(ExerciseEntity(name = "Squat", muscleGroup = "Legs", equipmentType = "Barbell"))
+        val idA = repository.addExercise(
+            WorkoutExercise(workoutId = workoutA, exerciseId = exerciseId, position = 0, sets = 3, minRepetitions = 8, maxRepetitions = 12, weight = 60.0, restSeconds = 90),
+        )
+        val idB = repository.addExercise(
+            WorkoutExercise(workoutId = workoutB, exerciseId = ex2, position = 0, sets = 5, minRepetitions = 5, maxRepetitions = 8, weight = 100.0, restSeconds = 180),
+        )
+
+        repository.updateExercisePositions(mapOf(idA to 3))
+
+        val fromA = repository.getExercises(workoutA).first().first()
+        val fromB = repository.getExercises(workoutB).first().first()
+        assertEquals(3, fromA.position)
+        assertEquals(idB, fromB.id)
+        assertEquals(0, fromB.position)
+        assertEquals(5, fromB.sets)
+    }
+
+    @Test
+    fun updateExercisePositions_emptyMap_doesNotChangeData() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Push Day"))
+        repository.addExercise(
+            WorkoutExercise(workoutId = workoutId, exerciseId = exerciseId, position = 0, sets = 3, minRepetitions = 8, maxRepetitions = 12, weight = 60.0, restSeconds = 90),
+        )
+
+        repository.updateExercisePositions(emptyMap())
+
+        val result = repository.getExercises(workoutId).first()
+        assertEquals(1, result.size)
+        assertEquals(0, result[0].position)
+        assertEquals(3, result[0].sets)
+    }
 }

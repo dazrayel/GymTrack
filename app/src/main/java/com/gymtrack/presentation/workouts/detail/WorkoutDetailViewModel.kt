@@ -205,6 +205,34 @@ class WorkoutDetailViewModel @Inject constructor(
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+    // Reorder
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Moves the exercise at [fromIndex] to [toIndex] and persists the new
+     * 0-based positions for the entire list. Invalid or no-op indices are ignored.
+     * The UI list is refreshed by the existing Room Flow — no optimistic update.
+     */
+    fun reorderExercises(fromIndex: Int, toIndex: Int) {
+        val current = _uiState.value.exercises
+        if (fromIndex == toIndex) return
+        if (fromIndex !in current.indices || toIndex !in current.indices) return
+
+        val reordered = current.toMutableList()
+        val moved = reordered.removeAt(fromIndex)
+        reordered.add(toIndex, moved)
+
+        val positions = reordered.mapIndexed { index, detail -> detail.id to index }.toMap()
+        viewModelScope.launch {
+            try {
+                workoutRepository.updateExercisePositions(positions)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // Workout editing
     // ──────────────────────────────────────────────────────────────────────────
 

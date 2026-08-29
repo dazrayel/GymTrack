@@ -29,4 +29,11 @@ interface WorkoutRepository {
     suspend fun removeExercise(workoutExercise: WorkoutExercise)
 
     suspend fun removeExerciseById(id: Long)
+
+    /**
+     * Updates only the [WorkoutExercise.position] of each entry.
+     * Keys are WorkoutExercise IDs; values are the new positions.
+     * Applied atomically.
+     */
+    suspend fun updateExercisePositions(positions: Map<Long, Int>)
 }

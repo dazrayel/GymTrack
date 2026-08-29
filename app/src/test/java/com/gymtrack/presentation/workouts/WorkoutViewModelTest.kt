@@ -440,4 +440,5 @@ private class FakeWorkoutRepository : WorkoutRepository {
     override suspend fun updateExercise(workoutExercise: WorkoutExercise) = Unit
     override suspend fun removeExercise(workoutExercise: WorkoutExercise) = Unit
     override suspend fun removeExerciseById(id: Long) = Unit
+    override suspend fun updateExercisePositions(positions: Map<Long, Int>) = Unit
 }

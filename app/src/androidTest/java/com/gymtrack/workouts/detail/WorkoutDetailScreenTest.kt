@@ -2,11 +2,18 @@ package com.gymtrack.workouts.detail
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextReplacement
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,6 +30,7 @@ import com.gymtrack.presentation.workouts.detail.WorkoutDetailScreen
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertTrue
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -56,6 +64,7 @@ class WorkoutDetailScreenTest {
 
     private var workoutId: Long = -1L
     private var exerciseId: Long = -1L
+    private val extraExerciseIds = mutableListOf<Long>()
 
     @Before
     fun setUp() {
@@ -78,6 +87,12 @@ class WorkoutDetailScreenTest {
             workoutRepository.delete(
                 Workout(id = workoutId, name = "Treino Teste", description = ""),
             )
+            extraExerciseIds.forEach { id ->
+                exerciseRepository.delete(
+                    Exercise(id = id, name = "", muscleGroup = "", equipmentType = ""),
+                )
+            }
+            extraExerciseIds.clear()
             exerciseRepository.delete(
                 Exercise(id = exerciseId, name = "Supino Teste", muscleGroup = "", equipmentType = ""),
             )
@@ -259,5 +274,316 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Supino Teste").assertIsDisplayed()
+    }
+
+    private fun openConfigurationDialog() {
+        setScreen()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Supino Teste").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Validation — séries
+    // ──────────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun configuration_setsZero_showsError_andDoesNotSave() {
+        openConfigurationDialog()
+
+        composeTestRule.onNodeWithTag("sets_field").performTextReplacement("0")
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("As séries devem ser pelo menos 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
+    }
+
+    @Test
+    fun configuration_setsNegative_showsError_andDoesNotSave() {
+        openConfigurationDialog()
+
+        composeTestRule.onNodeWithTag("sets_field").performTextReplacement("-1")
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("As séries devem ser pelo menos 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
+    }
+
+    @Test
+    fun configuration_setsNonNumeric_showsError_andDoesNotSave() {
+        openConfigurationDialog()
+
+        composeTestRule.onNodeWithTag("sets_field").performTextReplacement("abc")
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Valor inválido").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
+    }
+
+    @Test
+    fun configuration_minRepsGreaterThanMax_showsError_andDoesNotSave() {
+        openConfigurationDialog()
+
+        composeTestRule.onNodeWithTag("min_reps_field").performTextReplacement("12")
+        composeTestRule.onNodeWithTag("max_reps_field").performTextReplacement("8")
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithText("O máximo de repetições deve ser maior ou igual ao mínimo")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
+    }
+
+    @Test
+    fun configuration_negativeWeight_showsError_andDoesNotSave() {
+        openConfigurationDialog()
+
+        composeTestRule.onNodeWithTag("weight_field").performTextReplacement("-10")
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("A carga deve ser zero ou maior").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
+    }
+
+    @Test
+    fun configuration_negativeRest_showsError_andDoesNotSave() {
+        openConfigurationDialog()
+
+        composeTestRule.onNodeWithTag("rest_seconds_field").performTextReplacement("-30")
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("O descanso deve ser zero ou maior").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
+    }
+
+    @Test
+    fun configuration_validValues_savesAndClosesDialog() {
+        openConfigurationDialog()
+
+        composeTestRule.onNodeWithTag("sets_field").performTextReplacement("4")
+        composeTestRule.onNodeWithTag("min_reps_field").performTextReplacement("8")
+        composeTestRule.onNodeWithTag("max_reps_field").performTextReplacement("12")
+        composeTestRule.onNodeWithTag("weight_field").performTextReplacement("60.5")
+        composeTestRule.onNodeWithTag("rest_seconds_field").performTextReplacement("90")
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule
+                .onAllNodesWithText("4× • 8–12 reps • 60.5 kg")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+
+        composeTestRule.onNodeWithText("Supino Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("4× • 8–12 reps • 60.5 kg").assertIsDisplayed()
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Reorder
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private fun addListedExercise(name: String, position: Int) {
+        runBlocking {
+            val id = exerciseRepository.save(
+                Exercise(name = name, muscleGroup = "Teste", equipmentType = "Barra"),
+            )
+            extraExerciseIds += id
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = workoutId,
+                    exerciseId = id,
+                    position = position,
+                    sets = 3,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 40.0,
+                    restSeconds = 60,
+                ),
+            )
+        }
+    }
+
+    private fun addDefaultListedExercise(position: Int) {
+        runBlocking {
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = workoutId,
+                    exerciseId = exerciseId,
+                    position = position,
+                    sets = 3,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 40.0,
+                    restSeconds = 60,
+                ),
+            )
+        }
+    }
+
+    private fun waitForMoveControl(description: String) {
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule
+                .onAllNodesWithContentDescription(description)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+    }
+
+    private fun clickMoveControl(description: String) {
+        waitForMoveControl(description)
+        composeTestRule
+            .onNodeWithContentDescription(description)
+            .performScrollTo()
+            .performClick()
+    }
+
+    private fun isNameDisplayedAbove(upper: String, lower: String): Boolean {
+        val upperNodes = composeTestRule.onAllNodesWithText(upper).fetchSemanticsNodes()
+        val lowerNodes = composeTestRule.onAllNodesWithText(lower).fetchSemanticsNodes()
+        if (upperNodes.isEmpty() || lowerNodes.isEmpty()) return false
+        return upperNodes.first().positionInRoot.y < lowerNodes.first().positionInRoot.y
+    }
+
+    private fun assertNameDisplayedAbove(upper: String, lower: String) {
+        assertTrue("$upper should appear above $lower", isNameDisplayedAbove(upper, lower))
+    }
+
+    @Test
+    fun reorder_firstExercise_upDisabled_downEnabled() {
+        addDefaultListedExercise(position = 0)
+        addListedExercise("Agachamento Teste", position = 1)
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitForMoveControl("Mover Supino Teste para baixo")
+
+        composeTestRule
+            .onNodeWithContentDescription("Mover Supino Teste para cima")
+            .assertIsNotEnabled()
+        composeTestRule
+            .onNodeWithContentDescription("Mover Supino Teste para baixo")
+            .assertIsEnabled()
+    }
+
+    @Test
+    fun reorder_middleExercise_bothEnabled() {
+        addDefaultListedExercise(position = 0)
+        addListedExercise("Agachamento Teste", position = 1)
+        addListedExercise("Remada Teste", position = 2)
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitForMoveControl("Mover Agachamento Teste para cima")
+
+        composeTestRule
+            .onNodeWithContentDescription("Mover Agachamento Teste para cima")
+            .performScrollTo()
+            .assertIsEnabled()
+        composeTestRule
+            .onNodeWithContentDescription("Mover Agachamento Teste para baixo")
+            .assertIsEnabled()
+        composeTestRule.waitForIdle()
+    }
+
+    @Test
+    fun reorder_lastExercise_upEnabled_downDisabled() {
+        addDefaultListedExercise(position = 0)
+        addListedExercise("Agachamento Teste", position = 1)
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitForMoveControl("Mover Agachamento Teste para cima")
+
+        composeTestRule
+            .onNodeWithContentDescription("Mover Agachamento Teste para cima")
+            .assertIsEnabled()
+        composeTestRule
+            .onNodeWithContentDescription("Mover Agachamento Teste para baixo")
+            .assertIsNotEnabled()
+    }
+
+    @Test
+    fun reorder_moveFirstExerciseDown_changesDisplayedOrder() {
+        addDefaultListedExercise(position = 0)
+        addListedExercise("Agachamento Teste", position = 1)
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        clickMoveControl("Mover Supino Teste para baixo")
+        composeTestRule.waitUntil(5_000) {
+            isNameDisplayedAbove("Agachamento Teste", "Supino Teste")
+        }
+
+        assertNameDisplayedAbove("Agachamento Teste", "Supino Teste")
+    }
+
+    @Test
+    fun reorder_moveSecondExerciseUp_changesDisplayedOrder() {
+        addDefaultListedExercise(position = 0)
+        addListedExercise("Agachamento Teste", position = 1)
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        clickMoveControl("Mover Agachamento Teste para cima")
+        composeTestRule.waitUntil(5_000) {
+            isNameDisplayedAbove("Agachamento Teste", "Supino Teste")
+        }
+
+        assertNameDisplayedAbove("Agachamento Teste", "Supino Teste")
+    }
+
+    @Test
+    fun reorder_persistsAfterLeavingAndReenteringScreen() {
+        addDefaultListedExercise(position = 0)
+        addListedExercise("Agachamento Teste", position = 1)
+
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            NavHost(
+                navController = navController,
+                startDestination = "list",
+            ) {
+                composable("list") {
+                    androidx.compose.material3.TextButton(
+                        onClick = { navController.navigate("workout_detail/$workoutId") },
+                    ) {
+                        androidx.compose.material3.Text("Abrir detalhe")
+                    }
+                }
+                composable(
+                    route = TEST_ROUTE,
+                    arguments = listOf(navArgument("workoutId") { type = NavType.LongType }),
+                ) {
+                    WorkoutDetailScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        contentPadding = PaddingValues(),
+                    )
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithText("Abrir detalhe").performClick()
+        composeTestRule.waitForIdle()
+
+        clickMoveControl("Mover Supino Teste para baixo")
+        composeTestRule.waitUntil(5_000) {
+            isNameDisplayedAbove("Agachamento Teste", "Supino Teste")
+        }
+
+        composeTestRule.onNodeWithContentDescription("Voltar").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Abrir detalhe").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(5_000) {
+            isNameDisplayedAbove("Agachamento Teste", "Supino Teste")
+        }
+
+        assertNameDisplayedAbove("Agachamento Teste", "Supino Teste")
     }
 }

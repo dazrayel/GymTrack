@@ -57,6 +57,10 @@ class WorkoutRepositoryImpl @Inject constructor(
     override suspend fun removeExerciseById(id: Long) {
         withContext(Dispatchers.IO) { workoutExerciseDao.deleteById(id) }
     }
+
+    override suspend fun updateExercisePositions(positions: Map<Long, Int>) {
+        withContext(Dispatchers.IO) { workoutExerciseDao.updatePositions(positions) }
+    }
 }
 
 private fun WorkoutEntity.toDomain() = Workout(

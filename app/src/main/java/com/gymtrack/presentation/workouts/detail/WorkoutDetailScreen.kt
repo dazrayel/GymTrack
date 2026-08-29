@@ -14,12 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.AlertDialog
@@ -48,7 +51,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -90,6 +96,8 @@ fun WorkoutDetailScreen(
         onShowDeleteConfirmation = viewModel::showDeleteConfirmation,
         onDismissDeleteConfirmation = viewModel::dismissDeleteConfirmation,
         onConfirmDelete = viewModel::confirmDelete,
+        onMoveUp = { index -> viewModel.reorderExercises(index, index - 1) },
+        onMoveDown = { index -> viewModel.reorderExercises(index, index + 1) },
         onErrorShown = viewModel::clearError,
         modifier = modifier,
     )
@@ -118,6 +126,8 @@ private fun WorkoutDetailContent(
     onShowDeleteConfirmation: (WorkoutExerciseDetail) -> Unit,
     onDismissDeleteConfirmation: () -> Unit,
     onConfirmDelete: () -> Unit,
+    onMoveUp: (Int) -> Unit,
+    onMoveDown: (Int) -> Unit,
     onErrorShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -218,9 +228,13 @@ private fun WorkoutDetailContent(
                         }
                     }
 
-                    items(uiState.exercises, key = { it.id }) { detail ->
+                    itemsIndexed(uiState.exercises, key = { _, detail -> detail.id }) { index, detail ->
                         WorkoutExerciseItem(
                             detail = detail,
+                            canMoveUp = index > 0,
+                            canMoveDown = index < uiState.exercises.lastIndex,
+                            onMoveUp = { onMoveUp(index) },
+                            onMoveDown = { onMoveDown(index) },
                             onEditClick = { onShowEditExercise(detail) },
                             onDeleteClick = { onShowDeleteConfirmation(detail) },
                         )
@@ -278,6 +292,10 @@ private fun WorkoutDetailContent(
 @Composable
 private fun WorkoutExerciseItem(
     detail: WorkoutExerciseDetail,
+    canMoveUp: Boolean,
+    canMoveDown: Boolean,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -288,8 +306,38 @@ private fun WorkoutExerciseItem(
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header: name + actions
+            // Header: reorder + name + actions
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    val moveUpDescription = stringResource(
+                        R.string.move_exercise_up,
+                        detail.exercise.name,
+                    )
+                    val moveDownDescription = stringResource(
+                        R.string.move_exercise_down,
+                        detail.exercise.name,
+                    )
+                    IconButton(
+                        onClick = onMoveUp,
+                        enabled = canMoveUp,
+                        modifier = Modifier.semantics { contentDescription = moveUpDescription },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.KeyboardArrowUp,
+                            contentDescription = null,
+                        )
+                    }
+                    IconButton(
+                        onClick = onMoveDown,
+                        enabled = canMoveDown,
+                        modifier = Modifier.semantics { contentDescription = moveDownDescription },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.KeyboardArrowDown,
+                            contentDescription = null,
+                        )
+                    }
+                }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = detail.exercise.name,
@@ -485,6 +533,12 @@ private fun ExerciseConfigurationDialog(
     var restSeconds by remember(detail) { mutableStateOf(detail.restSeconds.toString()) }
     var notes by remember(detail) { mutableStateOf(detail.notes) }
 
+    var setsError by remember { mutableStateOf<Int?>(null) }
+    var minRepsError by remember { mutableStateOf<Int?>(null) }
+    var maxRepsError by remember { mutableStateOf<Int?>(null) }
+    var weightError by remember { mutableStateOf<Int?>(null) }
+    var restSecondsError by remember { mutableStateOf<Int?>(null) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -503,37 +557,73 @@ private fun ExerciseConfigurationDialog(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     NumberField(
                         value = sets,
-                        onValueChange = { sets = it },
+                        onValueChange = {
+                            sets = it
+                            setsError = null
+                        },
                         label = stringResource(R.string.sets_label),
-                        modifier = Modifier.weight(1f),
+                        isError = setsError != null,
+                        errorMessage = setsError?.let { stringResource(it) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("sets_field"),
                     )
                     NumberField(
                         value = restSeconds,
-                        onValueChange = { restSeconds = it },
+                        onValueChange = {
+                            restSeconds = it
+                            restSecondsError = null
+                        },
                         label = stringResource(R.string.rest_seconds_label),
-                        modifier = Modifier.weight(1f),
+                        isError = restSecondsError != null,
+                        errorMessage = restSecondsError?.let { stringResource(it) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("rest_seconds_field"),
                     )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     NumberField(
                         value = minReps,
-                        onValueChange = { minReps = it },
+                        onValueChange = {
+                            minReps = it
+                            minRepsError = null
+                            maxRepsError = null
+                        },
                         label = stringResource(R.string.min_reps_label),
-                        modifier = Modifier.weight(1f),
+                        isError = minRepsError != null,
+                        errorMessage = minRepsError?.let { stringResource(it) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("min_reps_field"),
                     )
                     NumberField(
                         value = maxReps,
-                        onValueChange = { maxReps = it },
+                        onValueChange = {
+                            maxReps = it
+                            maxRepsError = null
+                        },
                         label = stringResource(R.string.max_reps_label),
-                        modifier = Modifier.weight(1f),
+                        isError = maxRepsError != null,
+                        errorMessage = maxRepsError?.let { stringResource(it) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("max_reps_field"),
                     )
                 }
                 NumberField(
                     value = weight,
-                    onValueChange = { weight = it },
+                    onValueChange = {
+                        weight = it
+                        weightError = null
+                    },
                     label = stringResource(R.string.weight_label),
                     isDecimal = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    isError = weightError != null,
+                    errorMessage = weightError?.let { stringResource(it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("weight_field"),
                 )
                 OutlinedTextField(
                     value = notes,
@@ -548,14 +638,30 @@ private fun ExerciseConfigurationDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    onConfirm(
-                        sets.toIntOrNull() ?: detail.sets,
-                        minReps.toIntOrNull() ?: detail.minRepetitions,
-                        maxReps.toIntOrNull() ?: detail.maxRepetitions,
-                        weight.toDoubleOrNull() ?: detail.weight,
-                        restSeconds.toIntOrNull() ?: detail.restSeconds,
-                        notes,
-                    )
+                    setsError = integerFieldError(sets, minValue = 1, belowMinRes = R.string.validation_sets_min)
+                    minRepsError = integerFieldError(minReps, minValue = 1, belowMinRes = R.string.validation_min_reps_min)
+                    maxRepsError = integerFieldError(maxReps, minValue = 1, belowMinRes = R.string.validation_max_reps_min)
+                    weightError = doubleFieldError(weight)
+                    restSecondsError = integerFieldError(restSeconds, minValue = 0, belowMinRes = R.string.validation_rest_min)
+
+                    val setsValue = parseRequiredIntAtLeast(sets, minValue = 1)
+                    val minValue = parseRequiredIntAtLeast(minReps, minValue = 1)
+                    val maxValue = parseRequiredIntAtLeast(maxReps, minValue = 1)
+                    val weightValue = parseRequiredNonNegativeDouble(weight)
+                    val restValue = parseRequiredIntAtLeast(restSeconds, minValue = 0)
+
+                    val rangeInvalid = minValue != null && maxValue != null && maxValue < minValue
+                    if (rangeInvalid) {
+                        maxRepsError = R.string.validation_max_reps_range
+                    }
+
+                    if (setsValue == null || minValue == null || maxValue == null ||
+                        weightValue == null || restValue == null || rangeInvalid
+                    ) {
+                        return@TextButton
+                    }
+
+                    onConfirm(setsValue, minValue, maxValue, weightValue, restValue, notes)
                 },
             ) {
                 Text(stringResource(R.string.save))
@@ -569,6 +675,37 @@ private fun ExerciseConfigurationDialog(
     )
 }
 
+private fun parseRequiredIntAtLeast(raw: String, minValue: Int): Int? {
+    val trimmed = raw.trim()
+    if (!trimmed.matches(Regex("-?\\d+"))) return null
+    val parsed = trimmed.toIntOrNull() ?: return null
+    return parsed.takeIf { it >= minValue }
+}
+
+private fun parseRequiredNonNegativeDouble(raw: String): Double? {
+    val trimmed = raw.trim()
+    if (trimmed.isEmpty()) return null
+    val parsed = trimmed.toDoubleOrNull() ?: return null
+    return parsed.takeIf { it >= 0.0 }
+}
+
+private fun integerFieldError(raw: String, minValue: Int, belowMinRes: Int): Int? {
+    val trimmed = raw.trim()
+    if (trimmed.isEmpty()) return R.string.field_required
+    if (!trimmed.matches(Regex("-?\\d+"))) return R.string.validation_invalid_value
+    val parsed = trimmed.toIntOrNull() ?: return R.string.validation_invalid_value
+    if (parsed < minValue) return belowMinRes
+    return null
+}
+
+private fun doubleFieldError(raw: String): Int? {
+    val trimmed = raw.trim()
+    if (trimmed.isEmpty()) return R.string.field_required
+    val parsed = trimmed.toDoubleOrNull() ?: return R.string.validation_invalid_value
+    if (parsed < 0.0) return R.string.validation_weight_min
+    return null
+}
+
 @Composable
 private fun NumberField(
     value: String,
@@ -576,11 +713,19 @@ private fun NumberField(
     label: String,
     modifier: Modifier = Modifier,
     isDecimal: Boolean = false,
+    isError: Boolean = false,
+    errorMessage: String? = null,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(text = label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        isError = isError,
+        supportingText = if (isError && errorMessage != null) {
+            { Text(errorMessage) }
+        } else {
+            null
+        },
         keyboardOptions = KeyboardOptions(
             keyboardType = if (isDecimal) KeyboardType.Decimal else KeyboardType.Number,
         ),
@@ -708,6 +853,8 @@ private fun WorkoutDetailContentLoadingPreview() {
             onShowDeleteConfirmation = {},
             onDismissDeleteConfirmation = {},
             onConfirmDelete = {},
+            onMoveUp = {},
+            onMoveDown = {},
             onErrorShown = {},
         )
     }
@@ -737,6 +884,8 @@ private fun WorkoutDetailContentEmptyPreview() {
             onShowDeleteConfirmation = {},
             onDismissDeleteConfirmation = {},
             onConfirmDelete = {},
+            onMoveUp = {},
+            onMoveDown = {},
             onErrorShown = {},
         )
     }
@@ -773,6 +922,8 @@ private fun WorkoutDetailContentListPreview() {
             onShowDeleteConfirmation = {},
             onDismissDeleteConfirmation = {},
             onConfirmDelete = {},
+            onMoveUp = {},
+            onMoveDown = {},
             onErrorShown = {},
         )
     }

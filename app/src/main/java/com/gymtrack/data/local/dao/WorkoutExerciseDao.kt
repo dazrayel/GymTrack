@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.gymtrack.data.local.entity.WorkoutExerciseEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -23,6 +24,22 @@ interface WorkoutExerciseDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(workoutExercise: WorkoutExerciseEntity): Long
+
+    /**
+     * Blocking update — same Room/KSP constraint as [insert]. Caller must dispatch on
+     * Dispatchers.IO. Updates only the [position] column.
+     */
+    @Query("UPDATE workout_exercises SET position = :position WHERE id = :id")
+    fun updatePosition(id: Long, position: Int): Int
+
+    /**
+     * Applies every [id → position] mapping in a single Room transaction so a failure
+     * cannot leave the workout with a partially reordered list.
+     */
+    @Transaction
+    fun updatePositions(positions: Map<Long, Int>) {
+        positions.forEach { (id, position) -> updatePosition(id, position) }
+    }
 
     @Query("DELETE FROM workout_exercises WHERE id = :id")
     fun deleteById(id: Long): Int

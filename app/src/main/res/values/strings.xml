@@ -69,9 +69,20 @@
     <string name="rest_seconds_display">descanso</string>
     <string name="notes_label">Observações</string>
 
+    <!-- Exercise configuration validation -->
+    <string name="validation_invalid_value">Valor inválido</string>
+    <string name="validation_sets_min">As séries devem ser pelo menos 1</string>
+    <string name="validation_min_reps_min">As repetições mínimas devem ser pelo menos 1</string>
+    <string name="validation_max_reps_min">As repetições máximas devem ser pelo menos 1</string>
+    <string name="validation_max_reps_range">O máximo de repetições deve ser maior ou igual ao mínimo</string>
+    <string name="validation_weight_min">A carga deve ser zero ou maior</string>
+    <string name="validation_rest_min">O descanso deve ser zero ou maior</string>
+
     <!-- Workout exercise actions -->
     <string name="remove_exercise_from_workout">Remover exercício</string>
     <string name="remove_exercise_confirmation">Remover \"%1$s\" deste treino?</string>
+    <string name="move_exercise_up">Mover %1$s para cima</string>
+    <string name="move_exercise_down">Mover %1$s para baixo</string>
 
     <!-- Common actions -->
     <string name="save">Salvar</string>

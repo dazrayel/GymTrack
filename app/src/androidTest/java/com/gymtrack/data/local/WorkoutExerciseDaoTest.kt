@@ -309,4 +309,60 @@ class WorkoutExerciseDaoTest {
 
         assertEquals(1, dao.getByWorkoutId(otherWorkoutId).first().size)
     }
+
+    // ─── Atualização de position ─────────────────────────────────────────────
+
+    @Test
+    fun updatePosition_updatesOnlyPosition() = runBlocking {
+        val id = dao.insert(
+            WorkoutExerciseEntity(
+                workoutId = workoutId,
+                exerciseId = exerciseId,
+                position = 0,
+                sets = 4,
+                minRepetitions = 6,
+                maxRepetitions = 10,
+                weight = 80.0,
+                restSeconds = 120,
+                notes = "Manter",
+            ),
+        )
+
+        val affected = dao.updatePosition(id, 3)
+        assertEquals(1, affected)
+
+        val result = dao.getById(id).first()!!
+        assertEquals(3, result.position)
+        assertEquals(workoutId, result.workoutId)
+        assertEquals(exerciseId, result.exerciseId)
+        assertEquals(4, result.sets)
+        assertEquals(6, result.minRepetitions)
+        assertEquals(10, result.maxRepetitions)
+        assertEquals(80.0, result.weight, 0.001)
+        assertEquals(120, result.restSeconds)
+        assertEquals("Manter", result.notes)
+    }
+
+    @Test
+    fun updatePosition_returnsAffectedRowCount() {
+        val id = dao.insert(makeEntity())
+        assertEquals(1, dao.updatePosition(id, 5))
+        assertEquals(0, dao.updatePosition(999L, 1))
+    }
+
+    @Test
+    fun updatePositions_appliesAllMappingsAtomically() = runBlocking {
+        val ex2 = exerciseDao.insert(ExerciseEntity(name = "Squat", muscleGroup = "Legs", equipmentType = "Barbell"))
+        val id0 = dao.insert(makeEntity(position = 0, exerciseId = exerciseId))
+        val id1 = dao.insert(makeEntity(position = 1, exerciseId = ex2))
+
+        dao.updatePositions(mapOf(id0 to 1, id1 to 0))
+
+        val result = dao.getByWorkoutId(workoutId).first()
+        assertEquals(2, result.size)
+        assertEquals(id1, result[0].id)
+        assertEquals(0, result[0].position)
+        assertEquals(id0, result[1].id)
+        assertEquals(1, result[1].position)
+    }
 }
