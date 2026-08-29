@@ -10,18 +10,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavType
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.gymtrack.presentation.exercises.ExercisesScreen
 import com.gymtrack.presentation.history.HistoryScreen
 import com.gymtrack.presentation.home.HomeScreen
 import com.gymtrack.presentation.settings.SettingsScreen
 import com.gymtrack.presentation.workouts.WorkoutsScreen
+import com.gymtrack.presentation.workouts.detail.WorkoutDetailScreen
 
 private const val ROUTE_EXERCISES = "exercises"
+private const val ROUTE_WORKOUT_DETAIL = "workout_detail/{workoutId}"
+private fun routeWorkoutDetail(workoutId: Long) = "workout_detail/$workoutId"
 
 @Composable
 fun GymTrackNavGraph(modifier: Modifier = Modifier) {
@@ -78,7 +83,14 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                 )
             }
             composable(TopLevelDestination.WORKOUTS.route) {
-                WorkoutsScreen(contentPadding = innerPadding)
+                WorkoutsScreen(
+                    onNavigateToDetail = { workoutId ->
+                        navController.navigate(routeWorkoutDetail(workoutId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                    contentPadding = innerPadding,
+                )
             }
             composable(TopLevelDestination.HISTORY.route) {
                 HistoryScreen(contentPadding = innerPadding)
@@ -90,6 +102,15 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                 ExercisesScreen(
                     outerPadding = innerPadding,
                     onNavigateBack = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = ROUTE_WORKOUT_DETAIL,
+                arguments = listOf(navArgument("workoutId") { type = NavType.LongType }),
+            ) {
+                WorkoutDetailScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    contentPadding = innerPadding,
                 )
             }
         }

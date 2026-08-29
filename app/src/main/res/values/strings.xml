@@ -34,6 +34,45 @@
     <string name="delete_exercise">Excluir exercício</string>
     <string name="delete_exercise_confirmation">Tem certeza que deseja excluir o exercício \"%1$s\"?</string>
 
+    <!-- Workouts screen -->
+    <string name="empty_workouts">Nenhum treino cadastrado</string>
+    <string name="empty_workouts_hint">Toque no botão + para criar seu primeiro treino</string>
+
+    <!-- Workout fields -->
+    <string name="workout_name">Nome do treino</string>
+    <string name="workout_description">Descrição (opcional)</string>
+
+    <!-- Workout actions -->
+    <string name="add_workout">Adicionar treino</string>
+    <string name="edit_workout">Editar treino</string>
+    <string name="delete_workout">Excluir treino</string>
+    <string name="delete_workout_confirmation">Tem certeza que deseja excluir o treino \"%1$s\"?</string>
+
+    <!-- Workout detail screen -->
+    <string name="workout_detail_title">Detalhes do treino</string>
+    <string name="workout_detail_empty">Nenhum exercício neste treino</string>
+    <string name="workout_detail_empty_hint">Toque no botão + para adicionar o primeiro exercício</string>
+    <string name="add_exercise_to_workout">Adicionar exercício</string>
+
+    <!-- Exercise picker -->
+    <string name="pick_exercise_title">Selecionar exercício</string>
+    <string name="pick_exercise_empty">Nenhum exercício disponível na biblioteca</string>
+
+    <!-- Exercise configuration dialog -->
+    <string name="configure_exercise_title_new">Configurar exercício</string>
+    <string name="configure_exercise_title_edit">Editar exercício</string>
+    <string name="sets_label">Séries</string>
+    <string name="min_reps_label">Mín. repetições</string>
+    <string name="max_reps_label">Máx. repetições</string>
+    <string name="weight_label">Carga (kg)</string>
+    <string name="rest_seconds_label">Descanso (segundos)</string>
+    <string name="rest_seconds_display">descanso</string>
+    <string name="notes_label">Observações</string>
+
+    <!-- Workout exercise actions -->
+    <string name="remove_exercise_from_workout">Remover exercício</string>
+    <string name="remove_exercise_confirmation">Remover \"%1$s\" deste treino?</string>
+
     <!-- Common actions -->
     <string name="save">Salvar</string>
     <string name="cancel">Cancelar</string>
