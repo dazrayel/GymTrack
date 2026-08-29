@@ -77,8 +77,12 @@ class ExerciseViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            repository.save(exercise)
-            _uiState.update { it.copy(showAddEditDialog = false, exerciseToEdit = null) }
+            try {
+                repository.save(exercise)
+                _uiState.update { it.copy(showAddEditDialog = false, exerciseToEdit = null) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
         }
     }
 
@@ -93,8 +97,16 @@ class ExerciseViewModel @Inject constructor(
     fun confirmDelete() {
         val exercise = _uiState.value.exerciseToDelete ?: return
         viewModelScope.launch {
-            repository.delete(exercise)
-            _uiState.update { it.copy(showDeleteConfirmation = false, exerciseToDelete = null) }
+            try {
+                repository.delete(exercise)
+                _uiState.update { it.copy(showDeleteConfirmation = false, exerciseToDelete = null) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(showDeleteConfirmation = false, exerciseToDelete = null, error = e.message) }
+            }
         }
+    }
+
+    fun clearError() {
+        _uiState.update { it.copy(error = null) }
     }
 }

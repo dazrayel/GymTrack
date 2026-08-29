@@ -69,7 +69,11 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
         ) {
             composable(TopLevelDestination.HOME.route) {
                 HomeScreen(
-                    onNavigateToExercises = { navController.navigate(ROUTE_EXERCISES) },
+                    onNavigateToExercises = {
+                        navController.navigate(ROUTE_EXERCISES) {
+                            launchSingleTop = true
+                        }
+                    },
                     contentPadding = innerPadding,
                 )
             }

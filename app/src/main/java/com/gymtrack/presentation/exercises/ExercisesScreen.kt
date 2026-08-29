@@ -34,10 +34,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +78,7 @@ fun ExercisesScreen(
         onDismissDialog = viewModel::dismissDialog,
         onConfirmDelete = viewModel::confirmDelete,
         onDismissDelete = viewModel::dismissDeleteConfirmation,
+        onErrorShown = viewModel::clearError,
         modifier = modifier,
     )
 }
@@ -93,11 +97,21 @@ private fun ExercisesContent(
     onDismissDialog: () -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
+    onErrorShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.error) {
+        val message = uiState.error ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(message = message)
+        onErrorShown()
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         modifier = modifier.padding(outerPadding),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -420,6 +434,7 @@ private fun ExercisesContentLoadingPreview() {
             onDismissDialog = {},
             onConfirmDelete = {},
             onDismissDelete = {},
+            onErrorShown = {},
         )
     }
 }
@@ -440,6 +455,7 @@ private fun ExercisesContentEmptyPreview() {
             onDismissDialog = {},
             onConfirmDelete = {},
             onDismissDelete = {},
+            onErrorShown = {},
         )
     }
 }
@@ -467,6 +483,7 @@ private fun ExercisesContentListPreview() {
             onDismissDialog = {},
             onConfirmDelete = {},
             onDismissDelete = {},
+            onErrorShown = {},
         )
     }
 }
