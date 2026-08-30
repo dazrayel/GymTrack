@@ -55,6 +55,7 @@
     <!-- Exercises screen -->
     <string name="exercises_title">Exercícios</string>
     <string name="search_exercises">Buscar exercícios</string>
+    <string name="clear_search">Limpar pesquisa</string>
     <string name="empty_exercises">Nenhum exercício cadastrado</string>
     <string name="empty_exercises_hint">Toque no botão + para adicionar seu primeiro exercício</string>
 

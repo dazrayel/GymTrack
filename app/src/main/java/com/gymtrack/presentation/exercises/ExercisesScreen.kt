@@ -172,7 +172,7 @@ fun ExercisesScreen(
                         IconButton(onClick = { onSearchQueryChange("") }) {
                             Icon(
                                 imageVector = Icons.Filled.Clear,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.clear_search),
                             )
                         }
                     }
