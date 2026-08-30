@@ -6,8 +6,12 @@ import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutExerciseDetail
+import com.gymtrack.domain.model.WorkoutSession
+import com.gymtrack.domain.model.WorkoutSessionExercise
+import com.gymtrack.domain.model.WorkoutSet
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
+import com.gymtrack.domain.repository.WorkoutSessionRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -45,6 +49,7 @@ class WorkoutDetailViewModelTest {
 
     private lateinit var fakeWorkoutRepo: FakeWorkoutDetailRepository
     private lateinit var fakeExerciseRepo: FakeExerciseDetailRepository
+    private lateinit var fakeSessionRepo: FakeWorkoutSessionRepository
     private lateinit var viewModel: WorkoutDetailViewModel
 
     private val workout = Workout(id = WORKOUT_ID, name = "Treino A", description = "Peito")
@@ -78,6 +83,7 @@ class WorkoutDetailViewModelTest {
         Dispatchers.setMain(testDispatcher)
         fakeWorkoutRepo = FakeWorkoutDetailRepository()
         fakeExerciseRepo = FakeExerciseDetailRepository()
+        fakeSessionRepo = FakeWorkoutSessionRepository()
         buildViewModel()
     }
 
@@ -90,6 +96,7 @@ class WorkoutDetailViewModelTest {
         viewModel = WorkoutDetailViewModel(
             workoutRepository = fakeWorkoutRepo,
             exerciseRepository = fakeExerciseRepo,
+            workoutSessionRepository = fakeSessionRepo,
             savedStateHandle = SavedStateHandle(mapOf("workoutId" to WORKOUT_ID)),
         )
     }
@@ -646,6 +653,62 @@ class WorkoutDetailViewModelTest {
         assertEquals("", moved.notes)
         assertEquals("Supino", moved.exercise.name)
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Start workout
+    // ──────────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun startWorkout_callsRepository() = runTest(testDispatcher) {
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        assertEquals(1, fakeSessionRepo.startSessionCalls)
+        assertEquals(WORKOUT_ID, fakeSessionRepo.lastStartWorkoutId)
+    }
+
+    @Test
+    fun startWorkout_emitsSessionId() = runTest(testDispatcher) {
+        fakeSessionRepo.startSessionResult = 77L
+
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        assertEquals(77L, viewModel.uiState.value.sessionStartedEvent)
+        assertNull(viewModel.uiState.value.error)
+    }
+
+    @Test
+    fun startWorkout_repositoryError_setsError() = runTest(testDispatcher) {
+        fakeSessionRepo.shouldThrowOnStart = true
+
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        assertEquals("startSession error", viewModel.uiState.value.error)
+        assertNull(viewModel.uiState.value.sessionStartedEvent)
+    }
+
+    @Test
+    fun startWorkout_doesNotNavigateWithoutSessionId() {
+        assertNull(viewModel.uiState.value.sessionStartedEvent)
+    }
+
+    @Test
+    fun startWorkout_existingInProgressSession_usesReturnedSessionId() = runTest(testDispatcher) {
+        fakeSessionRepo.startSessionResult = 55L
+
+        viewModel.startWorkout()
+        advanceUntilIdle()
+        assertEquals(55L, viewModel.uiState.value.sessionStartedEvent)
+
+        viewModel.consumeSessionStartedEvent()
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        assertEquals(55L, viewModel.uiState.value.sessionStartedEvent)
+        assertEquals(2, fakeSessionRepo.startSessionCalls)
+    }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -736,4 +799,42 @@ private class FakeExerciseDetailRepository : ExerciseRepository {
     override fun search(query: String): Flow<List<Exercise>> = emptyFlow()
     override suspend fun save(exercise: Exercise): Long = 0L
     override suspend fun delete(exercise: Exercise) = Unit
+}
+
+private class FakeWorkoutSessionRepository : WorkoutSessionRepository {
+
+    var startSessionResult: Long = 42L
+    var shouldThrowOnStart = false
+    var startSessionCalls = 0
+    var lastStartWorkoutId: Long? = null
+
+    override suspend fun startSession(workoutId: Long): Long {
+        startSessionCalls++
+        lastStartWorkoutId = workoutId
+        if (shouldThrowOnStart) throw RuntimeException("startSession error")
+        return startSessionResult
+    }
+
+    override suspend fun getSession(id: Long): WorkoutSession? = null
+    override fun observeSession(id: Long): Flow<WorkoutSession?> = emptyFlow()
+    override fun observeInProgress(): Flow<WorkoutSession?> = emptyFlow()
+    override fun observeSessionExercises(sessionId: Long): Flow<List<WorkoutSessionExercise>> =
+        emptyFlow()
+    override fun observeSets(sessionExerciseId: Long): Flow<List<WorkoutSet>> = emptyFlow()
+    override suspend fun completeSet(
+        sessionExerciseId: Long,
+        setIndex: Int,
+        reps: Int,
+        weight: Double,
+    ): Long = 0L
+    override suspend fun finishSession(sessionId: Long) = Unit
+    override suspend fun startRest(
+        sessionId: Long,
+        sessionExerciseId: Long,
+        afterSetIndex: Int,
+        restSeconds: Int,
+    ) = Unit
+    override suspend fun pauseRest(sessionId: Long) = Unit
+    override suspend fun resumeRest(sessionId: Long) = Unit
+    override suspend fun skipRest(sessionId: Long) = Unit
 }

@@ -2,16 +2,26 @@ package com.gymtrack
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutExercise
+import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
+import com.gymtrack.domain.repository.WorkoutSessionRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -35,8 +45,11 @@ class WorkoutDetailNavigationTest {
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @Inject lateinit var workoutRepository: WorkoutRepository
+    @Inject lateinit var exerciseRepository: ExerciseRepository
+    @Inject lateinit var workoutSessionRepository: WorkoutSessionRepository
 
     private var workoutId: Long = -1L
+    private var exerciseId: Long = -1L
     private val workoutName = "Treino Nav Detail"
 
     @Before
@@ -46,14 +59,38 @@ class WorkoutDetailNavigationTest {
             workoutId = workoutRepository.save(
                 Workout(name = workoutName, description = "Teste de navegação"),
             )
+            exerciseId = exerciseRepository.save(
+                Exercise(name = "Supino Nav", muscleGroup = "Peito", equipmentType = "Barra"),
+            )
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = workoutId,
+                    exerciseId = exerciseId,
+                    position = 0,
+                    sets = 3,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 40.0,
+                    restSeconds = 60,
+                ),
+            )
         }
     }
 
     @After
     fun tearDown() {
-        if (workoutId == -1L) return
         runBlocking {
-            workoutRepository.delete(Workout(id = workoutId, name = workoutName, description = ""))
+            workoutSessionRepository.observeInProgress().first()?.let { active ->
+                workoutSessionRepository.finishSession(active.id)
+            }
+            if (workoutId != -1L) {
+                workoutRepository.delete(Workout(id = workoutId, name = workoutName, description = ""))
+            }
+            if (exerciseId != -1L) {
+                exerciseRepository.delete(
+                    Exercise(id = exerciseId, name = "", muscleGroup = "", equipmentType = ""),
+                )
+            }
         }
     }
 
@@ -126,5 +163,31 @@ class WorkoutDetailNavigationTest {
 
         // The detail screen is gone — back button is no longer visible
         composeTestRule.onNodeWithContentDescription("Voltar").assertDoesNotExist()
+    }
+
+    @Test
+    fun navigation_detailStartWorkout_opensExecutionWithPersistedSessionId() {
+        composeTestRule.onNodeWithText("Treinos").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText(workoutName).performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Iniciar treino").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.waitUntil(5_000) {
+            runBlocking { workoutSessionRepository.observeInProgress().first() } != null
+        }
+        val session = runBlocking { workoutSessionRepository.observeInProgress().first() }
+        assertNotNull(session)
+        // TopAppBar can expose the same title twice in the merged semantics tree.
+        composeTestRule.onAllNodesWithText("Treino em andamento").onFirst().assertIsDisplayed()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText(workoutName).fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText(workoutName).assertIsDisplayed()
+        assertEquals(workoutId, session!!.workoutId)
+        assertEquals(workoutName, session.workoutName)
+        assertTrue(session.id > 0L)
     }
 }

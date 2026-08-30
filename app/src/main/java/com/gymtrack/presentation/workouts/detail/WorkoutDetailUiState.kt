@@ -19,4 +19,7 @@ data class WorkoutDetailUiState(
     // Exclusão de exercício do treino
     val showDeleteConfirmation: Boolean = false,
     val exerciseToDelete: WorkoutExerciseDetail? = null,
+
+    /** Consumable one-shot navigation to workout execution. */
+    val sessionStartedEvent: Long? = null,
 )

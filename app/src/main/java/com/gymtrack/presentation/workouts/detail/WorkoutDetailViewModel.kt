@@ -8,6 +8,7 @@ import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutExerciseDetail
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
+import com.gymtrack.domain.repository.WorkoutSessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,6 +25,7 @@ import javax.inject.Inject
 class WorkoutDetailViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
+    private val workoutSessionRepository: WorkoutSessionRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -242,6 +244,21 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun dismissEditWorkoutDialog() {
         _uiState.update { it.copy(showEditWorkoutDialog = false) }
+    }
+
+    fun startWorkout() {
+        viewModelScope.launch {
+            try {
+                val sessionId = workoutSessionRepository.startSession(workoutId)
+                _uiState.update { it.copy(sessionStartedEvent = sessionId) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    fun consumeSessionStartedEvent() {
+        _uiState.update { it.copy(sessionStartedEvent = null) }
     }
 
     fun saveWorkout(name: String, description: String) {

@@ -53,6 +53,38 @@
     <string name="workout_detail_empty">Nenhum exercício neste treino</string>
     <string name="workout_detail_empty_hint">Toque no botão + para adicionar o primeiro exercício</string>
     <string name="add_exercise_to_workout">Adicionar exercício</string>
+    <string name="start_workout">Iniciar treino</string>
+
+    <!-- Workout execution -->
+    <string name="workout_in_progress">Treino em andamento</string>
+    <string name="workout_session_id">Sessão: %1$d</string>
+    <string name="workout_basic_complete">Treino concluído</string>
+    <string name="complete_set">Concluir série</string>
+    <string name="current_set">Série %1$d de %2$d</string>
+    <string name="reps_label">Repetições</string>
+    <string name="validation_reps_min">As repetições devem ser pelo menos 1</string>
+    <string name="rest_title">Descanso</string>
+    <string name="rest_paused">Descanso pausado</string>
+    <string name="pause_rest">Pausar</string>
+    <string name="resume_rest">Retomar</string>
+    <string name="skip_rest">Pular</string>
+    <string name="rest_remaining">Tempo restante %1$s</string>
+    <string name="elapsed_time_label">Tempo</string>
+    <string name="elapsed_time_description">Tempo decorrido %1$s</string>
+    <string name="exercises_progress">Exercícios: %1$d/%2$d</string>
+    <string name="sets_progress">Séries: %1$d/%2$d</string>
+    <string name="workout_progress_percent">%1$d%% concluído</string>
+    <string name="workout_progress_bar">Progresso do treino %1$d por cento</string>
+    <string name="finish_workout">Finalizar</string>
+    <string name="finish_workout_title">Finalizar treino?</string>
+    <string name="finish_workout_message">O treino será encerrado. Você poderá ver o resumo do que foi realizado.</string>
+    <string name="session_summary_title">Resumo do treino</string>
+    <string name="duration_label">Duração</string>
+    <string name="volume_label">Volume</string>
+    <string name="duration_description">Duração %1$s</string>
+    <string name="volume_description">Volume %1$s</string>
+    <string name="exercise_sets_progress">Séries: %1$d/%2$d</string>
+    <string name="set_performed">%1$d × %2$s kg</string>
 
     <!-- Exercise picker -->
     <string name="pick_exercise_title">Selecionar exercício</string>

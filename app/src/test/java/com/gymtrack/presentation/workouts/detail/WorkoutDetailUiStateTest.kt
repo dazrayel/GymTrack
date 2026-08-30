@@ -31,6 +31,7 @@ class WorkoutDetailUiStateTest {
         assertNull(state.workout)
         assertTrue(state.exercises.isEmpty())
         assertNull(state.error)
+        assertNull(state.sessionStartedEvent)
     }
 
     @Test

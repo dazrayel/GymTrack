@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -133,9 +134,27 @@ class WorkoutDetailScreenTest {
         setScreen()
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithText("Nenhum exercício neste treino").assertIsDisplayed()
+        waitUntilTextIsDisplayed("Nenhum exercício neste treino")
         composeTestRule.onNodeWithText("Toque no botão + para adicionar o primeiro exercício")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun startWorkoutButton_isDisabled_whenWorkoutHasNoExercises() {
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Iniciar treino").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Iniciar treino").assertIsNotEnabled()
+    }
+
+    @Test
+    fun startWorkoutButton_isEnabled_whenWorkoutHasExercises() {
+        addDefaultListedExercise(position = 0)
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Iniciar treino").assertIsEnabled()
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -206,7 +225,7 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Configurar exercício").assertIsNotDisplayed()
-        composeTestRule.onNodeWithText("Nenhum exercício neste treino").assertIsDisplayed()
+        waitUntilTextIsDisplayed("Nenhum exercício neste treino")
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -426,6 +445,14 @@ class WorkoutDetailScreenTest {
                 ),
             )
         }
+    }
+
+    private fun waitUntilTextIsDisplayed(text: String) {
+        composeTestRule.waitUntil(5_000) {
+            val nodes = composeTestRule.onAllNodesWithText(text)
+            nodes.fetchSemanticsNodes().isNotEmpty() && nodes[0].isDisplayed()
+        }
+        composeTestRule.onNodeWithText(text).assertIsDisplayed()
     }
 
     private fun waitForMoveControl(description: String) {

@@ -72,12 +72,19 @@ import com.gymtrack.presentation.theme.GymTrackTheme
 @Composable
 fun WorkoutDetailScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToExecution: (sessionId: Long) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
     viewModel: WorkoutDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val availableExercises by viewModel.availableExercises.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.sessionStartedEvent) {
+        val sessionId = uiState.sessionStartedEvent ?: return@LaunchedEffect
+        onNavigateToExecution(sessionId)
+        viewModel.consumeSessionStartedEvent()
+    }
 
     WorkoutDetailContent(
         uiState = uiState,
@@ -98,6 +105,7 @@ fun WorkoutDetailScreen(
         onConfirmDelete = viewModel::confirmDelete,
         onMoveUp = { index -> viewModel.reorderExercises(index, index - 1) },
         onMoveDown = { index -> viewModel.reorderExercises(index, index + 1) },
+        onStartWorkout = viewModel::startWorkout,
         onErrorShown = viewModel::clearError,
         modifier = modifier,
     )
@@ -128,6 +136,7 @@ private fun WorkoutDetailContent(
     onConfirmDelete: () -> Unit,
     onMoveUp: (Int) -> Unit,
     onMoveDown: (Int) -> Unit,
+    onStartWorkout: () -> Unit,
     onErrorShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -162,6 +171,12 @@ private fun WorkoutDetailContent(
                     }
                 },
                 actions = {
+                    TextButton(
+                        onClick = onStartWorkout,
+                        enabled = uiState.exercises.isNotEmpty(),
+                    ) {
+                        Text(stringResource(R.string.start_workout))
+                    }
                     IconButton(onClick = onShowEditWorkoutDialog) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
@@ -855,6 +870,7 @@ private fun WorkoutDetailContentLoadingPreview() {
             onConfirmDelete = {},
             onMoveUp = {},
             onMoveDown = {},
+            onStartWorkout = {},
             onErrorShown = {},
         )
     }
@@ -886,6 +902,7 @@ private fun WorkoutDetailContentEmptyPreview() {
             onConfirmDelete = {},
             onMoveUp = {},
             onMoveDown = {},
+            onStartWorkout = {},
             onErrorShown = {},
         )
     }
@@ -924,6 +941,7 @@ private fun WorkoutDetailContentListPreview() {
             onConfirmDelete = {},
             onMoveUp = {},
             onMoveDown = {},
+            onStartWorkout = {},
             onErrorShown = {},
         )
     }

@@ -6,10 +6,17 @@ import com.gymtrack.data.local.GymTrackDatabase
 import com.gymtrack.data.local.dao.ExerciseDao
 import com.gymtrack.data.local.dao.WorkoutDao
 import com.gymtrack.data.local.dao.WorkoutExerciseDao
+import com.gymtrack.data.local.dao.WorkoutSessionDao
+import com.gymtrack.data.local.dao.WorkoutSessionExerciseDao
+import com.gymtrack.data.local.dao.WorkoutSetDao
 import com.gymtrack.data.repository.ExerciseRepositoryImpl
 import com.gymtrack.data.repository.WorkoutRepositoryImpl
+import com.gymtrack.data.repository.WorkoutSessionRepositoryImpl
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
+import com.gymtrack.domain.repository.WorkoutSessionRepository
+import com.gymtrack.domain.time.SystemTimeProvider
+import com.gymtrack.domain.time.TimeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -31,9 +38,18 @@ object DatabaseModule {
             GymTrackDatabase::class.java,
             GymTrackDatabase.DATABASE_NAME,
         )
-            .addMigrations(GymTrackDatabase.MIGRATION_1_2, GymTrackDatabase.MIGRATION_2_3)
+            .addMigrations(
+                GymTrackDatabase.MIGRATION_1_2,
+                GymTrackDatabase.MIGRATION_2_3,
+                GymTrackDatabase.MIGRATION_3_4,
+                GymTrackDatabase.MIGRATION_4_5,
+            )
             .build()
     }
+
+    @Provides
+    @Singleton
+    fun provideTimeProvider(): TimeProvider = SystemTimeProvider()
 
     @Provides
     fun provideExerciseDao(database: GymTrackDatabase): ExerciseDao {
@@ -65,5 +81,42 @@ object DatabaseModule {
         workoutExerciseDao: WorkoutExerciseDao,
     ): WorkoutRepository {
         return WorkoutRepositoryImpl(workoutDao, workoutExerciseDao)
+    }
+
+    @Provides
+    fun provideWorkoutSessionDao(database: GymTrackDatabase): WorkoutSessionDao {
+        return database.workoutSessionDao()
+    }
+
+    @Provides
+    fun provideWorkoutSessionExerciseDao(database: GymTrackDatabase): WorkoutSessionExerciseDao {
+        return database.workoutSessionExerciseDao()
+    }
+
+    @Provides
+    fun provideWorkoutSetDao(database: GymTrackDatabase): WorkoutSetDao {
+        return database.workoutSetDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkoutSessionRepository(
+        database: GymTrackDatabase,
+        sessionDao: WorkoutSessionDao,
+        sessionExerciseDao: WorkoutSessionExerciseDao,
+        setDao: WorkoutSetDao,
+        workoutRepository: WorkoutRepository,
+        exerciseRepository: ExerciseRepository,
+        timeProvider: TimeProvider,
+    ): WorkoutSessionRepository {
+        return WorkoutSessionRepositoryImpl(
+            database,
+            sessionDao,
+            sessionExerciseDao,
+            setDao,
+            workoutRepository,
+            exerciseRepository,
+            timeProvider,
+        )
     }
 }

@@ -23,10 +23,16 @@ import com.gymtrack.presentation.home.HomeScreen
 import com.gymtrack.presentation.settings.SettingsScreen
 import com.gymtrack.presentation.workouts.WorkoutsScreen
 import com.gymtrack.presentation.workouts.detail.WorkoutDetailScreen
+import com.gymtrack.presentation.workouts.execution.WorkoutExecutionScreen
+import com.gymtrack.presentation.workouts.summary.WorkoutSessionSummaryScreen
 
 private const val ROUTE_EXERCISES = "exercises"
 private const val ROUTE_WORKOUT_DETAIL = "workout_detail/{workoutId}"
+private const val ROUTE_WORKOUT_EXECUTION = "workout_execution/{sessionId}"
+private const val ROUTE_WORKOUT_SESSION_SUMMARY = "workout_session_summary/{sessionId}"
 private fun routeWorkoutDetail(workoutId: Long) = "workout_detail/$workoutId"
+private fun routeWorkoutExecution(sessionId: Long) = "workout_execution/$sessionId"
+private fun routeWorkoutSessionSummary(sessionId: Long) = "workout_session_summary/$sessionId"
 
 @Composable
 fun GymTrackNavGraph(modifier: Modifier = Modifier) {
@@ -110,6 +116,41 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
             ) {
                 WorkoutDetailScreen(
                     onNavigateBack = { navController.popBackStack() },
+                    onNavigateToExecution = { sessionId ->
+                        navController.navigate(routeWorkoutExecution(sessionId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                    contentPadding = innerPadding,
+                )
+            }
+            composable(
+                route = ROUTE_WORKOUT_EXECUTION,
+                arguments = listOf(navArgument("sessionId") { type = NavType.LongType }),
+            ) {
+                WorkoutExecutionScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToSummary = { sessionId ->
+                        navController.navigate(routeWorkoutSessionSummary(sessionId)) {
+                            popUpTo(ROUTE_WORKOUT_EXECUTION) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    contentPadding = innerPadding,
+                )
+            }
+            composable(
+                route = ROUTE_WORKOUT_SESSION_SUMMARY,
+                arguments = listOf(navArgument("sessionId") { type = NavType.LongType }),
+            ) {
+                WorkoutSessionSummaryScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToWorkout = { workoutId ->
+                        navController.navigate(routeWorkoutDetail(workoutId)) {
+                            popUpTo(ROUTE_WORKOUT_SESSION_SUMMARY) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                     contentPadding = innerPadding,
                 )
             }
