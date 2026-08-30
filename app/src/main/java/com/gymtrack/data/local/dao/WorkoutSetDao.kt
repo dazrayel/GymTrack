@@ -3,6 +3,8 @@ package com.gymtrack.data.local.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import com.gymtrack.data.local.entity.CompletedSetHistoryRow
+import com.gymtrack.data.local.entity.WorkoutSessionEntity
 import com.gymtrack.data.local.entity.WorkoutSetEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -24,6 +26,26 @@ interface WorkoutSetDao {
         """,
     )
     fun getBySessionId(sessionId: Long): Flow<List<WorkoutSetEntity>>
+
+    @Query(
+        """
+        SELECT
+            s.id AS sessionId,
+            COALESCE(s.endedAtMillis, s.startedAtMillis) AS occurredAtMillis,
+            se.exerciseName AS exerciseName,
+            ws.reps AS reps,
+            ws.weight AS weight
+        FROM workout_sets AS ws
+        INNER JOIN workout_session_exercises AS se
+            ON ws.sessionExerciseId = se.id
+        INNER JOIN workout_sessions AS s
+            ON se.sessionId = s.id
+        WHERE s.status = :status
+        """,
+    )
+    fun observeCompletedSetHistory(
+        status: String = WorkoutSessionEntity.STATUS_COMPLETED,
+    ): Flow<List<CompletedSetHistoryRow>>
 
     /**
      * Blocking insert — Room 2.6.1 + KSP 2.3.x incompatibility prevents suspend DAO

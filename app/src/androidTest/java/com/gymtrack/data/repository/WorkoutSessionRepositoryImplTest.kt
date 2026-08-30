@@ -488,4 +488,170 @@ class WorkoutSessionRepositoryImplTest {
         assertEquals("Bench Press", exercises[0].exerciseName)
         assertEquals(1, repository.observeSets(exercises[0].id).first().size)
     }
+
+    @Test
+    fun observeCompletedSessions_excludesInProgress() = runBlocking {
+        repository.startSession(workoutId)
+        assertTrue(repository.observeCompletedSessions().first().isEmpty())
+    }
+
+    @Test
+    fun observeCompletedSessions_mapsAggregatesAndDuration() = runBlocking {
+        val sessionId = repository.startSession(workoutId)
+        val exerciseId = repository.observeSessionExercises(sessionId).first()[0].id
+        repository.completeSet(exerciseId, setIndex = 0, reps = 8, weight = 60.0)
+        repository.finishSession(sessionId)
+
+        val item = repository.observeCompletedSessions().first().single()
+        val session = repository.getSession(sessionId)!!
+        assertEquals(sessionId, item.sessionId)
+        assertEquals("Push Day", item.workoutName)
+        assertEquals(session.startedAtMillis, item.startedAtMillis)
+        assertEquals(session.endedAtMillis, item.endedAtMillis)
+        assertEquals(session.endedAtMillis!! - session.startedAtMillis, item.durationMillis)
+        assertEquals(8 * 60.0, item.volume, 0.001)
+        assertEquals(2, item.exerciseCount)
+        assertEquals(1, item.completedSetCount)
+        assertEquals(7, item.plannedSetCount)
+    }
+
+    @Test
+    fun observeCompletedSessions_ordersNewestFirst() = runBlocking {
+        val firstId = repository.startSession(workoutId)
+        repository.finishSession(firstId)
+
+        val otherWorkout = workoutRepository.save(Workout(name = "Other", description = ""))
+        workoutRepository.addExercise(
+            WorkoutExercise(
+                workoutId = otherWorkout,
+                exerciseId = squatId,
+                position = 0,
+                sets = 1,
+                minRepetitions = 5,
+                maxRepetitions = 5,
+                weight = 40.0,
+                restSeconds = 0,
+            ),
+        )
+        val secondId = repository.startSession(otherWorkout)
+        repository.finishSession(secondId)
+
+        val ids = repository.observeCompletedSessions().first().map { it.sessionId }
+        assertEquals(listOf(secondId, firstId), ids)
+        assertEquals("Other", repository.observeCompletedSessions().first()[0].workoutName)
+        assertEquals("Push Day", repository.observeCompletedSessions().first()[1].workoutName)
+    }
+
+    @Test
+    fun observeCompletedSessions_snapshotSurvivesTemplateRename() = runBlocking {
+        val sessionId = repository.startSession(workoutId)
+        repository.finishSession(sessionId)
+        workoutRepository.update(Workout(id = workoutId, name = "Renamed Push", description = "x"))
+
+        val item = repository.observeCompletedSessions().first().single()
+        assertEquals(sessionId, item.sessionId)
+        assertEquals("Push Day", item.workoutName)
+        assertEquals("Renamed Push", workoutRepository.getById(workoutId).first()!!.name)
+    }
+
+    @Test
+    fun observeCompletedSessions_survivesExerciseDeletion() = runBlocking {
+        val sessionId = repository.startSession(workoutId)
+        val sessionExerciseId = repository.observeSessionExercises(sessionId).first()[0].id
+        repository.completeSet(sessionExerciseId, setIndex = 0, reps = 10, weight = 50.0)
+        repository.finishSession(sessionId)
+        exerciseRepository.delete(
+            com.gymtrack.domain.model.Exercise(
+                id = exerciseId,
+                name = "Bench Press",
+                muscleGroup = "Chest",
+                equipmentType = "Barbell",
+            ),
+        )
+
+        val item = repository.observeCompletedSessions().first().single()
+        assertEquals("Push Day", item.workoutName)
+        assertEquals(1, item.completedSetCount)
+        assertEquals(10 * 50.0, item.volume, 0.001)
+        assertEquals(2, item.exerciseCount)
+    }
+
+    @Test
+    fun observeCompletedSessions_isolatesSessions() = runBlocking {
+        val firstId = repository.startSession(workoutId)
+        val firstExercise = repository.observeSessionExercises(firstId).first()[0].id
+        repository.completeSet(firstExercise, setIndex = 0, reps = 8, weight = 60.0)
+        repository.finishSession(firstId)
+
+        val otherWorkout = workoutRepository.save(Workout(name = "Pull", description = ""))
+        workoutRepository.addExercise(
+            WorkoutExercise(
+                workoutId = otherWorkout,
+                exerciseId = squatId,
+                position = 0,
+                sets = 2,
+                minRepetitions = 5,
+                maxRepetitions = 5,
+                weight = 40.0,
+                restSeconds = 0,
+            ),
+        )
+        val secondId = repository.startSession(otherWorkout)
+        val secondExercise = repository.observeSessionExercises(secondId).first()[0].id
+        repository.completeSet(secondExercise, setIndex = 0, reps = 5, weight = 40.0)
+        repository.finishSession(secondId)
+
+        val items = repository.observeCompletedSessions().first().associateBy { it.sessionId }
+        assertEquals(8 * 60.0, items.getValue(firstId).volume, 0.001)
+        assertEquals(5 * 40.0, items.getValue(secondId).volume, 0.001)
+        assertEquals(7, items.getValue(firstId).plannedSetCount)
+        assertEquals(2, items.getValue(secondId).plannedSetCount)
+    }
+
+    @Test
+    fun observeCompletedSetHistory_excludesInProgress() = runBlocking {
+        val sessionId = repository.startSession(workoutId)
+        val sessionExerciseId = repository.observeSessionExercises(sessionId).first()[0].id
+        repository.completeSet(sessionExerciseId, setIndex = 0, reps = 8, weight = 60.0)
+
+        assertTrue(repository.observeCompletedSetHistory().first().isEmpty())
+
+        repository.finishSession(sessionId)
+        val history = repository.observeCompletedSetHistory().first()
+        assertTrue(history.any { it.sessionId == sessionId && it.weight == 60.0 })
+    }
+
+    @Test
+    fun observeCompletedSetHistory_keepsSnapshotNameAfterExerciseDelete() = runBlocking {
+        val sessionId = repository.startSession(workoutId)
+        val snapshot = repository.observeSessionExercises(sessionId).first()[0]
+        repository.completeSet(snapshot.id, setIndex = 0, reps = 10, weight = 50.0)
+        repository.finishSession(sessionId)
+        exerciseRepository.delete(
+            com.gymtrack.domain.model.Exercise(
+                id = exerciseId,
+                name = "Bench Press",
+                muscleGroup = "Chest",
+                equipmentType = "Barbell",
+            ),
+        )
+
+        val rows = repository.observeCompletedSetHistory().first().filter { it.sessionId == sessionId }
+        assertTrue(rows.any { it.exerciseName == "Bench Press" && it.reps == 10 && it.weight == 50.0 })
+        assertNull(repository.observeSessionExercises(sessionId).first()[0].exerciseId)
+    }
+
+    @Test
+    fun observeCompletedSetHistory_isolatesExerciseNames() = runBlocking {
+        val firstId = repository.startSession(workoutId)
+        val firstExercises = repository.observeSessionExercises(firstId).first()
+        repository.completeSet(firstExercises[0].id, setIndex = 0, reps = 8, weight = 60.0)
+        repository.completeSet(firstExercises[1].id, setIndex = 0, reps = 5, weight = 40.0)
+        repository.finishSession(firstId)
+
+        val rows = repository.observeCompletedSetHistory().first().filter { it.sessionId == firstId }
+        assertEquals(setOf("Bench Press", "Squat"), rows.map { it.exerciseName }.toSet())
+        assertEquals(60.0, rows.single { it.exerciseName == "Bench Press" }.weight, 0.001)
+        assertEquals(40.0, rows.single { it.exerciseName == "Squat" }.weight, 0.001)
+    }
 }

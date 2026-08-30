@@ -507,4 +507,101 @@ class WorkoutSessionDaoTest {
         assertTrue(setDao.getBySessionExerciseId(sessionExerciseId).first().isEmpty())
         assertTrue(sessionExerciseDao.getBySessionId(sessionId).first().isEmpty())
     }
+
+    private fun completedSession(
+        name: String,
+        startedAt: Long,
+        endedAt: Long,
+    ) = WorkoutSessionEntity(
+        workoutId = workoutId,
+        workoutName = name,
+        workoutDescription = "",
+        startedAtMillis = startedAt,
+        endedAtMillis = endedAt,
+        status = WorkoutSessionEntity.STATUS_COMPLETED,
+    )
+
+    @Test
+    fun getCompletedOnce_returnsOnlyCompleted() {
+        val completedId = sessionDao.insert(completedSession("Done", startedAt = 100L, endedAt = 200L))
+        sessionDao.insert(inProgressSession())
+
+        val result = sessionDao.getCompletedOnce()
+        assertEquals(1, result.size)
+        assertEquals(completedId, result.single().sessionId)
+        assertEquals("Done", result.single().workoutName)
+    }
+
+    @Test
+    fun getCompletedOnce_excludesInProgress() {
+        sessionDao.insert(inProgressSession())
+        assertTrue(sessionDao.getCompletedOnce().isEmpty())
+    }
+
+    @Test
+    fun getCompletedOnce_ordersByEndedAtDescending() {
+        val oldest = sessionDao.insert(completedSession("Oldest", startedAt = 10L, endedAt = 100L))
+        val newest = sessionDao.insert(completedSession("Newest", startedAt = 20L, endedAt = 300L))
+        val middle = sessionDao.insert(completedSession("Middle", startedAt = 15L, endedAt = 200L))
+
+        val ids = sessionDao.getCompletedOnce().map { it.sessionId }
+        assertEquals(listOf(newest, middle, oldest), ids)
+    }
+
+    @Test
+    fun getCompletedOnce_returnsAllCompletedSessions() {
+        sessionDao.insert(completedSession("A", startedAt = 1L, endedAt = 10L))
+        sessionDao.insert(completedSession("B", startedAt = 2L, endedAt = 20L))
+        assertEquals(2, sessionDao.getCompletedOnce().size)
+    }
+
+    @Test
+    fun getCompletedOnce_missingSessionDoesNotAppear() {
+        sessionDao.insert(completedSession("Only", startedAt = 1L, endedAt = 2L))
+        val ids = sessionDao.getCompletedOnce().map { it.sessionId }
+        assertTrue(999_999L !in ids)
+    }
+
+    @Test
+    fun observeCompleted_emitsCompletedOnly() = runBlocking {
+        sessionDao.insert(completedSession("Done", startedAt = 1L, endedAt = 2L))
+        sessionDao.insert(inProgressSession())
+        val observed = sessionDao.observeCompleted().first()
+        assertEquals(1, observed.size)
+        assertEquals("Done", observed.single().workoutName)
+    }
+
+    @Test
+    fun getCompletedOnce_aggregatesVolumeAndCounts() {
+        val sessionId = sessionDao.insert(completedSession("Push", startedAt = 1_000L, endedAt = 5_000L))
+        val first = sessionExerciseDao.insert(sessionExercise(sessionId, 0).copy(plannedSets = 3))
+        val second = sessionExerciseDao.insert(
+            sessionExercise(sessionId, 1, name = "Squat").copy(plannedSets = 2),
+        )
+        setDao.insert(
+            WorkoutSetEntity(
+                sessionExerciseId = first,
+                setIndex = 0,
+                reps = 8,
+                weight = 60.0,
+                completedAtMillis = 2L,
+            ),
+        )
+        setDao.insert(
+            WorkoutSetEntity(
+                sessionExerciseId = second,
+                setIndex = 0,
+                reps = 5,
+                weight = 80.0,
+                completedAtMillis = 3L,
+            ),
+        )
+
+        val row = sessionDao.getCompletedOnce().single()
+        assertEquals(sessionId, row.sessionId)
+        assertEquals(2, row.exerciseCount)
+        assertEquals(2, row.completedSetCount)
+        assertEquals(5, row.plannedSetCount)
+        assertEquals(8 * 60.0 + 5 * 80.0, row.volume, 0.001)
+    }
 }

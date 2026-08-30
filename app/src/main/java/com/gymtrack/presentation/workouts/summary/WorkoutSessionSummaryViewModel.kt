@@ -39,21 +39,37 @@ class WorkoutSessionSummaryViewModel @Inject constructor(
             combine(
                 workoutSessionRepository.observeSession(sessionId),
                 observeExercisesWithSets(),
-            ) { session, exercisesWithSets ->
-                session to exercisesWithSets
+                workoutSessionRepository.observeCompletedSetHistory(),
+            ) { session, exercisesWithSets, history ->
+                Triple(session, exercisesWithSets, history)
             }
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
                 }
-                .collect { (session, exercisesWithSets) ->
-                    val (exercises, setsByExerciseId) = exercisesWithSets
-                    _uiState.update {
-                        it.copy(
-                            session = session,
-                            exercises = exercises,
-                            setsByExerciseId = setsByExerciseId,
-                            isLoading = false,
-                        )
+                .collect { (session, exercisesWithSets, history) ->
+                    if (session == null) {
+                        _uiState.update {
+                            it.copy(
+                                session = null,
+                                exercises = emptyList(),
+                                setsByExerciseId = emptyMap(),
+                                completedSetHistory = emptyList(),
+                                isLoading = false,
+                                sessionNotFound = true,
+                            )
+                        }
+                    } else {
+                        val (exercises, setsByExerciseId) = exercisesWithSets
+                        _uiState.update {
+                            it.copy(
+                                session = session,
+                                exercises = exercises,
+                                setsByExerciseId = setsByExerciseId,
+                                completedSetHistory = history,
+                                isLoading = false,
+                                sessionNotFound = false,
+                            )
+                        }
                     }
                 }
         }

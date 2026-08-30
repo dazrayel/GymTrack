@@ -3,6 +3,7 @@ package com.gymtrack.data.local.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import com.gymtrack.data.local.entity.WorkoutHistoryRow
 import com.gymtrack.data.local.entity.WorkoutSessionEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -28,6 +29,86 @@ interface WorkoutSessionDao {
     fun getInProgressOnce(
         status: String = WorkoutSessionEntity.STATUS_IN_PROGRESS,
     ): WorkoutSessionEntity?
+
+    @Query(
+        """
+        SELECT
+            s.id AS sessionId,
+            s.workoutName AS workoutName,
+            s.startedAtMillis AS startedAtMillis,
+            s.endedAtMillis AS endedAtMillis,
+            COALESCE((
+                SELECT SUM(ws.reps * ws.weight)
+                FROM workout_sets AS ws
+                INNER JOIN workout_session_exercises AS se
+                    ON ws.sessionExerciseId = se.id
+                WHERE se.sessionId = s.id
+            ), 0) AS volume,
+            (
+                SELECT COUNT(*)
+                FROM workout_session_exercises AS se
+                WHERE se.sessionId = s.id
+            ) AS exerciseCount,
+            (
+                SELECT COUNT(*)
+                FROM workout_sets AS ws
+                INNER JOIN workout_session_exercises AS se
+                    ON ws.sessionExerciseId = se.id
+                WHERE se.sessionId = s.id
+            ) AS completedSetCount,
+            COALESCE((
+                SELECT SUM(se.plannedSets)
+                FROM workout_session_exercises AS se
+                WHERE se.sessionId = s.id
+            ), 0) AS plannedSetCount
+        FROM workout_sessions AS s
+        WHERE s.status = :status
+        ORDER BY COALESCE(s.endedAtMillis, s.startedAtMillis) DESC, s.id DESC
+        """,
+    )
+    fun observeCompleted(
+        status: String = WorkoutSessionEntity.STATUS_COMPLETED,
+    ): Flow<List<WorkoutHistoryRow>>
+
+    @Query(
+        """
+        SELECT
+            s.id AS sessionId,
+            s.workoutName AS workoutName,
+            s.startedAtMillis AS startedAtMillis,
+            s.endedAtMillis AS endedAtMillis,
+            COALESCE((
+                SELECT SUM(ws.reps * ws.weight)
+                FROM workout_sets AS ws
+                INNER JOIN workout_session_exercises AS se
+                    ON ws.sessionExerciseId = se.id
+                WHERE se.sessionId = s.id
+            ), 0) AS volume,
+            (
+                SELECT COUNT(*)
+                FROM workout_session_exercises AS se
+                WHERE se.sessionId = s.id
+            ) AS exerciseCount,
+            (
+                SELECT COUNT(*)
+                FROM workout_sets AS ws
+                INNER JOIN workout_session_exercises AS se
+                    ON ws.sessionExerciseId = se.id
+                WHERE se.sessionId = s.id
+            ) AS completedSetCount,
+            COALESCE((
+                SELECT SUM(se.plannedSets)
+                FROM workout_session_exercises AS se
+                WHERE se.sessionId = s.id
+            ), 0) AS plannedSetCount
+        FROM workout_sessions AS s
+        WHERE s.status = :status
+        ORDER BY COALESCE(s.endedAtMillis, s.startedAtMillis) DESC, s.id DESC
+        """,
+    )
+    fun getCompletedOnce(
+        status: String = WorkoutSessionEntity.STATUS_COMPLETED,
+    ): List<WorkoutHistoryRow>
 
     /**
      * Blocking insert — Room 2.6.1 + KSP 2.3.x incompatibility prevents suspend DAO

@@ -637,6 +637,8 @@ private class FakeExecutionSessionRepository(
     override fun observeSession(id: Long): Flow<WorkoutSession?> = sessionFlow
 
     override fun observeInProgress(): Flow<WorkoutSession?> = emptyFlow()
+    override fun observeCompletedSessions(): Flow<List<com.gymtrack.domain.model.WorkoutHistoryItem>> = emptyFlow()
+    override fun observeCompletedSetHistory(): Flow<List<com.gymtrack.domain.model.CompletedSetRecord>> = emptyFlow()
 
     override fun observeSessionExercises(sessionId: Long): Flow<List<WorkoutSessionExercise>> =
         exercisesFlow

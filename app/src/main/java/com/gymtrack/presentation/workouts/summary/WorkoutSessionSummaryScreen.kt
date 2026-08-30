@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
+import com.gymtrack.domain.model.formatSignedInt
+import com.gymtrack.domain.model.formatSignedKg
 import com.gymtrack.domain.model.formatVolumeKg
 import com.gymtrack.domain.time.formatElapsedMillis
 
@@ -58,14 +60,7 @@ fun WorkoutSessionSummaryScreen(
     WorkoutSessionSummaryContent(
         uiState = uiState,
         contentPadding = contentPadding,
-        onNavigateBack = {
-            val workoutId = uiState.session?.workoutId
-            if (workoutId != null && uiState.canNavigateToWorkout) {
-                onNavigateToWorkout(workoutId)
-            } else {
-                onNavigateBack()
-            }
-        },
+        onNavigateBack = onNavigateBack,
         onErrorShown = viewModel::clearError,
         modifier = modifier,
     )
@@ -121,6 +116,20 @@ private fun WorkoutSessionSummaryContent(
             ) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
+        } else if (uiState.sessionNotFound || uiState.session == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .testTag("summary_not_found"),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.session_not_found),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                )
+            }
         } else {
             val progress = uiState.progress
             val duration = formatElapsedMillis(uiState.durationMillis)
@@ -138,11 +147,29 @@ private fun WorkoutSessionSummaryContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = uiState.session?.workoutName.orEmpty(),
+                    text = uiState.session.workoutName,
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.testTag("summary_workout_name"),
                 )
+                Text(
+                    text = uiState.startedDate,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.testTag("summary_date"),
+                )
+                Text(
+                    text = stringResource(R.string.session_start, uiState.startedTime),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.testTag("summary_start_time"),
+                )
+                if (uiState.endedTime.isNotEmpty()) {
+                    Text(
+                        text = stringResource(R.string.session_end, uiState.endedTime),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.testTag("summary_end_time"),
+                    )
+                }
                 Text(
                     text = stringResource(R.string.duration_label),
                     style = MaterialTheme.typography.labelMedium,
@@ -249,6 +276,46 @@ private fun ExerciseSummaryCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
+            val best = exercise.progress.historicalBest
+            if (best != null) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.progress_best_marks),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.testTag("progress_best_${exercise.exerciseName}"),
+                )
+                Text(
+                    text = stringResource(
+                        R.string.progress_best_values,
+                        formatVolumeKg(best.bestWeight),
+                        best.bestReps,
+                        formatVolumeKg(best.bestVolume),
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            val weightDelta = exercise.progress.weightDelta
+            val repsDelta = exercise.progress.repsDelta
+            val volumeDelta = exercise.progress.volumeDelta
+            if (weightDelta != null && repsDelta != null && volumeDelta != null) {
+                Text(
+                    text = stringResource(R.string.progress_evolution),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.testTag("progress_evolution_${exercise.exerciseName}"),
+                )
+                Text(
+                    text = stringResource(
+                        R.string.progress_evolution_values,
+                        formatSignedKg(weightDelta),
+                        formatSignedInt(repsDelta),
+                        formatSignedKg(volumeDelta),
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }

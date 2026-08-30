@@ -1,5 +1,7 @@
 package com.gymtrack.domain.repository
 
+import com.gymtrack.domain.model.CompletedSetRecord
+import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSet
@@ -19,6 +21,10 @@ interface WorkoutSessionRepository {
     fun observeSession(id: Long): Flow<WorkoutSession?>
 
     fun observeInProgress(): Flow<WorkoutSession?>
+
+    fun observeCompletedSessions(): Flow<List<WorkoutHistoryItem>>
+
+    fun observeCompletedSetHistory(): Flow<List<CompletedSetRecord>>
 
     fun observeSessionExercises(sessionId: Long): Flow<List<WorkoutSessionExercise>>
 

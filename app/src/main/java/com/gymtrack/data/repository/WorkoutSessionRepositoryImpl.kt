@@ -5,13 +5,17 @@ import com.gymtrack.data.local.GymTrackDatabase
 import com.gymtrack.data.local.dao.WorkoutSessionDao
 import com.gymtrack.data.local.dao.WorkoutSessionExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSetDao
+import com.gymtrack.data.local.entity.WorkoutHistoryRow
 import com.gymtrack.data.local.entity.WorkoutSessionEntity
 import com.gymtrack.data.local.entity.WorkoutSessionExerciseEntity
 import com.gymtrack.data.local.entity.WorkoutSetEntity
+import com.gymtrack.domain.model.CompletedSetRecord
+import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
+import com.gymtrack.domain.model.elapsedMillis
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
@@ -90,6 +94,22 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
 
     override fun observeInProgress(): Flow<WorkoutSession?> =
         sessionDao.getInProgress().map { it?.toDomain() }
+
+    override fun observeCompletedSessions(): Flow<List<WorkoutHistoryItem>> =
+        sessionDao.observeCompleted().map { rows -> rows.map { it.toHistoryItem() } }
+
+    override fun observeCompletedSetHistory(): Flow<List<CompletedSetRecord>> =
+        setDao.observeCompletedSetHistory().map { rows ->
+            rows.map { row ->
+                CompletedSetRecord(
+                    sessionId = row.sessionId,
+                    occurredAtMillis = row.occurredAtMillis,
+                    exerciseName = row.exerciseName,
+                    reps = row.reps,
+                    weight = row.weight,
+                )
+            }
+        }
 
     override fun observeSessionExercises(sessionId: Long): Flow<List<WorkoutSessionExercise>> =
         sessionExerciseDao.getBySessionId(sessionId).map { list -> list.map { it.toDomain() } }
@@ -222,3 +242,27 @@ private fun WorkoutSetEntity.toDomain() = WorkoutSet(
     weight = weight,
     completedAtMillis = completedAtMillis,
 )
+
+private fun WorkoutHistoryRow.toHistoryItem(): WorkoutHistoryItem {
+    val duration = elapsedMillis(
+        session = WorkoutSession(
+            id = sessionId,
+            workoutName = workoutName,
+            startedAtMillis = startedAtMillis,
+            endedAtMillis = endedAtMillis,
+            status = WorkoutSessionStatus.COMPLETED,
+        ),
+        nowMillis = endedAtMillis ?: startedAtMillis,
+    )
+    return WorkoutHistoryItem(
+        sessionId = sessionId,
+        workoutName = workoutName,
+        startedAtMillis = startedAtMillis,
+        endedAtMillis = endedAtMillis,
+        durationMillis = duration,
+        volume = volume,
+        exerciseCount = exerciseCount,
+        completedSetCount = completedSetCount,
+        plannedSetCount = plannedSetCount,
+    )
+}

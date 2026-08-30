@@ -6,6 +6,8 @@ import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutExerciseDetail
+import com.gymtrack.domain.model.CompletedSetRecord
+import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSet
@@ -818,6 +820,8 @@ private class FakeWorkoutSessionRepository : WorkoutSessionRepository {
     override suspend fun getSession(id: Long): WorkoutSession? = null
     override fun observeSession(id: Long): Flow<WorkoutSession?> = emptyFlow()
     override fun observeInProgress(): Flow<WorkoutSession?> = emptyFlow()
+    override fun observeCompletedSessions(): Flow<List<WorkoutHistoryItem>> = emptyFlow()
+    override fun observeCompletedSetHistory(): Flow<List<CompletedSetRecord>> = emptyFlow()
     override fun observeSessionExercises(sessionId: Long): Flow<List<WorkoutSessionExercise>> =
         emptyFlow()
     override fun observeSets(sessionExerciseId: Long): Flow<List<WorkoutSet>> = emptyFlow()

@@ -99,7 +99,14 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                 )
             }
             composable(TopLevelDestination.HISTORY.route) {
-                HistoryScreen(contentPadding = innerPadding)
+                HistoryScreen(
+                    contentPadding = innerPadding,
+                    onSessionClick = { sessionId ->
+                        navController.navigate(routeWorkoutSessionSummary(sessionId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
             }
             composable(TopLevelDestination.SETTINGS.route) {
                 SettingsScreen(contentPadding = innerPadding)
@@ -145,12 +152,6 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
             ) {
                 WorkoutSessionSummaryScreen(
                     onNavigateBack = { navController.popBackStack() },
-                    onNavigateToWorkout = { workoutId ->
-                        navController.navigate(routeWorkoutDetail(workoutId)) {
-                            popUpTo(ROUTE_WORKOUT_SESSION_SUMMARY) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    },
                     contentPadding = innerPadding,
                 )
             }

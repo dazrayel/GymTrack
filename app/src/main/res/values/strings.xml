@@ -11,6 +11,11 @@
     <!-- Screen titles -->
     <string name="workouts_title">Meus treinos</string>
     <string name="history_title">Histórico</string>
+    <string name="empty_history">Nenhum treino realizado</string>
+    <string name="empty_history_hint">Os treinos concluídos aparecerão aqui.</string>
+    <string name="history_item_meta">%1$s · %2$d exercícios · %3$d séries</string>
+    <string name="history_volume">Volume: %1$s</string>
+    <string name="history_session_cd">Sessão de %1$s em %2$s</string>
     <string name="settings_title">Configurações</string>
 
     <!-- Home quick access -->
@@ -79,12 +84,19 @@
     <string name="finish_workout_title">Finalizar treino?</string>
     <string name="finish_workout_message">O treino será encerrado. Você poderá ver o resumo do que foi realizado.</string>
     <string name="session_summary_title">Resumo do treino</string>
+    <string name="session_start">Início: %1$s</string>
+    <string name="session_end">Término: %1$s</string>
+    <string name="session_not_found">Sessão não encontrada</string>
     <string name="duration_label">Duração</string>
     <string name="volume_label">Volume</string>
     <string name="duration_description">Duração %1$s</string>
     <string name="volume_description">Volume %1$s</string>
     <string name="exercise_sets_progress">Séries: %1$d/%2$d</string>
     <string name="set_performed">%1$d × %2$s kg</string>
+    <string name="progress_best_marks">Melhor marca</string>
+    <string name="progress_best_values">Carga %1$s · Reps %2$d · Volume %3$s</string>
+    <string name="progress_evolution">Evolução</string>
+    <string name="progress_evolution_values">Carga %1$s · Reps %2$s · Volume %3$s</string>
 
     <!-- Exercise picker -->
     <string name="pick_exercise_title">Selecionar exercício</string>

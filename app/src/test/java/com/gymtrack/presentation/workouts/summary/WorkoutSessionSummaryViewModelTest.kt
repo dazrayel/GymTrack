@@ -2,6 +2,7 @@ package com.gymtrack.presentation.workouts.summary
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.SavedStateHandle
+import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
@@ -157,6 +158,88 @@ class WorkoutSessionSummaryViewModelTest {
         assertEquals(0, viewModel.uiState.value.progress.completedSets)
     }
 
+    @Test
+    fun missingSession_marksNotFound() {
+        fakeRepo.emitSession(null)
+
+        assertTrue(viewModel.uiState.value.sessionNotFound)
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertEquals(null, viewModel.uiState.value.session)
+    }
+
+    @Test
+    fun completedSession_exposesUtcDateAndTimes() {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA))
+
+        assertEquals("01/01/1970", viewModel.uiState.value.startedDate)
+        assertEquals("00:00", viewModel.uiState.value.startedTime)
+        assertEquals("00:01", viewModel.uiState.value.endedTime)
+        assertFalse(viewModel.uiState.value.sessionNotFound)
+        assertEquals("Push Day", viewModel.uiState.value.session?.workoutName)
+    }
+
+    @Test
+    fun exercises_preservePositionOrder() {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseB, exerciseA))
+
+        assertEquals(
+            listOf("Supino Snapshot", "Crucifixo Snapshot"),
+            viewModel.uiState.value.exerciseSummaries.map { it.exerciseName },
+        )
+    }
+
+    @Test
+    fun sets_areOrderedBySetIndex() {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA))
+        fakeRepo.emitSets(
+            exerciseA.id,
+            listOf(set(exerciseA.id, 2), set(exerciseA.id, 0), set(exerciseA.id, 1)),
+        )
+
+        assertEquals(
+            listOf(0, 1, 2),
+            viewModel.uiState.value.exerciseSummaries.single().sets.map { it.setIndex },
+        )
+    }
+
+    @Test
+    fun progress_comparesCurrentSessionAgainstPreviousBest() {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA))
+        fakeRepo.emitSets(
+            exerciseA.id,
+            listOf(set(exerciseA.id, 0, reps = 8, weight = 85.0)),
+        )
+        fakeRepo.emitHistory(
+            listOf(
+                CompletedSetRecord(
+                    sessionId = 10L,
+                    occurredAtMillis = 500L,
+                    exerciseName = "Supino Snapshot",
+                    reps = 8,
+                    weight = 80.0,
+                ),
+                CompletedSetRecord(
+                    sessionId = SESSION_ID,
+                    occurredAtMillis = 61_000L,
+                    exerciseName = "Supino Snapshot",
+                    reps = 8,
+                    weight = 85.0,
+                ),
+            ),
+        )
+
+        val progress = viewModel.uiState.value.exerciseSummaries.single().progress
+        assertEquals(85.0, progress.sessionBestWeight!!, 0.001)
+        assertEquals(80.0, progress.previousBest!!.bestWeight, 0.001)
+        assertEquals(5.0, progress.weightDelta!!, 0.001)
+        assertEquals(SESSION_ID, progress.historicalBest!!.bestWeightSessionId)
+        assertEquals(10L, progress.previousSession!!.sessionId)
+    }
+
     private fun set(
         sessionExerciseId: Long,
         setIndex: Int,
@@ -177,6 +260,7 @@ private class FakeSummarySessionRepository : WorkoutSessionRepository {
     private val sessionFlow = MutableStateFlow<WorkoutSession?>(null)
     private val exercisesFlow = MutableStateFlow<List<WorkoutSessionExercise>>(emptyList())
     private val setsFlows = mutableMapOf<Long, MutableStateFlow<List<WorkoutSet>>>()
+    private val historyFlow = MutableStateFlow<List<CompletedSetRecord>>(emptyList())
 
     fun emitSession(session: WorkoutSession?) {
         sessionFlow.value = session
@@ -190,10 +274,16 @@ private class FakeSummarySessionRepository : WorkoutSessionRepository {
         setsFlows.getOrPut(sessionExerciseId) { MutableStateFlow(emptyList()) }.value = sets
     }
 
+    fun emitHistory(records: List<CompletedSetRecord>) {
+        historyFlow.value = records
+    }
+
     override suspend fun startSession(workoutId: Long) = 0L
     override suspend fun getSession(id: Long) = sessionFlow.value
     override fun observeSession(id: Long) = sessionFlow
     override fun observeInProgress(): Flow<WorkoutSession?> = emptyFlow()
+    override fun observeCompletedSessions(): Flow<List<com.gymtrack.domain.model.WorkoutHistoryItem>> = emptyFlow()
+    override fun observeCompletedSetHistory(): Flow<List<CompletedSetRecord>> = historyFlow
     override fun observeSessionExercises(sessionId: Long) = exercisesFlow
     override fun observeSets(sessionExerciseId: Long): Flow<List<WorkoutSet>> =
         setsFlows.getOrPut(sessionExerciseId) { MutableStateFlow(emptyList()) }
