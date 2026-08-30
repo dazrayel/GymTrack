@@ -122,6 +122,7 @@ interface WorkoutSessionDao {
      */
     @Query(
         "UPDATE workout_sessions SET endedAtMillis = :endedAtMillis, status = :status, " +
+            "inProgressLock = NULL, " +
             "restEndsAtMillis = NULL, restPausedRemainingMillis = NULL, " +
             "restSessionExerciseId = NULL, restAfterSetIndex = NULL WHERE id = :id",
     )

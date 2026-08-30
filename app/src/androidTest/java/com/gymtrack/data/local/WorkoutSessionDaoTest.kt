@@ -75,6 +75,7 @@ class WorkoutSessionDaoTest {
         startedAtMillis = startedAt,
         endedAtMillis = null,
         status = WorkoutSessionEntity.STATUS_IN_PROGRESS,
+        inProgressLock = 1,
     )
 
     private fun sessionExercise(
@@ -103,6 +104,17 @@ class WorkoutSessionDaoTest {
     fun sessionInsert_returnsPositiveRowId() {
         val id = sessionDao.insert(inProgressSession())
         assertTrue(id > 0)
+    }
+
+    @Test
+    fun sessionInsert_secondInProgressLock_isRejected() {
+        sessionDao.insert(inProgressSession(name = "First"))
+        try {
+            sessionDao.insert(inProgressSession(name = "Second"))
+            fail("Second IN_PROGRESS row with inProgressLock = 1 should be rejected")
+        } catch (_: SQLiteConstraintException) {
+            // expected
+        }
     }
 
     @Test
@@ -174,6 +186,7 @@ class WorkoutSessionDaoTest {
         assertEquals("Chest", result.workoutDescription)
         assertEquals(1_000L, result.startedAtMillis)
         assertEquals(workoutId, result.workoutId)
+        assertNull(result.inProgressLock)
     }
 
     @Test
@@ -300,7 +313,9 @@ class WorkoutSessionDaoTest {
     @Test
     fun sessionExerciseGetBySessionId_excludesOtherSessions() = runBlocking {
         val sessionA = sessionDao.insert(inProgressSession(name = "A"))
-        val sessionB = sessionDao.insert(inProgressSession(name = "B"))
+        val sessionB = sessionDao.insert(
+            completedSession(name = "B", startedAt = 100L, endedAt = 200L),
+        )
         sessionExerciseDao.insert(sessionExercise(sessionA, position = 0, name = "Only A"))
         sessionExerciseDao.insert(sessionExercise(sessionB, position = 0, name = "Only B"))
 

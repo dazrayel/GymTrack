@@ -364,6 +364,184 @@ class WorkoutSessionMigrationTest {
         cursor.close()
     }
 
+    @Test
+    fun migration5To6_schemaValidates() {
+        helper.createDatabase(TEST_DB_5_6, 5).use { /* empty v5 */ }
+
+        helper.runMigrationsAndValidate(
+            TEST_DB_5_6,
+            6,
+            true,
+            GymTrackDatabase.MIGRATION_5_6,
+        )
+    }
+
+    @Test
+    fun migration5To6_keepsOneActiveAndCompletedLocks() {
+        helper.createDatabase(TEST_DB_5_6, 5).use { v5 ->
+            v5.execSQL(
+                "INSERT INTO workout_sessions " +
+                    "(workoutName, workoutDescription, startedAtMillis, endedAtMillis, status) " +
+                    "VALUES ('Active', '', 1000, NULL, 'IN_PROGRESS')",
+            )
+            v5.execSQL(
+                "INSERT INTO workout_sessions " +
+                    "(workoutName, workoutDescription, startedAtMillis, endedAtMillis, status) " +
+                    "VALUES ('Done', '', 500, 800, 'COMPLETED')",
+            )
+        }
+
+        val v6 = helper.runMigrationsAndValidate(
+            TEST_DB_5_6,
+            6,
+            true,
+            GymTrackDatabase.MIGRATION_5_6,
+        )
+
+        val active = v6.query(
+            "SELECT inProgressLock FROM workout_sessions WHERE status = 'IN_PROGRESS'",
+        )
+        assertEquals(1, active.count)
+        active.moveToFirst()
+        assertEquals(1, active.getInt(0))
+        active.close()
+
+        val completed = v6.query(
+            "SELECT inProgressLock FROM workout_sessions WHERE status = 'COMPLETED'",
+        )
+        assertEquals(1, completed.count)
+        completed.moveToFirst()
+        assertTrue(completed.isNull(0))
+        completed.close()
+    }
+
+    @Test
+    fun migration5To6_collapsesDuplicateInProgressAndChildren() {
+        helper.createDatabase(TEST_DB_5_6, 5).use { v5 ->
+            v5.execSQL(
+                "INSERT INTO workout_sessions " +
+                    "(workoutName, workoutDescription, startedAtMillis, status) " +
+                    "VALUES ('Keep', '', 1000, 'IN_PROGRESS')",
+            )
+            v5.execSQL(
+                "INSERT INTO workout_sessions " +
+                    "(workoutName, workoutDescription, startedAtMillis, status) " +
+                    "VALUES ('Drop', '', 2000, 'IN_PROGRESS')",
+            )
+            val keepId = queryId(v5, "SELECT MIN(id) FROM workout_sessions")
+            val dropId = queryId(v5, "SELECT MAX(id) FROM workout_sessions")
+            v5.execSQL(
+                "INSERT INTO workout_session_exercises " +
+                    "(sessionId, position, exerciseName, muscleGroup, equipmentType, " +
+                    "plannedSets, minRepetitions, maxRepetitions, plannedWeight, restSeconds, notes) " +
+                    "VALUES ($keepId, 0, 'KeepEx', 'Chest', 'Barbell', 1, 8, 8, 40.0, 0, 'keep')",
+            )
+            v5.execSQL(
+                "INSERT INTO workout_session_exercises " +
+                    "(sessionId, position, exerciseName, muscleGroup, equipmentType, " +
+                    "plannedSets, minRepetitions, maxRepetitions, plannedWeight, restSeconds, notes) " +
+                    "VALUES ($dropId, 0, 'DropEx', 'Chest', 'Barbell', 1, 8, 8, 40.0, 0, 'drop')",
+            )
+            val keepEx = queryId(v5, "SELECT id FROM workout_session_exercises WHERE notes = 'keep'")
+            val dropEx = queryId(v5, "SELECT id FROM workout_session_exercises WHERE notes = 'drop'")
+            v5.execSQL(
+                "INSERT INTO workout_sets " +
+                    "(sessionExerciseId, setIndex, reps, weight, completedAtMillis) " +
+                    "VALUES ($keepEx, 0, 8, 40.0, 3000)",
+            )
+            v5.execSQL(
+                "INSERT INTO workout_sets " +
+                    "(sessionExerciseId, setIndex, reps, weight, completedAtMillis) " +
+                    "VALUES ($dropEx, 0, 5, 20.0, 4000)",
+            )
+        }
+
+        val v6 = helper.runMigrationsAndValidate(
+            TEST_DB_5_6,
+            6,
+            true,
+            GymTrackDatabase.MIGRATION_5_6,
+        )
+
+        val sessions = v6.query("SELECT id, workoutName, inProgressLock FROM workout_sessions")
+        assertEquals(1, sessions.count)
+        sessions.moveToFirst()
+        val keptId = sessions.getLong(0)
+        assertEquals("Keep", sessions.getString(1))
+        assertEquals(1, sessions.getInt(2))
+        sessions.close()
+
+        assertEquals(
+            1,
+            v6.query("SELECT * FROM workout_session_exercises WHERE sessionId = $keptId").use { it.count },
+        )
+        assertEquals(0, v6.query("SELECT * FROM workout_session_exercises WHERE notes = 'drop'").use { it.count })
+        assertEquals(1, v6.query("SELECT * FROM workout_sets").use { it.count })
+        assertTrue(indexNames(v6, "workout_sessions").contains("index_workout_sessions_inProgressLock"))
+    }
+
+    @Test
+    fun migration5To6_completedOnly_keepsAllWithNullLock() {
+        helper.createDatabase(TEST_DB_5_6, 5).use { v5 ->
+            v5.execSQL(
+                "INSERT INTO workout_sessions " +
+                    "(workoutName, workoutDescription, startedAtMillis, endedAtMillis, status) " +
+                    "VALUES ('A', '', 100, 200, 'COMPLETED')",
+            )
+            v5.execSQL(
+                "INSERT INTO workout_sessions " +
+                    "(workoutName, workoutDescription, startedAtMillis, endedAtMillis, status) " +
+                    "VALUES ('B', '', 300, 400, 'COMPLETED')",
+            )
+        }
+
+        val v6 = helper.runMigrationsAndValidate(
+            TEST_DB_5_6,
+            6,
+            true,
+            GymTrackDatabase.MIGRATION_5_6,
+        )
+
+        val cursor = v6.query("SELECT workoutName, inProgressLock FROM workout_sessions ORDER BY id")
+        assertEquals(2, cursor.count)
+        cursor.moveToFirst()
+        assertEquals("A", cursor.getString(0))
+        assertTrue(cursor.isNull(1))
+        cursor.moveToNext()
+        assertEquals("B", cursor.getString(0))
+        assertTrue(cursor.isNull(1))
+        cursor.close()
+        assertTrue(indexNames(v6, "workout_sessions").contains("index_workout_sessions_inProgressLock"))
+    }
+
+    @Test
+    fun migration5To6_rejectsSecondInProgressLock() {
+        helper.createDatabase(TEST_DB_5_6, 5).use { /* empty v5 */ }
+
+        val v6 = helper.runMigrationsAndValidate(
+            TEST_DB_5_6,
+            6,
+            true,
+            GymTrackDatabase.MIGRATION_5_6,
+        )
+
+        v6.execSQL(
+            "INSERT INTO workout_sessions " +
+                "(workoutName, workoutDescription, startedAtMillis, status, inProgressLock) " +
+                "VALUES ('First', '', 1000, 'IN_PROGRESS', 1)",
+        )
+        try {
+            v6.execSQL(
+                "INSERT INTO workout_sessions " +
+                    "(workoutName, workoutDescription, startedAtMillis, status, inProgressLock) " +
+                    "VALUES ('Second', '', 2000, 'IN_PROGRESS', 1)",
+            )
+            fail("Second inProgressLock = 1 should be rejected")
+        } catch (_: android.database.sqlite.SQLiteConstraintException) {
+            // expected
+        }
+    }
+
     private fun indexNames(db: androidx.sqlite.db.SupportSQLiteDatabase, table: String): List<String> {
         val cursor = db.query(
             "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='$table'",
@@ -386,5 +564,6 @@ class WorkoutSessionMigrationTest {
     companion object {
         private const val TEST_DB = "session-migration-test"
         private const val TEST_DB_4_5 = "session-migration-test-4-5"
+        private const val TEST_DB_5_6 = "session-migration-test-5-6"
     }
 }

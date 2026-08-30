@@ -43,6 +43,7 @@ object DatabaseModule {
                 GymTrackDatabase.MIGRATION_2_3,
                 GymTrackDatabase.MIGRATION_3_4,
                 GymTrackDatabase.MIGRATION_4_5,
+                GymTrackDatabase.MIGRATION_5_6,
             )
             .build()
     }

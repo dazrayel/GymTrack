@@ -26,7 +26,7 @@ import com.gymtrack.data.local.entity.WorkoutSetEntity
         WorkoutSessionExerciseEntity::class,
         WorkoutSetEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class GymTrackDatabase : RoomDatabase() {
@@ -173,6 +173,39 @@ abstract class GymTrackDatabase : RoomDatabase() {
                     "ALTER TABLE `workout_sessions` ADD COLUMN `restSessionExerciseId` INTEGER",
                 )
                 db.execSQL("ALTER TABLE `workout_sessions` ADD COLUMN `restAfterSetIndex` INTEGER")
+            }
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `workout_sessions` ADD COLUMN `inProgressLock` INTEGER")
+                db.execSQL(
+                    "DELETE FROM `workout_sets` WHERE `sessionExerciseId` IN (" +
+                        "SELECT `se`.`id` FROM `workout_session_exercises` AS `se` " +
+                        "INNER JOIN `workout_sessions` AS `s` ON `se`.`sessionId` = `s`.`id` " +
+                        "WHERE `s`.`status` = 'IN_PROGRESS' AND `s`.`id` > (" +
+                        "SELECT MIN(`id`) FROM `workout_sessions` WHERE `status` = 'IN_PROGRESS'))",
+                )
+                db.execSQL(
+                    "DELETE FROM `workout_session_exercises` WHERE `sessionId` IN (" +
+                        "SELECT `id` FROM `workout_sessions` " +
+                        "WHERE `status` = 'IN_PROGRESS' AND `id` > (" +
+                        "SELECT MIN(`id`) FROM `workout_sessions` WHERE `status` = 'IN_PROGRESS'))",
+                )
+                db.execSQL(
+                    "DELETE FROM `workout_sessions` WHERE `status` = 'IN_PROGRESS' AND `id` NOT IN (" +
+                        "SELECT `keep_id` FROM (" +
+                        "SELECT MIN(`id`) AS `keep_id` FROM `workout_sessions` " +
+                        "WHERE `status` = 'IN_PROGRESS'))",
+                )
+                db.execSQL(
+                    "UPDATE `workout_sessions` SET `inProgressLock` = 1 " +
+                        "WHERE `status` = 'IN_PROGRESS'",
+                )
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS `index_workout_sessions_inProgressLock` " +
+                        "ON `workout_sessions` (`inProgressLock`)",
+                )
             }
         }
     }

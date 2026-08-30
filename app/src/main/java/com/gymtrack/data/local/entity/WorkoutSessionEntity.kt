@@ -18,6 +18,7 @@ import androidx.room.PrimaryKey
     indices = [
         Index("status"),
         Index("workoutId"),
+        Index(value = ["inProgressLock"], unique = true),
     ],
 )
 data class WorkoutSessionEntity(
@@ -33,6 +34,7 @@ data class WorkoutSessionEntity(
     val restPausedRemainingMillis: Long? = null,
     val restSessionExerciseId: Long? = null,
     val restAfterSetIndex: Int? = null,
+    val inProgressLock: Int? = null,
 ) {
     companion object {
         const val STATUS_IN_PROGRESS = "IN_PROGRESS"

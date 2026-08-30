@@ -9,6 +9,7 @@ import com.gymtrack.data.local.entity.ExerciseEntity
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
+import com.gymtrack.data.local.entity.WorkoutSessionEntity
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -211,6 +212,27 @@ class WorkoutSessionRepositoryImplTest {
         val exercises = repository.observeSessionExercises(first).first()
         assertEquals(2, exercises.size)
         assertEquals("Push Day", repository.getSession(first)!!.workoutName)
+    }
+
+    @Test
+    fun insert_secondInProgressLock_isRejected() = runBlocking {
+        repository.startSession(workoutId)
+        try {
+            db.workoutSessionDao().insert(
+                WorkoutSessionEntity(
+                    workoutId = workoutId,
+                    workoutName = "Race",
+                    workoutDescription = "",
+                    startedAtMillis = 1L,
+                    endedAtMillis = null,
+                    status = WorkoutSessionEntity.STATUS_IN_PROGRESS,
+                    inProgressLock = 1,
+                ),
+            )
+            fail("Second IN_PROGRESS row with inProgressLock = 1 should be rejected")
+        } catch (_: android.database.sqlite.SQLiteConstraintException) {
+            // expected
+        }
     }
 
     @Test

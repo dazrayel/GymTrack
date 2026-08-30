@@ -60,6 +60,7 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
                     startedAtMillis = timeProvider.nowMillis(),
                     endedAtMillis = null,
                     status = WorkoutSessionEntity.STATUS_IN_PROGRESS,
+                    inProgressLock = 1,
                 ),
             )
             val snapshots = template.map { we ->
