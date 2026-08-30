@@ -282,16 +282,15 @@ O fluxo de execução está integrado ao aplicativo.
 
 ### Pendências técnicas conhecidas
 
-As seguintes questões permanecem registradas e não devem ser esquecidas:
+As pendências funcionais abaixo foram tratadas na estabilização **8.S** (ver Fase 8):
 
-* garantia de `UNIQUE` para `IN_PROGRESS`;
-* uso consistente de `TimeProvider` em `startSession` / `completeSet`;
-* comportamento após process death;
-* investigação do flake `restEnds_returnsToWorking`.
+* garantia de no máximo uma sessão `IN_PROGRESS` (`inProgressLock`, Room v6);
+* `TimeProvider` no ciclo relevante da sessão (`startSession` / `completeSet` e restante do fluxo já alinhado);
+* retomada após cold start pela Home (`observeInProgress()` → CTA → sessão existente).
 
-Essas pendências não devem ser corrigidas incidentalmente durante outra fase.
+O flake `restEnds_returnsToWorking` permanece classificado como problema de **teste/harness**. Não deve gerar alteração artificial no timer.
 
-Devem receber uma etapa própria de estabilização quando houver decisão explícita para isso.
+Não corrigir essas áreas incidentalmente durante outra fase.
 
 ---
 
@@ -680,11 +679,46 @@ Não duplicar o dashboard.
 
 # Fase 8 — Polimento e estabilização
 
-A Fase 8 é a próxima grande etapa.
+A Fase 8 é incremental: primeiro estabilização técnica, depois polimento UX.
 
-Ela deve ser implementada de forma incremental.
+## 8.S — Estabilização da execução
+
+**CONCLUÍDA** em quatro commits:
+
+```text
+6fdedb8  fix: use TimeProvider for session timestamps
+1c4880f  fix: enforce single in-progress workout session
+1deb038  fix: resume or block when starting workout with active session
+16d7533  feat: resume in-progress workout from Home
+```
+
+* **8.S.1** — `TimeProvider` aplicado ao ciclo relevante da sessão (`startSession` / `completeSet`; descanso e finalização já o usavam).
+* **8.S.2** — no máximo uma sessão `IN_PROGRESS`, via `inProgressLock` e Room **v6** (`MIGRATION_5_6`).
+* **8.S.3** — `startSession` distingue `Created`, `Resumed` e `BlockedOtherWorkout`; o detalhe do treino mostra diálogo no caso bloqueado.
+* **8.S.4** — a Home observa `observeInProgress()`, mostra CTA para a sessão existente e navega para `workout_execution/{sessionId}` **sem** chamar `startSession()`.
+
+```text
+8.S.1–8.S.4: concluídas e commitadas.
+8.S.5: não implementar como nova feature; o item original relacionado ao timer foi classificado como fora de escopo / sem bug de produto evidenciado.
+```
+
+### Process death / cold start
+
+A retomada após cold start foi resolvida pela **8.S.4**:
+
+```text
+Room → observeInProgress() → HomeUiState.inProgressSession
+→ CTA "Continuar treino"
+→ workout_execution/{sessionId}
+```
+
+A sessão existente é reutilizada. Nenhum `startSession()` novo é chamado a partir da Home. **Não** há auto-navegação no cold start: isso é intencional e **não** deve ser tratado como bug.
+
+---
 
 ## 8.0 — Estabilização pré-polimento
+
+### Objetivo original
 
 Antes de adicionar efeitos visuais ou alterações de UX, auditar:
 
@@ -700,6 +734,20 @@ Antes de adicionar efeitos visuais ou alterações de UX, auditar:
 Esta etapa deve separar problemas funcionais reais de problemas exclusivamente de teste.
 
 Não corrigir automaticamente problemas apenas porque foram encontrados durante a auditoria.
+
+### Estado
+
+**CONCLUÍDA.** Auditoria técnica encerrada.
+
+As pendências funcionais relevantes da Fase 4 foram auditadas e os problemas reais identificados foram resolvidos pela sequência **8.S.1–8.S.4**.
+
+Não há bug funcional conhecido da 8.0 aguardando implementação.
+
+O flake `restEnds_returnsToWorking` permanece classificado como problema de teste/harness e não deve gerar alteração artificial no timer.
+
+As falhas instrumentadas envolvendo Activity em estado `PAUSED` / teardown e crash do processo permanecem classificadas como harness, não como regressão funcional da aplicação.
+
+Não alterar produção para mascarar esses problemas.
 
 ---
 
@@ -732,6 +780,42 @@ Verificar:
 Primeiro auditar.
 
 Depois implementar somente os problemas aprovados.
+
+### Estado
+
+Auditoria UX realizada. **Escopo aprovado; implementação ainda não iniciada.**
+
+A 8.1 é polimento visual e consistência **sem** mudar comportamento funcional.
+
+### Escopo aprovado da 8.1
+
+1. **Exercícios** — alinhar o padding interno do card/list item com o padrão das demais listas; não remover nem alterar as ações existentes.
+2. **Execução** — aplicar `titleLarge` à TopAppBar; manter exatamente o texto `"Treino em andamento"`; não alterar timer, descanso, ações ou `WorkoutExecutionViewModel`.
+3. **Resumo da sessão** — estado `session_not_found` no padrão visual de empty (ícone + título + eventualmente hint); manter a regra funcional de sessão não encontrada; aplicar `titleLarge` à TopAppBar.
+4. **Stats por exercício** — `empty_exercise_stats` no padrão visual de empty (ícone + título + hint); manter o título existente; aplicar `titleLarge` à TopAppBar.
+
+### Telas sem alteração na 8.1
+
+* Home — nenhuma alteração de UX aprovada. O comportamento da **8.S.4** (CTA de retomada de `IN_PROGRESS`) permanece.
+* Treinos — nenhuma alteração de UX aprovada.
+* Histórico — nenhuma alteração de UX aprovada.
+
+### Fora da 8.1
+
+* Snackbar / feedback visual adicional → 8.2
+* acessibilidade profunda / `contentDescription` / semântica → 8.3
+* animações e transições → 8.4
+* performance → 8.5
+* tratamento de erros técnicos como estados de utilizador → 8.6
+* auditoria final completa → 8.7
+* redesign da Settings
+* alteração do timer/rest
+* alteração do `WorkoutExecutionViewModel`
+* alteração de `startSession`
+* alteração do Room/schema
+* alteração do CTA da Home
+* auto-navegação após process death
+* correção artificial dos flakes/harness
 
 ---
 
@@ -1134,15 +1218,27 @@ Não misturar fases sem decisão explícita.
 
 ### Estado atual
 
-A Fase 7 foi consolidada.
-
-O próximo trabalho deve iniciar a partir do estado limpo após:
-
 ```text
-7424e70 feat: add exercise performance navigation
+Branch: feature/next-step
+
+HEAD:
+16d7533 feat: resume in-progress workout from Home
+
+Working tree:
+limpo
+
+Últimos commits relevantes:
+16d7533 — 8.S.4
+1deb038 — 8.S.3
+1c4880f — 8.S.2
+6fdedb8 — 8.S.1
+
+8.S.1–8.S.4: concluídas.
+8.0: concluída.
+8.1: escopo aprovado, ainda sem implementação.
 ```
 
-Não reabrir 7.1–7.3 sem necessidade.
+Não reabrir 7.1–7.3 nem 8.S.1–8.S.4 sem necessidade.
 
 ---
 
@@ -1155,21 +1251,23 @@ Fase 7
    ↓
 CONCLUÍDA
    ↓
-8.0 — Estabilização pré-polimento
+8.S — Estabilização da execução     CONCLUÍDA (8.S.1–8.S.4)
    ↓
-8.1 — Auditoria UX
+8.0 — Estabilização pré-polimento   CONCLUÍDA
    ↓
-8.2 — Feedback visual
+8.1 — Auditoria UX                  escopo aprovado; implementação ainda não iniciada
    ↓
-8.3 — Acessibilidade
+8.2 — Feedback visual               não iniciada
    ↓
-8.4 — Animações
+8.3 — Acessibilidade                não iniciada
    ↓
-8.5 — Performance
+8.4 — Animações                     não iniciada
    ↓
-8.6 — Tratamento de erros
+8.5 — Performance                   não iniciada
    ↓
-8.7 — Auditoria final UX
+8.6 — Tratamento de erros           não iniciada
+   ↓
+8.7 — Auditoria final UX            não iniciada
    ↓
 Fase 9 — Hardening e testes finais
    ↓
@@ -1181,6 +1279,8 @@ Fase 11 — Backend
 ```
 
 Não avançar para uma etapa posterior sem concluir e auditar a anterior.
+
+**Próxima etapa: implementar o escopo aprovado da 8.1.**
 
 ---
 
@@ -1215,14 +1315,14 @@ Quando uma decisão arquitetural for necessária:
 Fase 1  — Fundação              CONCLUÍDA
 Fase 2  — Exercícios            CONCLUÍDA
 Fase 3  — Treinos               CONCLUÍDA
-Fase 4  — Execução              IMPLEMENTADA / estabilização futura
+Fase 4  — Execução              IMPLEMENTADA / 8.S concluída
 Fase 5  — Timer                 IMPLEMENTADA / integrada à execução
 Fase 6  — Histórico/Dashboard   CONCLUÍDA
 Fase 7  — Estatísticas          CONCLUÍDA
-Fase 8  — Polimento             PRÓXIMA
+Fase 8  — Polimento             8.0 concluída; 8.1 escopo aprovado (não iniciada)
 Fase 9  — Hardening/Testes      FUTURA
 Fase 10 — IA                    FUTURA
 Fase 11 — Backend               FUTURA
 ```
 
-**Próxima etapa oficial: Fase 8.0 — Estabilização pré-polimento.**
+**Próxima etapa: implementar o escopo aprovado da 8.1.**
