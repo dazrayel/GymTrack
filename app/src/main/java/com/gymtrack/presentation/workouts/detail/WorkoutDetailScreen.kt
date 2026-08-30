@@ -106,6 +106,8 @@ fun WorkoutDetailScreen(
         onMoveUp = { index -> viewModel.reorderExercises(index, index - 1) },
         onMoveDown = { index -> viewModel.reorderExercises(index, index + 1) },
         onStartWorkout = viewModel::startWorkout,
+        onContinueInProgressSession = viewModel::continueInProgressSession,
+        onDismissInProgressConflict = viewModel::dismissInProgressConflict,
         onErrorShown = viewModel::clearError,
         modifier = modifier,
     )
@@ -137,6 +139,8 @@ private fun WorkoutDetailContent(
     onMoveUp: (Int) -> Unit,
     onMoveDown: (Int) -> Unit,
     onStartWorkout: () -> Unit,
+    onContinueInProgressSession: () -> Unit,
+    onDismissInProgressConflict: () -> Unit,
     onErrorShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -286,6 +290,31 @@ private fun WorkoutDetailContent(
                 onDismiss = onDismissDeleteConfirmation,
             )
         }
+    }
+
+    uiState.inProgressConflict?.let { conflict ->
+        AlertDialog(
+            onDismissRequest = onDismissInProgressConflict,
+            title = { Text(stringResource(R.string.in_progress_conflict_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.in_progress_conflict_message,
+                        conflict.workoutName,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = onContinueInProgressSession) {
+                    Text(stringResource(R.string.continue_in_progress_workout))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissInProgressConflict) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 
     // Edit workout dialog
@@ -871,6 +900,8 @@ private fun WorkoutDetailContentLoadingPreview() {
             onMoveUp = {},
             onMoveDown = {},
             onStartWorkout = {},
+            onContinueInProgressSession = {},
+            onDismissInProgressConflict = {},
             onErrorShown = {},
         )
     }
@@ -903,6 +934,8 @@ private fun WorkoutDetailContentEmptyPreview() {
             onMoveUp = {},
             onMoveDown = {},
             onStartWorkout = {},
+            onContinueInProgressSession = {},
+            onDismissInProgressConflict = {},
             onErrorShown = {},
         )
     }
@@ -942,6 +975,8 @@ private fun WorkoutDetailContentListPreview() {
             onMoveUp = {},
             onMoveDown = {},
             onStartWorkout = {},
+            onContinueInProgressSession = {},
+            onDismissInProgressConflict = {},
             onErrorShown = {},
         )
     }

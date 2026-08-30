@@ -3,6 +3,7 @@ package com.gymtrack.presentation.home
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.DashboardPeriod
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
@@ -395,9 +396,9 @@ private class FakeHomeSessionRepository : WorkoutSessionRepository {
 
     override fun observeCompletedSetHistory(): Flow<List<CompletedSetRecord>> = sets
 
-    override suspend fun startSession(workoutId: Long): Long {
+    override suspend fun startSession(workoutId: Long): StartSessionResult {
         startSessionCalls += 1
-        return 0L
+        return StartSessionResult.Created(0L)
     }
 
     override suspend fun getSession(id: Long): WorkoutSession? = null

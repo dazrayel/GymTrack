@@ -3,6 +3,7 @@ package com.gymtrack.presentation.stats
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.SavedStateHandle
 import com.gymtrack.domain.model.CompletedSetRecord
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
@@ -254,7 +255,8 @@ private class FakeExerciseStatsSessionRepository : WorkoutSessionRepository {
     }
 
     override fun observeCompletedSessions(): Flow<List<WorkoutHistoryItem>> = emptyFlow()
-    override suspend fun startSession(workoutId: Long): Long = 0L
+    override suspend fun startSession(workoutId: Long): StartSessionResult =
+        StartSessionResult.Created(0L)
     override suspend fun getSession(id: Long): WorkoutSession? = null
     override fun observeSession(id: Long): Flow<WorkoutSession?> = emptyFlow()
     override fun observeInProgress(): Flow<WorkoutSession?> = emptyFlow()

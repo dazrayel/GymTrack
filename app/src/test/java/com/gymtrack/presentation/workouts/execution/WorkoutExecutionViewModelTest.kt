@@ -3,6 +3,7 @@ package com.gymtrack.presentation.workouts.execution
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.SavedStateHandle
 import com.gymtrack.R
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
@@ -630,7 +631,8 @@ private class FakeExecutionSessionRepository(
         setsFlows.getOrPut(sessionExerciseId) { MutableStateFlow(emptyList()) }.value = sets
     }
 
-    override suspend fun startSession(workoutId: Long): Long = 0L
+    override suspend fun startSession(workoutId: Long): StartSessionResult =
+        StartSessionResult.Created(0L)
 
     override suspend fun getSession(id: Long): WorkoutSession? = sessionFlow.value
 

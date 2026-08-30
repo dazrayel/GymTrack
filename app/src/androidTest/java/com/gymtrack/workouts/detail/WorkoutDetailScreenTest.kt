@@ -23,14 +23,19 @@ import androidx.navigation.navArgument
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.TestActivity
 import com.gymtrack.domain.model.Exercise
-import com.gymtrack.domain.model.WorkoutExercise
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
+import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.presentation.workouts.detail.WorkoutDetailScreen
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.After
 import org.junit.Before
@@ -62,8 +67,10 @@ class WorkoutDetailScreenTest {
 
     @Inject lateinit var workoutRepository: WorkoutRepository
     @Inject lateinit var exerciseRepository: ExerciseRepository
+    @Inject lateinit var workoutSessionRepository: WorkoutSessionRepository
 
     private var workoutId: Long = -1L
+    private var extraWorkoutId: Long = -1L
     private var exerciseId: Long = -1L
     private val extraExerciseIds = mutableListOf<Long>()
 
@@ -84,6 +91,15 @@ class WorkoutDetailScreenTest {
     fun tearDown() {
         if (workoutId == -1L) return
         runBlocking {
+            workoutSessionRepository.observeInProgress().first()?.let { active ->
+                workoutSessionRepository.finishSession(active.id)
+            }
+            if (extraWorkoutId != -1L) {
+                workoutRepository.delete(
+                    Workout(id = extraWorkoutId, name = "", description = ""),
+                )
+                extraWorkoutId = -1L
+            }
             // Deleting the workout cascades to workout_exercises (FK CASCADE).
             workoutRepository.delete(
                 Workout(id = workoutId, name = "Treino Teste", description = ""),
@@ -105,7 +121,7 @@ class WorkoutDetailScreenTest {
     // SavedStateHandle receives the workoutId correctly via the route arg.
     // ──────────────────────────────────────────────────────────────────────────
 
-    private fun setScreen() {
+    private fun setScreen(onNavigateToExecution: (Long) -> Unit = {}) {
         composeTestRule.setContent {
             val navController = rememberNavController()
             NavHost(
@@ -118,6 +134,7 @@ class WorkoutDetailScreenTest {
                 ) {
                     WorkoutDetailScreen(
                         onNavigateBack = {},
+                        onNavigateToExecution = onNavigateToExecution,
                         contentPadding = PaddingValues(),
                     )
                 }
@@ -155,6 +172,90 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Iniciar treino").assertIsEnabled()
+    }
+
+    @Test
+    fun startWorkout_otherInProgress_showsConflictDialog_cancelDoesNotNavigate() {
+        val activeName = "Treino Ativo"
+        val activeSessionId = runBlocking {
+            extraWorkoutId = workoutRepository.save(Workout(name = activeName, description = ""))
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = extraWorkoutId,
+                    exerciseId = exerciseId,
+                    position = 0,
+                    sets = 1,
+                    minRepetitions = 1,
+                    maxRepetitions = 1,
+                    weight = 1.0,
+                    restSeconds = 0,
+                ),
+            )
+            (workoutSessionRepository.startSession(extraWorkoutId) as StartSessionResult.Created).sessionId
+        }
+        addDefaultListedExercise(position = 0)
+
+        var navigatedSessionId: Long? = null
+        setScreen { navigatedSessionId = it }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Iniciar treino").performClick()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText("Já existe um treino em andamento")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Já existe um treino em andamento").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Você já está realizando o treino $activeName.")
+            .assertIsDisplayed()
+
+        composeTestRule.onNodeWithText("Cancelar").performClick()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText("Já existe um treino em andamento")
+                .fetchSemanticsNodes()
+                .isEmpty()
+        }
+        composeTestRule.onNodeWithText("Treino Teste").assertIsDisplayed()
+        assertNull(navigatedSessionId)
+        assertEquals(
+            activeSessionId,
+            runBlocking { workoutSessionRepository.observeInProgress().first() }?.id,
+        )
+    }
+
+    @Test
+    fun startWorkout_otherInProgress_continueNavigatesToActiveSession() {
+        val activeName = "Treino Ativo"
+        val activeSessionId = runBlocking {
+            extraWorkoutId = workoutRepository.save(Workout(name = activeName, description = ""))
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = extraWorkoutId,
+                    exerciseId = exerciseId,
+                    position = 0,
+                    sets = 1,
+                    minRepetitions = 1,
+                    maxRepetitions = 1,
+                    weight = 1.0,
+                    restSeconds = 0,
+                ),
+            )
+            (workoutSessionRepository.startSession(extraWorkoutId) as StartSessionResult.Created).sessionId
+        }
+        addDefaultListedExercise(position = 0)
+
+        var navigatedSessionId: Long? = null
+        setScreen { navigatedSessionId = it }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Iniciar treino").performClick()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText("Continuar treino em andamento")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Continuar treino em andamento").performClick()
+        composeTestRule.waitUntil(5_000) { navigatedSessionId == activeSessionId }
     }
 
     // ──────────────────────────────────────────────────────────────────────────

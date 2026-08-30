@@ -10,6 +10,7 @@ import com.gymtrack.data.local.entity.WorkoutSessionEntity
 import com.gymtrack.data.local.entity.WorkoutSessionExerciseEntity
 import com.gymtrack.data.local.entity.WorkoutSetEntity
 import com.gymtrack.domain.model.CompletedSetRecord
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
@@ -39,52 +40,63 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
     private val timeProvider: TimeProvider,
 ) : WorkoutSessionRepository {
 
-    override suspend fun startSession(workoutId: Long): Long = withContext(Dispatchers.IO) {
-        val existing = sessionDao.getInProgressOnce()
-        if (existing != null) return@withContext existing.id
-
-        val workout = workoutRepository.getById(workoutId).first()
-            ?: throw IllegalArgumentException("Workout not found: $workoutId")
-        val template = workoutRepository.getExercises(workoutId).first()
-        if (template.isEmpty()) {
-            throw IllegalStateException("Workout has no exercises: $workoutId")
-        }
-        val catalogue = exerciseRepository.getAll().first().associateBy { it.id }
-
-        database.withTransaction {
-            val sessionId = sessionDao.insert(
-                WorkoutSessionEntity(
-                    workoutId = workout.id,
-                    workoutName = workout.name,
-                    workoutDescription = workout.description,
-                    startedAtMillis = timeProvider.nowMillis(),
-                    endedAtMillis = null,
-                    status = WorkoutSessionEntity.STATUS_IN_PROGRESS,
-                    inProgressLock = 1,
-                ),
-            )
-            val snapshots = template.map { we ->
-                val exercise = catalogue[we.exerciseId]
-                    ?: throw IllegalStateException("Exercise not found: ${we.exerciseId}")
-                WorkoutSessionExerciseEntity(
-                    sessionId = sessionId,
-                    exerciseId = we.exerciseId,
-                    position = we.position,
-                    exerciseName = exercise.name,
-                    muscleGroup = exercise.muscleGroup,
-                    equipmentType = exercise.equipmentType,
-                    plannedSets = we.sets,
-                    minRepetitions = we.minRepetitions,
-                    maxRepetitions = we.maxRepetitions,
-                    plannedWeight = we.weight,
-                    restSeconds = we.restSeconds,
-                    notes = we.notes,
-                )
+    override suspend fun startSession(workoutId: Long): StartSessionResult =
+        withContext(Dispatchers.IO) {
+            val existing = sessionDao.getInProgressOnce()
+            if (existing != null) {
+                return@withContext if (existing.workoutId == workoutId) {
+                    StartSessionResult.Resumed(existing.id)
+                } else {
+                    StartSessionResult.BlockedOtherWorkout(
+                        sessionId = existing.id,
+                        workoutName = existing.workoutName,
+                    )
+                }
             }
-            sessionExerciseDao.insertAll(snapshots)
-            sessionId
+
+            val workout = workoutRepository.getById(workoutId).first()
+                ?: throw IllegalArgumentException("Workout not found: $workoutId")
+            val template = workoutRepository.getExercises(workoutId).first()
+            if (template.isEmpty()) {
+                throw IllegalStateException("Workout has no exercises: $workoutId")
+            }
+            val catalogue = exerciseRepository.getAll().first().associateBy { it.id }
+
+            val sessionId = database.withTransaction {
+                val createdId = sessionDao.insert(
+                    WorkoutSessionEntity(
+                        workoutId = workout.id,
+                        workoutName = workout.name,
+                        workoutDescription = workout.description,
+                        startedAtMillis = timeProvider.nowMillis(),
+                        endedAtMillis = null,
+                        status = WorkoutSessionEntity.STATUS_IN_PROGRESS,
+                        inProgressLock = 1,
+                    ),
+                )
+                val snapshots = template.map { we ->
+                    val exercise = catalogue[we.exerciseId]
+                        ?: throw IllegalStateException("Exercise not found: ${we.exerciseId}")
+                    WorkoutSessionExerciseEntity(
+                        sessionId = createdId,
+                        exerciseId = we.exerciseId,
+                        position = we.position,
+                        exerciseName = exercise.name,
+                        muscleGroup = exercise.muscleGroup,
+                        equipmentType = exercise.equipmentType,
+                        plannedSets = we.sets,
+                        minRepetitions = we.minRepetitions,
+                        maxRepetitions = we.maxRepetitions,
+                        plannedWeight = we.weight,
+                        restSeconds = we.restSeconds,
+                        notes = we.notes,
+                    )
+                }
+                sessionExerciseDao.insertAll(snapshots)
+                createdId
+            }
+            StartSessionResult.Created(sessionId)
         }
-    }
 
     override suspend fun getSession(id: Long): WorkoutSession? = withContext(Dispatchers.IO) {
         sessionDao.getByIdOnce(id)?.toDomain()

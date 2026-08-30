@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.ExerciseRepository
@@ -49,6 +50,7 @@ class WorkoutDetailNavigationTest {
     @Inject lateinit var workoutSessionRepository: WorkoutSessionRepository
 
     private var workoutId: Long = -1L
+    private var extraWorkoutId: Long = -1L
     private var exerciseId: Long = -1L
     private val workoutName = "Treino Nav Detail"
 
@@ -85,6 +87,9 @@ class WorkoutDetailNavigationTest {
             }
             if (workoutId != -1L) {
                 workoutRepository.delete(Workout(id = workoutId, name = workoutName, description = ""))
+            }
+            if (extraWorkoutId != -1L) {
+                workoutRepository.delete(Workout(id = extraWorkoutId, name = "", description = ""))
             }
             if (exerciseId != -1L) {
                 exerciseRepository.delete(
@@ -189,5 +194,51 @@ class WorkoutDetailNavigationTest {
         assertEquals(workoutId, session!!.workoutId)
         assertEquals(workoutName, session.workoutName)
         assertTrue(session.id > 0L)
+    }
+
+    @Test
+    fun navigation_otherInProgress_continueOpensExistingSession() {
+        val activeName = "Treino Nav Ativo"
+        val sessionA = runBlocking {
+            extraWorkoutId = workoutRepository.save(
+                Workout(name = activeName, description = ""),
+            )
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = extraWorkoutId,
+                    exerciseId = exerciseId,
+                    position = 0,
+                    sets = 1,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 10.0,
+                    restSeconds = 0,
+                ),
+            )
+            (workoutSessionRepository.startSession(extraWorkoutId) as StartSessionResult.Created).sessionId
+        }
+
+        composeTestRule.onAllNodesWithText("Treinos").onFirst().performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText(workoutName).performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Iniciar treino").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Já existe um treino em andamento").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Você já está realizando o treino $activeName.")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Continuar treino em andamento").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText("Treino em andamento").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onAllNodesWithText("Treino em andamento").onFirst().assertIsDisplayed()
+        composeTestRule.onNodeWithText(activeName).assertIsDisplayed()
+        val session = runBlocking { workoutSessionRepository.observeInProgress().first() }
+        assertEquals(sessionA, session!!.id)
+        assertEquals(extraWorkoutId, session.workoutId)
     }
 }

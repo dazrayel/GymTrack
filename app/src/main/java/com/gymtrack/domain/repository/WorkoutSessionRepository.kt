@@ -1,6 +1,7 @@
 package com.gymtrack.domain.repository
 
 import com.gymtrack.domain.model.CompletedSetRecord
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
@@ -10,11 +11,12 @@ import kotlinx.coroutines.flow.Flow
 interface WorkoutSessionRepository {
 
     /**
-     * Creates a session snapshot from the current workout template, or returns the
+     * Starts a session snapshot from the current workout template, resumes the
      * existing [IN_PROGRESS][com.gymtrack.domain.model.WorkoutSessionStatus.IN_PROGRESS]
-     * session id if one is already active.
+     * session when it belongs to [workoutId], or reports a conflict when another
+     * workout is already in progress.
      */
-    suspend fun startSession(workoutId: Long): Long
+    suspend fun startSession(workoutId: Long): StartSessionResult
 
     suspend fun getSession(id: Long): WorkoutSession?
 

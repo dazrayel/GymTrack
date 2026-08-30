@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.TestActivity
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.ExerciseRepository
@@ -94,7 +95,7 @@ class WorkoutExecutionScreenTest {
                     restSeconds = 0,
                 ),
             )
-            sessionId = workoutSessionRepository.startSession(workoutId)
+            sessionId = (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
         }
     }
 
@@ -284,7 +285,7 @@ class WorkoutExecutionScreenTest {
             workoutRepository.getExercises(workoutId).first().forEach { exercise ->
                 workoutRepository.updateExercise(exercise.copy(restSeconds = restSeconds))
             }
-            sessionId = workoutSessionRepository.startSession(workoutId)
+            sessionId = (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
         }
     }
 

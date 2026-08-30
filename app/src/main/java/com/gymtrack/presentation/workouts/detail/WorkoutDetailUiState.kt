@@ -22,4 +22,12 @@ data class WorkoutDetailUiState(
 
     /** Consumable one-shot navigation to workout execution. */
     val sessionStartedEvent: Long? = null,
+
+    /** Set when start is blocked by an in-progress session of another workout. */
+    val inProgressConflict: InProgressConflictUiState? = null,
+)
+
+data class InProgressConflictUiState(
+    val sessionId: Long,
+    val workoutName: String,
 )

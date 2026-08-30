@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.TestActivity
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.ExerciseRepository
@@ -93,7 +94,7 @@ class WorkoutSessionSummaryScreenTest {
                     restSeconds = 0,
                 ),
             )
-            sessionId = workoutSessionRepository.startSession(workoutId)
+            sessionId = (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
             val exercises = workoutSessionRepository.observeSessionExercises(sessionId).first()
             workoutSessionRepository.completeSet(exercises[0].id, setIndex = 0, reps = 8, weight = 40.0)
             workoutSessionRepository.finishSession(sessionId)
@@ -250,11 +251,11 @@ class WorkoutSessionSummaryScreenTest {
                     restSeconds = 0,
                 ),
             )
-            val firstId = workoutSessionRepository.startSession(localWorkoutId)
+            val firstId = (workoutSessionRepository.startSession(localWorkoutId) as StartSessionResult.Created).sessionId
             val firstExercises = workoutSessionRepository.observeSessionExercises(firstId).first()
             workoutSessionRepository.completeSet(firstExercises[0].id, setIndex = 0, reps = 8, weight = 80.0)
             workoutSessionRepository.finishSession(firstId)
-            val id = workoutSessionRepository.startSession(localWorkoutId)
+            val id = (workoutSessionRepository.startSession(localWorkoutId) as StartSessionResult.Created).sessionId
             val secondExercises = workoutSessionRepository.observeSessionExercises(id).first()
             workoutSessionRepository.completeSet(secondExercises[0].id, setIndex = 0, reps = 8, weight = 82.5)
             workoutSessionRepository.finishSession(id)

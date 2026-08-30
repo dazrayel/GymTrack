@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutExerciseDetail
 import com.gymtrack.domain.repository.ExerciseRepository
@@ -249,12 +250,53 @@ class WorkoutDetailViewModel @Inject constructor(
     fun startWorkout() {
         viewModelScope.launch {
             try {
-                val sessionId = workoutSessionRepository.startSession(workoutId)
-                _uiState.update { it.copy(sessionStartedEvent = sessionId) }
+                when (val result = workoutSessionRepository.startSession(workoutId)) {
+                    is StartSessionResult.Created -> {
+                        _uiState.update {
+                            it.copy(
+                                sessionStartedEvent = result.sessionId,
+                                inProgressConflict = null,
+                            )
+                        }
+                    }
+                    is StartSessionResult.Resumed -> {
+                        _uiState.update {
+                            it.copy(
+                                sessionStartedEvent = result.sessionId,
+                                inProgressConflict = null,
+                            )
+                        }
+                    }
+                    is StartSessionResult.BlockedOtherWorkout -> {
+                        _uiState.update {
+                            it.copy(
+                                sessionStartedEvent = null,
+                                inProgressConflict = InProgressConflictUiState(
+                                    sessionId = result.sessionId,
+                                    workoutName = result.workoutName,
+                                ),
+                            )
+                        }
+                    }
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
             }
         }
+    }
+
+    fun continueInProgressSession() {
+        val conflict = _uiState.value.inProgressConflict ?: return
+        _uiState.update {
+            it.copy(
+                inProgressConflict = null,
+                sessionStartedEvent = conflict.sessionId,
+            )
+        }
+    }
+
+    fun dismissInProgressConflict() {
+        _uiState.update { it.copy(inProgressConflict = null) }
     }
 
     fun consumeSessionStartedEvent() {

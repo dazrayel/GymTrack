@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.MainActivity
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.ExerciseRepository
@@ -98,7 +99,7 @@ class ExercisesStatsNavigationTest {
                     restSeconds = 0,
                 ),
             )
-            sessionId = workoutSessionRepository.startSession(workoutId)
+            sessionId = (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
             val exercises = workoutSessionRepository.observeSessionExercises(sessionId).first()
             workoutSessionRepository.completeSet(exercises[0].id, setIndex = 0, reps = 8, weight = 40.0)
             workoutSessionRepository.finishSession(sessionId)

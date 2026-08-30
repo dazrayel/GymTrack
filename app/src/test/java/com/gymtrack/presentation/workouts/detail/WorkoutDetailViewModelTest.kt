@@ -3,6 +3,7 @@ package com.gymtrack.presentation.workouts.detail
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.SavedStateHandle
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutExerciseDetail
@@ -671,13 +672,14 @@ class WorkoutDetailViewModelTest {
 
     @Test
     fun startWorkout_emitsSessionId() = runTest(testDispatcher) {
-        fakeSessionRepo.startSessionResult = 77L
+        fakeSessionRepo.startSessionResult = StartSessionResult.Created(77L)
 
         viewModel.startWorkout()
         advanceUntilIdle()
 
         assertEquals(77L, viewModel.uiState.value.sessionStartedEvent)
         assertNull(viewModel.uiState.value.error)
+        assertNull(viewModel.uiState.value.inProgressConflict)
     }
 
     @Test
@@ -697,8 +699,115 @@ class WorkoutDetailViewModelTest {
     }
 
     @Test
+    fun startWorkout_created_emitsSessionStartedEvent() = runTest(testDispatcher) {
+        fakeSessionRepo.startSessionResult = StartSessionResult.Created(11L)
+
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        assertEquals(11L, viewModel.uiState.value.sessionStartedEvent)
+        assertNull(viewModel.uiState.value.inProgressConflict)
+        assertEquals(1, fakeSessionRepo.startSessionCalls)
+    }
+
+    @Test
+    fun startWorkout_created_clearsExistingConflict() = runTest(testDispatcher) {
+        fakeSessionRepo.startSessionResult = StartSessionResult.BlockedOtherWorkout(
+            sessionId = 90L,
+            workoutName = "Push Day",
+        )
+        viewModel.startWorkout()
+        advanceUntilIdle()
+        assertNotNull(viewModel.uiState.value.inProgressConflict)
+
+        fakeSessionRepo.startSessionResult = StartSessionResult.Created(11L)
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        assertEquals(11L, viewModel.uiState.value.sessionStartedEvent)
+        assertNull(viewModel.uiState.value.inProgressConflict)
+    }
+
+    @Test
+    fun startWorkout_resumed_emitsSessionStartedEvent() = runTest(testDispatcher) {
+        fakeSessionRepo.startSessionResult = StartSessionResult.Resumed(55L)
+
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        assertEquals(55L, viewModel.uiState.value.sessionStartedEvent)
+        assertNull(viewModel.uiState.value.inProgressConflict)
+    }
+
+    @Test
+    fun startWorkout_resumed_clearsExistingConflict() = runTest(testDispatcher) {
+        fakeSessionRepo.startSessionResult = StartSessionResult.BlockedOtherWorkout(
+            sessionId = 90L,
+            workoutName = "Push Day",
+        )
+        viewModel.startWorkout()
+        advanceUntilIdle()
+        assertNotNull(viewModel.uiState.value.inProgressConflict)
+
+        fakeSessionRepo.startSessionResult = StartSessionResult.Resumed(55L)
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        assertEquals(55L, viewModel.uiState.value.sessionStartedEvent)
+        assertNull(viewModel.uiState.value.inProgressConflict)
+    }
+
+    @Test
+    fun startWorkout_blockedOtherWorkout_doesNotNavigate() = runTest(testDispatcher) {
+        fakeSessionRepo.startSessionResult = StartSessionResult.BlockedOtherWorkout(
+            sessionId = 90L,
+            workoutName = "Push Day",
+        )
+
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.sessionStartedEvent)
+        assertEquals(90L, viewModel.uiState.value.inProgressConflict?.sessionId)
+        assertEquals("Push Day", viewModel.uiState.value.inProgressConflict?.workoutName)
+        assertEquals(1, fakeSessionRepo.startSessionCalls)
+    }
+
+    @Test
+    fun continueInProgressSession_emitsStoredSessionIdWithoutStartingAgain() = runTest(testDispatcher) {
+        fakeSessionRepo.startSessionResult = StartSessionResult.BlockedOtherWorkout(
+            sessionId = 90L,
+            workoutName = "Push Day",
+        )
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        viewModel.continueInProgressSession()
+
+        assertEquals(90L, viewModel.uiState.value.sessionStartedEvent)
+        assertNull(viewModel.uiState.value.inProgressConflict)
+        assertEquals(1, fakeSessionRepo.startSessionCalls)
+    }
+
+    @Test
+    fun dismissInProgressConflict_clearsDialogWithoutNavigating() = runTest(testDispatcher) {
+        fakeSessionRepo.startSessionResult = StartSessionResult.BlockedOtherWorkout(
+            sessionId = 90L,
+            workoutName = "Push Day",
+        )
+        viewModel.startWorkout()
+        advanceUntilIdle()
+
+        viewModel.dismissInProgressConflict()
+
+        assertNull(viewModel.uiState.value.inProgressConflict)
+        assertNull(viewModel.uiState.value.sessionStartedEvent)
+        assertEquals(1, fakeSessionRepo.startSessionCalls)
+    }
+
+    @Test
     fun startWorkout_existingInProgressSession_usesReturnedSessionId() = runTest(testDispatcher) {
-        fakeSessionRepo.startSessionResult = 55L
+        fakeSessionRepo.startSessionResult = StartSessionResult.Resumed(55L)
 
         viewModel.startWorkout()
         advanceUntilIdle()
@@ -805,12 +914,12 @@ private class FakeExerciseDetailRepository : ExerciseRepository {
 
 private class FakeWorkoutSessionRepository : WorkoutSessionRepository {
 
-    var startSessionResult: Long = 42L
+    var startSessionResult: StartSessionResult = StartSessionResult.Created(42L)
     var shouldThrowOnStart = false
     var startSessionCalls = 0
     var lastStartWorkoutId: Long? = null
 
-    override suspend fun startSession(workoutId: Long): Long {
+    override suspend fun startSession(workoutId: Long): StartSessionResult {
         startSessionCalls++
         lastStartWorkoutId = workoutId
         if (shouldThrowOnStart) throw RuntimeException("startSession error")

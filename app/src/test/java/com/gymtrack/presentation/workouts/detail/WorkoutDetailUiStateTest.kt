@@ -32,6 +32,7 @@ class WorkoutDetailUiStateTest {
         assertTrue(state.exercises.isEmpty())
         assertNull(state.error)
         assertNull(state.sessionStartedEvent)
+        assertNull(state.inProgressConflict)
     }
 
     @Test
@@ -113,6 +114,17 @@ class WorkoutDetailUiStateTest {
         val cleared = state.copy(showDeleteConfirmation = false, exerciseToDelete = null)
         assertFalse(cleared.showDeleteConfirmation)
         assertNull(cleared.exerciseToDelete)
+    }
+
+    @Test
+    fun copy_inProgressConflict_setAndCleared() {
+        val conflict = InProgressConflictUiState(sessionId = 9L, workoutName = "Push Day")
+        val state = WorkoutDetailUiState().copy(inProgressConflict = conflict)
+        assertEquals(9L, state.inProgressConflict?.sessionId)
+        assertEquals("Push Day", state.inProgressConflict?.workoutName)
+
+        val cleared = state.copy(inProgressConflict = null)
+        assertNull(cleared.inProgressConflict)
     }
 
     @Test

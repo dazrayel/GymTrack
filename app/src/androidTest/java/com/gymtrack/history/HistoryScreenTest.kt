@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.TestActivity
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutHistoryItem
@@ -247,7 +248,7 @@ class HistoryScreenTest {
                     restSeconds = 0,
                 ),
             )
-            sessionId = workoutSessionRepository.startSession(workoutId)
+            sessionId = (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
         }
 
         composeTestRule.setContent {
@@ -289,7 +290,7 @@ class HistoryScreenTest {
                 restSeconds = 0,
             ),
         )
-        sessionId = workoutSessionRepository.startSession(workoutId)
+        sessionId = (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
         val exercises = workoutSessionRepository.observeSessionExercises(sessionId).first()
         workoutSessionRepository.completeSet(exercises[0].id, setIndex = 0, reps = 8, weight = 40.0)
         workoutSessionRepository.finishSession(sessionId)
