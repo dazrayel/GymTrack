@@ -10,6 +10,7 @@ import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.repository.WorkoutSessionRepository
+import com.gymtrack.domain.time.TimeProvider
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.flow.first
@@ -123,6 +124,15 @@ class WorkoutSessionRepositoryImplTest {
     }
 
     @Test
+    fun startSession_usesTimeProviderForStartedAt() = runBlocking {
+        val now = 1_700_000_000_000L
+        val timedRepository = sessionRepositoryWith(FakeTimeProvider(now))
+        val sessionId = timedRepository.startSession(workoutId)
+        assertEquals(now, timedRepository.getSession(sessionId)!!.startedAtMillis)
+        assertNull(timedRepository.getSession(sessionId)!!.endedAtMillis)
+    }
+
+    @Test
     fun startSession_snapshotsWorkout() = runBlocking {
         val sessionId = repository.startSession(workoutId)
         val session = repository.getSession(sessionId)!!
@@ -227,6 +237,17 @@ class WorkoutSessionRepositoryImplTest {
         assertEquals(8, set.reps)
         assertEquals(62.5, set.weight, 0.001)
         assertTrue(set.completedAtMillis in before..after)
+    }
+
+    @Test
+    fun completeSet_usesTimeProviderForCompletedAt() = runBlocking {
+        val now = 1_700_000_000_500L
+        val timedRepository = sessionRepositoryWith(FakeTimeProvider(now))
+        val sessionId = timedRepository.startSession(workoutId)
+        val sessionExerciseId = timedRepository.observeSessionExercises(sessionId).first()[0].id
+        timedRepository.completeSet(sessionExerciseId, setIndex = 0, reps = 8, weight = 60.0)
+        val set = timedRepository.observeSets(sessionExerciseId).first().single()
+        assertEquals(now, set.completedAtMillis)
     }
 
     @Test
@@ -653,5 +674,21 @@ class WorkoutSessionRepositoryImplTest {
         assertEquals(setOf("Bench Press", "Squat"), rows.map { it.exerciseName }.toSet())
         assertEquals(60.0, rows.single { it.exerciseName == "Bench Press" }.weight, 0.001)
         assertEquals(40.0, rows.single { it.exerciseName == "Squat" }.weight, 0.001)
+    }
+
+    private fun sessionRepositoryWith(clock: TimeProvider): WorkoutSessionRepository {
+        return WorkoutSessionRepositoryImpl(
+            db,
+            db.workoutSessionDao(),
+            db.workoutSessionExerciseDao(),
+            db.workoutSetDao(),
+            workoutRepository,
+            exerciseRepository,
+            clock,
+        )
+    }
+
+    private class FakeTimeProvider(private val now: Long) : TimeProvider {
+        override fun nowMillis(): Long = now
     }
 }

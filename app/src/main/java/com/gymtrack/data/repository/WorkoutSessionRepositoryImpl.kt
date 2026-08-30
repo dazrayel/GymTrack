@@ -57,7 +57,7 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
                     workoutId = workout.id,
                     workoutName = workout.name,
                     workoutDescription = workout.description,
-                    startedAtMillis = System.currentTimeMillis(),
+                    startedAtMillis = timeProvider.nowMillis(),
                     endedAtMillis = null,
                     status = WorkoutSessionEntity.STATUS_IN_PROGRESS,
                 ),
@@ -129,7 +129,7 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
                 setIndex = setIndex,
                 reps = reps,
                 weight = weight,
-                completedAtMillis = System.currentTimeMillis(),
+                completedAtMillis = timeProvider.nowMillis(),
             ),
         )
     }
