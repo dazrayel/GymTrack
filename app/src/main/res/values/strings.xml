@@ -48,6 +48,8 @@
     <string name="home_record_reps">Reps: %1$d</string>
     <string name="home_record_volume">Volume: %1$s</string>
     <string name="home_record_cd">Recorde de %1$s</string>
+    <string name="exercise_stats_history">Histórico</string>
+    <string name="empty_exercise_stats">Sem histórico para este exercício</string>
 
     <!-- Exercises screen -->
     <string name="exercises_title">Exercícios</string>
