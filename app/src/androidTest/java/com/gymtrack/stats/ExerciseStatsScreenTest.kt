@@ -94,6 +94,7 @@ class ExerciseStatsScreenTest {
         )
         composeTestRule.waitForIdle()
         waitUntilTextIsDisplayed("Sem histórico para este exercício")
+        waitUntilTextIsDisplayed("Conclua séries deste exercício para ver o histórico de desempenho.")
         composeTestRule.onNodeWithTag("exercise_stats_empty").assertIsDisplayed()
         composeTestRule.onNodeWithTag("exercise_stats_records").assertDoesNotExist()
         composeTestRule.onNodeWithTag("exercise_stats_history").assertDoesNotExist()

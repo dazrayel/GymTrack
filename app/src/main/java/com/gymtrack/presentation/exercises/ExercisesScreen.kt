@@ -255,10 +255,10 @@ private fun ExerciseItem(
         shape = RoundedCornerShape(12.dp),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = exercise.name,
                     style = MaterialTheme.typography.titleMedium,

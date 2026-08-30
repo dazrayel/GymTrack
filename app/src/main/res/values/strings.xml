@@ -50,6 +50,7 @@
     <string name="home_record_cd">Recorde de %1$s</string>
     <string name="exercise_stats_history">Histórico</string>
     <string name="empty_exercise_stats">Sem histórico para este exercício</string>
+    <string name="empty_exercise_stats_hint">Conclua séries deste exercício para ver o histórico de desempenho.</string>
 
     <!-- Exercises screen -->
     <string name="exercises_title">Exercícios</string>

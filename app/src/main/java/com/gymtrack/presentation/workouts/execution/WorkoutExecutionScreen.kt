@@ -123,6 +123,7 @@ private fun WorkoutExecutionContent(
                 title = {
                     Text(
                         text = title,
+                        style = MaterialTheme.typography.titleLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
