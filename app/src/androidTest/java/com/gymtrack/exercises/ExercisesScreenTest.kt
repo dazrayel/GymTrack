@@ -190,6 +190,23 @@ class ExercisesScreenTest {
     }
 
     @Test
+    fun emptyCatalog_showsCatalogEmptyMessage() {
+        setContent(ExerciseUiState(isLoading = false, searchQuery = "", exercises = emptyList()))
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Nenhum exercício cadastrado").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Nenhum exercício encontrado").assertDoesNotExist()
+    }
+
+    @Test
+    fun filledSearch_noResults_showsSearchEmptyNotCatalogEmpty() {
+        setContent(ExerciseUiState(isLoading = false, searchQuery = "Supino", exercises = emptyList()))
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Nenhum exercício encontrado").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Nenhum exercício cadastrado").assertDoesNotExist()
+        composeTestRule.onNodeWithContentDescription("Limpar pesquisa").assertIsDisplayed()
+    }
+
+    @Test
     fun clickingDelete_stillRequestsDeletion() {
         val exercise = Exercise(1, "Supino reto", "Peitoral", "Barra")
         var deleted: Exercise? = null

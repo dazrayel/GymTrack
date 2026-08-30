@@ -58,6 +58,8 @@
     <string name="clear_search">Limpar pesquisa</string>
     <string name="empty_exercises">Nenhum exercício cadastrado</string>
     <string name="empty_exercises_hint">Toque no botão + para adicionar seu primeiro exercício</string>
+    <string name="empty_exercises_search">Nenhum exercício encontrado</string>
+    <string name="empty_exercises_search_hint">Tente outro termo ou limpe a pesquisa.</string>
 
     <!-- Exercise fields -->
     <string name="exercise_name">Nome</string>

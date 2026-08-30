@@ -189,7 +189,7 @@ fun ExercisesScreen(
                 }
 
                 uiState.exercises.isEmpty() -> {
-                    EmptyExercisesContent()
+                    EmptyExercisesContent(isSearchEmpty = uiState.searchQuery.isNotEmpty())
                 }
 
                 else -> {
@@ -301,7 +301,20 @@ private fun ExerciseItem(
 }
 
 @Composable
-private fun EmptyExercisesContent(modifier: Modifier = Modifier) {
+private fun EmptyExercisesContent(
+    modifier: Modifier = Modifier,
+    isSearchEmpty: Boolean = false,
+) {
+    val titleRes = if (isSearchEmpty) {
+        R.string.empty_exercises_search
+    } else {
+        R.string.empty_exercises
+    }
+    val hintRes = if (isSearchEmpty) {
+        R.string.empty_exercises_search_hint
+    } else {
+        R.string.empty_exercises_hint
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -317,14 +330,14 @@ private fun EmptyExercisesContent(modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(16.dp))
         Text(
-            text = stringResource(R.string.empty_exercises),
+            text = stringResource(titleRes),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = stringResource(R.string.empty_exercises_hint),
+            text = stringResource(hintRes),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
             textAlign = TextAlign.Center,
