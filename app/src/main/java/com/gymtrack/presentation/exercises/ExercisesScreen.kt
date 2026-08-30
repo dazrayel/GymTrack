@@ -47,8 +47,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -61,18 +63,20 @@ import com.gymtrack.presentation.theme.GymTrackTheme
 fun ExercisesScreen(
     outerPadding: PaddingValues,
     onNavigateBack: () -> Unit,
+    onExerciseStatsClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: ExerciseViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    ExercisesContent(
+    ExercisesScreen(
         uiState = uiState,
         outerPadding = outerPadding,
         onNavigateBack = onNavigateBack,
         onSearchQueryChange = viewModel::onSearchQueryChange,
         onAddClick = viewModel::showAddDialog,
         onExerciseClick = viewModel::showEditDialog,
+        onExerciseStatsClick = onExerciseStatsClick,
         onDeleteClick = viewModel::showDeleteConfirmation,
         onSaveExercise = viewModel::saveExercise,
         onDismissDialog = viewModel::dismissDialog,
@@ -85,13 +89,14 @@ fun ExercisesScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExercisesContent(
+fun ExercisesScreen(
     uiState: ExerciseUiState,
     outerPadding: PaddingValues,
     onNavigateBack: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
     onAddClick: () -> Unit,
     onExerciseClick: (Exercise) -> Unit,
+    onExerciseStatsClick: (String) -> Unit,
     onDeleteClick: (Exercise) -> Unit,
     onSaveExercise: (name: String, muscleGroup: String, equipmentType: String) -> Unit,
     onDismissDialog: () -> Unit,
@@ -153,7 +158,8 @@ private fun ExercisesContent(
                 onValueChange = onSearchQueryChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .testTag("exercise_search"),
                 placeholder = { Text(stringResource(R.string.search_exercises)) },
                 leadingIcon = {
                     Icon(
@@ -201,6 +207,7 @@ private fun ExercisesContent(
                             ExerciseItem(
                                 exercise = exercise,
                                 onClick = { onExerciseClick(exercise) },
+                                onStatsClick = { onExerciseStatsClick(exercise.name) },
                                 onDeleteClick = { onDeleteClick(exercise) },
                             )
                         }
@@ -233,26 +240,31 @@ private fun ExercisesContent(
 private fun ExerciseItem(
     exercise: Exercise,
     onClick: () -> Unit,
+    onStatsClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("exercise_card_${exercise.name}"),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
         shape = RoundedCornerShape(12.dp),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text(
                     text = exercise.name,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 if (exercise.muscleGroup.isNotBlank() || exercise.equipmentType.isNotBlank()) {
                     val subtitle = listOf(exercise.muscleGroup, exercise.equipmentType)
@@ -263,10 +275,21 @@ private fun ExerciseItem(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         modifier = Modifier.padding(top = 2.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
-            IconButton(onClick = onDeleteClick) {
+            TextButton(
+                onClick = onStatsClick,
+                modifier = Modifier.testTag("exercise_view_performance_${exercise.name}"),
+            ) {
+                Text(text = stringResource(R.string.exercise_view_performance))
+            }
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.testTag("exercise_delete_${exercise.name}"),
+            ) {
                 Icon(
                     imageVector = Icons.Outlined.Delete,
                     contentDescription = stringResource(R.string.delete_exercise),
@@ -422,13 +445,14 @@ private fun DeleteExerciseDialog(
 @Composable
 private fun ExercisesContentLoadingPreview() {
     GymTrackTheme {
-        ExercisesContent(
+        ExercisesScreen(
             uiState = ExerciseUiState(isLoading = true),
             outerPadding = PaddingValues(),
             onNavigateBack = {},
             onSearchQueryChange = {},
             onAddClick = {},
             onExerciseClick = {},
+            onExerciseStatsClick = {},
             onDeleteClick = {},
             onSaveExercise = { _, _, _ -> },
             onDismissDialog = {},
@@ -443,13 +467,14 @@ private fun ExercisesContentLoadingPreview() {
 @Composable
 private fun ExercisesContentEmptyPreview() {
     GymTrackTheme {
-        ExercisesContent(
+        ExercisesScreen(
             uiState = ExerciseUiState(isLoading = false),
             outerPadding = PaddingValues(),
             onNavigateBack = {},
             onSearchQueryChange = {},
             onAddClick = {},
             onExerciseClick = {},
+            onExerciseStatsClick = {},
             onDeleteClick = {},
             onSaveExercise = { _, _, _ -> },
             onDismissDialog = {},
@@ -464,7 +489,7 @@ private fun ExercisesContentEmptyPreview() {
 @Composable
 private fun ExercisesContentListPreview() {
     GymTrackTheme {
-        ExercisesContent(
+        ExercisesScreen(
             uiState = ExerciseUiState(
                 isLoading = false,
                 exercises = listOf(
@@ -478,6 +503,7 @@ private fun ExercisesContentListPreview() {
             onSearchQueryChange = {},
             onAddClick = {},
             onExerciseClick = {},
+            onExerciseStatsClick = {},
             onDeleteClick = {},
             onSaveExercise = { _, _, _ -> },
             onDismissDialog = {},

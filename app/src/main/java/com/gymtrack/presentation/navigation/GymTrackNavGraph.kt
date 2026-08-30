@@ -139,6 +139,11 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                 ExercisesScreen(
                     outerPadding = innerPadding,
                     onNavigateBack = { navController.popBackStack() },
+                    onExerciseStatsClick = { exerciseName ->
+                        navController.navigate(routeExerciseStats(exerciseName)) {
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
             composable(
