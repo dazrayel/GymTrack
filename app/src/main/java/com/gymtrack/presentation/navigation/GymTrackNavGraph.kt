@@ -1,5 +1,6 @@
 package com.gymtrack.presentation.navigation
 
+import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -21,6 +22,7 @@ import com.gymtrack.presentation.exercises.ExercisesScreen
 import com.gymtrack.presentation.history.HistoryScreen
 import com.gymtrack.presentation.home.HomeScreen
 import com.gymtrack.presentation.settings.SettingsScreen
+import com.gymtrack.presentation.stats.ExerciseStatsScreen
 import com.gymtrack.presentation.workouts.WorkoutsScreen
 import com.gymtrack.presentation.workouts.detail.WorkoutDetailScreen
 import com.gymtrack.presentation.workouts.execution.WorkoutExecutionScreen
@@ -30,9 +32,12 @@ private const val ROUTE_EXERCISES = "exercises"
 private const val ROUTE_WORKOUT_DETAIL = "workout_detail/{workoutId}"
 private const val ROUTE_WORKOUT_EXECUTION = "workout_execution/{sessionId}"
 private const val ROUTE_WORKOUT_SESSION_SUMMARY = "workout_session_summary/{sessionId}"
+private const val ROUTE_EXERCISE_STATS = "exercise_stats/{exerciseName}"
 private fun routeWorkoutDetail(workoutId: Long) = "workout_detail/$workoutId"
 private fun routeWorkoutExecution(sessionId: Long) = "workout_execution/$sessionId"
 private fun routeWorkoutSessionSummary(sessionId: Long) = "workout_session_summary/$sessionId"
+private fun routeExerciseStats(exerciseName: String) =
+    "exercise_stats/${Uri.encode(exerciseName)}"
 
 @Composable
 fun GymTrackNavGraph(modifier: Modifier = Modifier) {
@@ -96,6 +101,11 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                     },
                     onSessionClick = { sessionId ->
                         navController.navigate(routeWorkoutSessionSummary(sessionId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onRecordClick = { exerciseName ->
+                        navController.navigate(routeExerciseStats(exerciseName)) {
                             launchSingleTop = true
                         }
                     },
@@ -165,6 +175,15 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                 arguments = listOf(navArgument("sessionId") { type = NavType.LongType }),
             ) {
                 WorkoutSessionSummaryScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    contentPadding = innerPadding,
+                )
+            }
+            composable(
+                route = ROUTE_EXERCISE_STATS,
+                arguments = listOf(navArgument("exerciseName") { type = NavType.StringType }),
+            ) {
+                ExerciseStatsScreen(
                     onNavigateBack = { navController.popBackStack() },
                     contentPadding = innerPadding,
                 )

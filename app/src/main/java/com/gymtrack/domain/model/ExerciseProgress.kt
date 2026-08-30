@@ -109,6 +109,35 @@ fun historicalPersonalRecords(
         .sortedBy { it.exerciseName }
 }
 
+data class ExercisePerformancePoint(
+    val sessionId: Long,
+    val exerciseName: String,
+    val occurredAtMillis: Long,
+    val bestWeight: Double,
+    val bestReps: Int,
+    val volume: Double,
+)
+
+fun exercisePerformanceHistory(
+    records: List<CompletedSetRecord>,
+    exerciseName: String,
+): List<ExercisePerformancePoint> {
+    return sessionExerciseStats(records.filter { it.exerciseName == exerciseName })
+        .map { stats ->
+            ExercisePerformancePoint(
+                sessionId = stats.sessionId,
+                exerciseName = stats.exerciseName,
+                occurredAtMillis = stats.occurredAtMillis,
+                bestWeight = stats.bestWeight,
+                bestReps = stats.bestReps,
+                volume = stats.volume,
+            )
+        }
+        .sortedWith(
+            compareBy<ExercisePerformancePoint> { it.occurredAtMillis }.thenBy { it.sessionId },
+        )
+}
+
 fun isSessionBefore(
     candidate: SessionExerciseStats,
     currentSessionId: Long,

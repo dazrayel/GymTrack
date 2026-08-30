@@ -1,6 +1,7 @@
 package com.gymtrack.presentation.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -70,6 +71,7 @@ fun HomeScreen(
     onNavigateToExercises: () -> Unit = {},
     onNavigateToWorkouts: () -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
+    onRecordClick: (String) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -80,6 +82,7 @@ fun HomeScreen(
         onNavigateToExercises = onNavigateToExercises,
         onNavigateToWorkouts = onNavigateToWorkouts,
         onSessionClick = onSessionClick,
+        onRecordClick = onRecordClick,
         onPeriodSelected = viewModel::selectPeriod,
         onErrorShown = viewModel::clearError,
         contentPadding = contentPadding,
@@ -96,6 +99,7 @@ fun HomeScreen(
     onSessionClick: (Long) -> Unit,
     onErrorShown: () -> Unit,
     onPeriodSelected: (DashboardPeriod) -> Unit = {},
+    onRecordClick: (String) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
 ) {
@@ -150,6 +154,7 @@ fun HomeScreen(
                     onSessionClick = onSessionClick,
                     onNavigateToExercises = onNavigateToExercises,
                     onPeriodSelected = onPeriodSelected,
+                    onRecordClick = onRecordClick,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -163,6 +168,7 @@ private fun DashboardContent(
     onSessionClick: (Long) -> Unit,
     onNavigateToExercises: () -> Unit,
     onPeriodSelected: (DashboardPeriod) -> Unit,
+    onRecordClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -185,7 +191,7 @@ private fun DashboardContent(
         FrequencyCard(trainedDayCount = uiState.trainedDayCount)
         TrendCard(points = uiState.dailyVolumeTrend)
         if (uiState.records.isNotEmpty()) {
-            RecordsCard(records = uiState.records)
+            RecordsCard(records = uiState.records, onRecordClick = onRecordClick)
         }
         QuickAccessCard(onNavigateToExercises = onNavigateToExercises)
         Spacer(Modifier.height(8.dp))
@@ -467,6 +473,7 @@ private fun TrendCard(
 @Composable
 private fun RecordsCard(
     records: List<ExercisePersonalRecords>,
+    onRecordClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -494,6 +501,7 @@ private fun RecordsCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("home_record_${record.exerciseName}")
+                            .clickable { onRecordClick(record.exerciseName) }
                             .semantics { contentDescription = description },
                     ) {
                         Text(

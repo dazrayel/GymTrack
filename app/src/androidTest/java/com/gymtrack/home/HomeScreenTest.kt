@@ -85,6 +85,7 @@ class HomeScreenTest {
         onSessionClick: (Long) -> Unit = {},
         onNavigateToWorkouts: () -> Unit = {},
         onPeriodSelected: (DashboardPeriod) -> Unit = {},
+        onRecordClick: (String) -> Unit = {},
     ) {
         composeTestRule.setContent {
             GymTrackTheme {
@@ -93,6 +94,7 @@ class HomeScreenTest {
                     onNavigateToExercises = {},
                     onNavigateToWorkouts = onNavigateToWorkouts,
                     onSessionClick = onSessionClick,
+                    onRecordClick = onRecordClick,
                     onPeriodSelected = onPeriodSelected,
                     onErrorShown = {},
                     contentPadding = PaddingValues(),
@@ -250,6 +252,24 @@ class HomeScreenTest {
         composeTestRule.onNodeWithTag("home_recent_42").performClick()
         composeTestRule.waitForIdle()
         assertEquals(42L, clickedId)
+    }
+
+    @Test
+    fun clickingRecord_exposesExerciseName() {
+        var clickedName: String? = null
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                recentWorkout = sampleItem,
+                records = listOf(record("Supino", weight = 80.0, reps = 10, volume = 800.0)),
+            ),
+            onRecordClick = { clickedName = it },
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_records").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_record_Supino").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals("Supino", clickedName)
     }
 
     @Test
