@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -83,6 +84,8 @@ class HomeViewModelTest {
         assertEquals(0, viewModel.uiState.value.trainedDayCount)
         assertTrue(viewModel.uiState.value.records.isEmpty())
         assertNull(viewModel.uiState.value.error)
+        assertNull(viewModel.uiState.value.inProgressSession)
+        assertEquals(0, fakeRepository.startSessionCalls)
     }
 
     @Test
@@ -254,6 +257,39 @@ class HomeViewModelTest {
 
         assertEquals(0, fakeRepository.startSessionCalls)
         assertFalse(viewModel.uiState.value.isLoading)
+        assertNull(viewModel.uiState.value.inProgressSession)
+    }
+
+    @Test
+    fun inProgressSession_isExposedWhenObserved() = runTest(testDispatcher) {
+        val active = inProgressSession(id = 77L, name = "Push Day")
+        val viewModel = HomeViewModel(fakeRepository, clock)
+        fakeRepository.emitSessions(emptyList())
+        fakeRepository.emitSets(emptyList())
+        fakeRepository.emitInProgress(active)
+        advanceUntilIdle()
+
+        assertEquals(77L, viewModel.uiState.value.inProgressSession?.id)
+        assertEquals("Push Day", viewModel.uiState.value.inProgressSession?.workoutName)
+        assertTrue(viewModel.uiState.value.showEmpty)
+        assertEquals(0, fakeRepository.startSessionCalls)
+    }
+
+    @Test
+    fun inProgressSession_clearsWhenFlowEmitsNull() = runTest(testDispatcher) {
+        val active = inProgressSession(id = 77L, name = "Push Day")
+        val viewModel = HomeViewModel(fakeRepository, clock)
+        fakeRepository.emitSessions(emptyList())
+        fakeRepository.emitSets(emptyList())
+        fakeRepository.emitInProgress(active)
+        advanceUntilIdle()
+        assertEquals(77L, viewModel.uiState.value.inProgressSession?.id)
+
+        fakeRepository.emitInProgress(null)
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.inProgressSession)
+        assertEquals(0, fakeRepository.startSessionCalls)
     }
 
     @Test
@@ -362,6 +398,14 @@ class HomeViewModelTest {
         completedSetCount = 1,
         plannedSetCount = 1,
     )
+
+    private fun inProgressSession(id: Long, name: String) = WorkoutSession(
+        id = id,
+        workoutId = 1L,
+        workoutName = name,
+        startedAtMillis = local("2026-08-26T10:00:00"),
+        status = com.gymtrack.domain.model.WorkoutSessionStatus.IN_PROGRESS,
+    )
 }
 
 private class FakeTimeProvider(var now: Long) : TimeProvider {
@@ -376,6 +420,7 @@ private class FakeHomeSessionRepository : WorkoutSessionRepository {
 
     private val sessions = MutableSharedFlow<List<WorkoutHistoryItem>>(extraBufferCapacity = 1)
     private val sets = MutableSharedFlow<List<CompletedSetRecord>>(extraBufferCapacity = 1)
+    private val inProgress = MutableStateFlow<WorkoutSession?>(null)
     var shouldThrowOnObserve = false
     var startSessionCalls = 0
 
@@ -385,6 +430,10 @@ private class FakeHomeSessionRepository : WorkoutSessionRepository {
 
     suspend fun emitSets(items: List<CompletedSetRecord>) {
         sets.emit(items)
+    }
+
+    fun emitInProgress(session: WorkoutSession?) {
+        inProgress.value = session
     }
 
     override fun observeCompletedSessions(): Flow<List<WorkoutHistoryItem>> {
@@ -403,7 +452,7 @@ private class FakeHomeSessionRepository : WorkoutSessionRepository {
 
     override suspend fun getSession(id: Long): WorkoutSession? = null
     override fun observeSession(id: Long): Flow<WorkoutSession?> = emptyFlow()
-    override fun observeInProgress(): Flow<WorkoutSession?> = emptyFlow()
+    override fun observeInProgress(): Flow<WorkoutSession?> = inProgress
     override fun observeSessionExercises(sessionId: Long): Flow<List<WorkoutSessionExercise>> =
         emptyFlow()
     override fun observeSets(sessionExerciseId: Long): Flow<List<WorkoutSet>> = emptyFlow()

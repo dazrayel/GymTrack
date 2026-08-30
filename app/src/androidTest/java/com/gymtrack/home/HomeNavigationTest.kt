@@ -14,6 +14,7 @@ import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
+import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
@@ -125,5 +126,31 @@ class HomeNavigationTest {
         val opened = runBlocking { workoutSessionRepository.getSession(sessionId) }!!
         assertEquals(persisted.id, opened.id)
         assertEquals(persisted.startedAtMillis, opened.startedAtMillis)
+    }
+
+    @Test
+    fun inProgressCta_opensExistingExecutionWithoutCreatingSession() {
+        val activeId = runBlocking {
+            (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
+        }
+
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithTag("home_in_progress").fetchSemanticsNodes().isNotEmpty()
+        }
+        waitUntilTextIsDisplayed(workoutName)
+        composeTestRule.onNodeWithTag("home_continue_in_progress").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithText("Treino em andamento")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        val active = runBlocking { workoutSessionRepository.observeInProgress().first() }
+        assertEquals(activeId, active!!.id)
+        assertEquals(WorkoutSessionStatus.IN_PROGRESS, active.status)
+        assertEquals(workoutName, active.workoutName)
+        val session = runBlocking { workoutSessionRepository.getSession(activeId) }!!
+        assertEquals(WorkoutSessionStatus.IN_PROGRESS, session.status)
     }
 }

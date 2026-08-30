@@ -34,6 +34,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         observeDashboard()
+        observeInProgressSession()
     }
 
     fun selectPeriod(period: DashboardPeriod) {
@@ -87,6 +88,20 @@ class HomeViewModel @Inject constructor(
                             error = null,
                         )
                     }
+                }
+        }
+    }
+
+    private fun observeInProgressSession() {
+        viewModelScope.launch {
+            sessionRepository.observeInProgress()
+                .catch { e ->
+                    _uiState.update {
+                        it.copy(error = e.message)
+                    }
+                }
+                .collect { session ->
+                    _uiState.update { it.copy(inProgressSession = session) }
                 }
         }
     }

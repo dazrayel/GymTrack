@@ -19,6 +19,8 @@ import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
 import com.gymtrack.domain.model.PeriodDashboardStats
 import com.gymtrack.domain.model.WorkoutHistoryItem
+import com.gymtrack.domain.model.WorkoutSession
+import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.formatVolumeKg
 import com.gymtrack.domain.time.formatDashboardDuration
 import com.gymtrack.domain.time.formatLocalDate
@@ -58,6 +60,13 @@ class HomeScreenTest {
         completedSetCount = 12,
         plannedSetCount = 12,
     )
+    private val activeSession = WorkoutSession(
+        id = 77L,
+        workoutId = 9L,
+        workoutName = "Push Day",
+        startedAtMillis = occurredAt,
+        status = WorkoutSessionStatus.IN_PROGRESS,
+    )
 
     @Before
     fun setUp() {
@@ -86,6 +95,7 @@ class HomeScreenTest {
         onNavigateToWorkouts: () -> Unit = {},
         onPeriodSelected: (DashboardPeriod) -> Unit = {},
         onRecordClick: (String) -> Unit = {},
+        onContinueInProgress: (Long) -> Unit = {},
     ) {
         composeTestRule.setContent {
             GymTrackTheme {
@@ -95,6 +105,7 @@ class HomeScreenTest {
                     onNavigateToWorkouts = onNavigateToWorkouts,
                     onSessionClick = onSessionClick,
                     onRecordClick = onRecordClick,
+                    onContinueInProgress = onContinueInProgress,
                     onPeriodSelected = onPeriodSelected,
                     onErrorShown = {},
                     contentPadding = PaddingValues(),
@@ -389,6 +400,57 @@ class HomeScreenTest {
         composeTestRule.onNodeWithTag("home_recent_42").assertIsDisplayed()
         composeTestRule.onNodeWithTag("home_trend").assertIsDisplayed()
         composeTestRule.onNodeWithTag("home_records").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun dashboardWithoutInProgress_doesNotShowResumeCta() {
+        setContent(HomeUiState(isLoading = false, recentWorkout = sampleItem))
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_in_progress").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("home_continue_in_progress").assertDoesNotExist()
+    }
+
+    @Test
+    fun emptyWithoutInProgress_doesNotShowResumeCta() {
+        setContent(HomeUiState(isLoading = false))
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_empty").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_in_progress").assertDoesNotExist()
+    }
+
+    @Test
+    fun dashboardWithInProgress_showsResumeCtaAndReportsSessionId() {
+        var continuedId: Long? = null
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                recentWorkout = sampleItem,
+                inProgressSession = activeSession,
+            ),
+            onContinueInProgress = { continuedId = it },
+        )
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Treino em andamento")
+        waitUntilTextIsDisplayed("Push Day")
+        composeTestRule.onNodeWithTag("home_continue_in_progress").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(77L, continuedId)
+    }
+
+    @Test
+    fun emptyWithInProgress_stillShowsResumeCta() {
+        var continuedId: Long? = null
+        setContent(
+            HomeUiState(isLoading = false, inProgressSession = activeSession),
+            onContinueInProgress = { continuedId = it },
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_empty").assertIsDisplayed()
+        waitUntilTextIsDisplayed("Treino em andamento")
+        waitUntilTextIsDisplayed("Push Day")
+        composeTestRule.onNodeWithTag("home_continue_in_progress").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(77L, continuedId)
     }
 
     private fun sevenZeroDays(): List<DailyVolume> {

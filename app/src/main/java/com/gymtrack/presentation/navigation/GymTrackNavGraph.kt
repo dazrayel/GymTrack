@@ -109,6 +109,11 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                             launchSingleTop = true
                         }
                     },
+                    onContinueInProgress = { sessionId ->
+                        navController.navigate(routeWorkoutExecution(sessionId)) {
+                            launchSingleTop = true
+                        }
+                    },
                     contentPadding = innerPadding,
                 )
             }

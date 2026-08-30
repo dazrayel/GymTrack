@@ -72,6 +72,7 @@ fun HomeScreen(
     onNavigateToWorkouts: () -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
     onRecordClick: (String) -> Unit = {},
+    onContinueInProgress: (sessionId: Long) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -83,6 +84,7 @@ fun HomeScreen(
         onNavigateToWorkouts = onNavigateToWorkouts,
         onSessionClick = onSessionClick,
         onRecordClick = onRecordClick,
+        onContinueInProgress = onContinueInProgress,
         onPeriodSelected = viewModel::selectPeriod,
         onErrorShown = viewModel::clearError,
         contentPadding = contentPadding,
@@ -100,6 +102,7 @@ fun HomeScreen(
     onErrorShown: () -> Unit,
     onPeriodSelected: (DashboardPeriod) -> Unit = {},
     onRecordClick: (String) -> Unit = {},
+    onContinueInProgress: (sessionId: Long) -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
 ) {
@@ -141,22 +144,35 @@ fun HomeScreen(
                 }
             }
 
-            uiState.showEmpty -> {
-                EmptyDashboardContent(
-                    onNavigateToWorkouts = onNavigateToWorkouts,
-                    modifier = Modifier.padding(innerPadding),
-                )
-            }
-
             else -> {
-                DashboardContent(
-                    uiState = uiState,
-                    onSessionClick = onSessionClick,
-                    onNavigateToExercises = onNavigateToExercises,
-                    onPeriodSelected = onPeriodSelected,
-                    onRecordClick = onRecordClick,
-                    modifier = Modifier.padding(innerPadding),
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                ) {
+                    uiState.inProgressSession?.let { session ->
+                        InProgressResumeCard(
+                            workoutName = session.workoutName,
+                            onContinue = { onContinueInProgress(session.id) },
+                            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
+                        )
+                    }
+                    if (uiState.showEmpty) {
+                        EmptyDashboardContent(
+                            onNavigateToWorkouts = onNavigateToWorkouts,
+                            modifier = Modifier.weight(1f),
+                        )
+                    } else {
+                        DashboardContent(
+                            uiState = uiState,
+                            onSessionClick = onSessionClick,
+                            onNavigateToExercises = onNavigateToExercises,
+                            onPeriodSelected = onPeriodSelected,
+                            onRecordClick = onRecordClick,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
             }
         }
     }
@@ -195,6 +211,44 @@ private fun DashboardContent(
         }
         QuickAccessCard(onNavigateToExercises = onNavigateToExercises)
         Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun InProgressResumeCard(
+    workoutName: String,
+    onContinue: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("home_in_progress"),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            Text(
+                text = stringResource(R.string.workout_in_progress),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+            )
+            Text(
+                text = workoutName,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Button(
+                onClick = onContinue,
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .testTag("home_continue_in_progress"),
+            ) {
+                Text(text = stringResource(R.string.continue_in_progress_workout))
+            }
+        }
     }
 }
 
