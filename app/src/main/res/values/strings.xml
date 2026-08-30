@@ -18,9 +18,36 @@
     <string name="history_session_cd">Sessão de %1$s em %2$s</string>
     <string name="settings_title">Configurações</string>
 
-    <!-- Home quick access -->
+    <!-- Home dashboard -->
     <string name="home_quick_access">Acesso rápido</string>
     <string name="home_exercises_description">Gerencie sua biblioteca de exercícios</string>
+    <string name="dashboard_recent_title">Treino recente</string>
+    <string name="dashboard_this_week">Esta semana</string>
+    <string name="dashboard_this_month">Este mês</string>
+    <string name="dashboard_all_time">Todo o histórico</string>
+    <string name="dashboard_period_week">Semana</string>
+    <string name="dashboard_period_month">Mês</string>
+    <string name="dashboard_period_all">Tudo</string>
+    <string name="dashboard_workouts">Treinos</string>
+    <string name="dashboard_volume_label">Volume</string>
+    <string name="dashboard_time_label">Tempo</string>
+    <string name="dashboard_exercises_label">Exercícios</string>
+    <string name="dashboard_duration">Duração: %1$s</string>
+    <string name="dashboard_volume">Volume: %1$s</string>
+    <string name="dashboard_datetime">%1$s · %2$s</string>
+    <string name="empty_dashboard">Nenhum treino concluído</string>
+    <string name="empty_dashboard_hint">Finalize um treino para ver o resumo da semana aqui.</string>
+    <string name="empty_dashboard_cta">Ver treinos</string>
+    <string name="dashboard_recent_cd">Treino recente %1$s em %2$s</string>
+    <string name="dashboard_frequency">Frequência</string>
+    <string name="dashboard_trained_days">%1$d dias treinados</string>
+    <string name="dashboard_last_seven_days">Últimos 7 dias</string>
+    <string name="dashboard_trend_cd">Volume dos últimos 7 dias</string>
+    <string name="dashboard_records">Recordes</string>
+    <string name="home_record_weight">Carga: %1$s</string>
+    <string name="home_record_reps">Reps: %1$d</string>
+    <string name="home_record_volume">Volume: %1$s</string>
+    <string name="home_record_cd">Recorde de %1$s</string>
 
     <!-- Exercises screen -->
     <string name="exercises_title">Exercícios</string>

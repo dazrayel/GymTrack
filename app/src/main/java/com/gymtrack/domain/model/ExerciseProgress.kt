@@ -100,6 +100,15 @@ fun personalRecords(stats: List<SessionExerciseStats>): ExercisePersonalRecords?
     )
 }
 
+fun historicalPersonalRecords(
+    records: List<CompletedSetRecord>,
+): List<ExercisePersonalRecords> {
+    return sessionExerciseStats(records)
+        .groupBy { it.exerciseName }
+        .mapNotNull { (_, stats) -> personalRecords(stats) }
+        .sortedBy { it.exerciseName }
+}
+
 fun isSessionBefore(
     candidate: SessionExerciseStats,
     currentSessionId: Long,

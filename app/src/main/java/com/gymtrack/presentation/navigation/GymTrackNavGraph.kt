@@ -85,6 +85,20 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToWorkouts = {
+                        navController.navigate(TopLevelDestination.WORKOUTS.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onSessionClick = { sessionId ->
+                        navController.navigate(routeWorkoutSessionSummary(sessionId)) {
+                            launchSingleTop = true
+                        }
+                    },
                     contentPadding = innerPadding,
                 )
             }
