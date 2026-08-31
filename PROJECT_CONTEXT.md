@@ -136,6 +136,8 @@ Antes de alterar a arquitetura, analisar o código existente e explicar o motivo
 
 Detalhe do catálogo, músculos secundários, `status` por exercício da sessão e ordem livre: ver a seção **Catálogo, status e ordem livre** abaixo.
 
+Exclusão de sessões `COMPLETED` no histórico: ver **Exclusão de sessões do histórico**. Sem migration; Room permanece na versão 8.
+
 ### Backend
 
 Ainda não existe backend.
@@ -1649,6 +1651,7 @@ Execução
 
 Histórico
 ├── sessões COMPLETED
+├── exclusão com diálogo (só COMPLETED)
 ├── exercícios
 ├── séries
 ├── cargas
@@ -1675,6 +1678,27 @@ Desempenho
 
 ---
 
+## Exclusão de sessões do histórico
+
+Implementado na branch (`2083881`). **Não** altera a versão do Room (continua **8**) e **não** cria migration.
+
+* `HistoryScreen`: ícone de lixeira por item (`history_delete_{sessionId}`); o toque no card continua a abrir o resumo.
+* Diálogo (`delete_history_session` / `delete_history_session_message`): **Cancelar** chama `dismissDeleteConfirmation()` e **não** apaga; **Excluir** chama `HistoryViewModel.confirmDelete()`.
+* `confirmDelete()` usa `sessionToDelete` e chama `WorkoutSessionRepository.deleteCompletedSession(sessionId)`.
+* `deleteCompletedSession`: lê a sessão; se não existir ou `status != COMPLETED`, retorna sem escrever. Só então `WorkoutSessionDao.deleteById`.
+* Sessão `IN_PROGRESS` permanece intacta.
+* `workout_session_exercises` (`ON DELETE CASCADE` da sessão) e `workout_sets` (`ON DELETE CASCADE` do exercício da sessão) são removidos pelo schema **já existente**.
+* Catálogo (`exercises`), músculos secundários, template do treino (`workouts` / `workout_exercises`) e outras sessões não são apagados.
+* A lista observa `observeCompletedSessions()`; após o DELETE o `Flow` reemite (incluindo empty).
+
+Testes (sem inventar totais):
+
+* JVM: `HistoryViewModelTest` — `confirmDelete_removesOnlySelectedSession`, `dismissDeleteConfirmation_doesNotDelete`, `confirmDelete_lastSession_leavesEmptyList`, `confirmDelete_withoutSelection_doesNothing`.
+* UI: `HistoryScreenTest` — `list_showsDeleteAction`, `deleteDialog_cancelKeepsItem_confirmRemovesSession`.
+* Repository/Room: `WorkoutSessionRepositoryImplTest` — `deleteCompletedSession_removesOnlyThatSessionAndDependents` (CASCADE, outra sessão e catálogo intactos), `deleteCompletedSession_doesNotDeleteInProgressSession`.
+
+---
+
 # 9. Regras de dados importantes
 
 ## Sessões
@@ -1686,6 +1710,8 @@ COMPLETED
 ```
 
 Sessão `IN_PROGRESS` não deve aparecer em estatísticas históricas.
+
+A exclusão pelo histórico (`deleteCompletedSession`) aplica-se **somente** a sessões `COMPLETED`. Uma sessão `IN_PROGRESS` **não** é removida por essa API.
 
 Isto é o `WorkoutSession.status`. O `IN_PROGRESS` de **`WorkoutSessionExercise`** é só o exercício escolhido na execução e **não** entra sozinho nas métricas de histórico.
 
@@ -1756,6 +1782,8 @@ Quando um flake conhecido impedir a execução da suíte completa, registrar exp
 
 Testes acrescentados em `15c03f8` / ordem livre: ver a seção **Catálogo, status e ordem livre** (não inventar totais da suíte).
 
+Exclusão do histórico: `HistoryViewModelTest` (confirmação, cancelamento, última sessão), `HistoryScreenTest` (diálogo cancelar/confirmar), `WorkoutSessionRepositoryImplTest` (CASCADE e proteção de `IN_PROGRESS`).
+
 ---
 
 # 12. Regras de Git
@@ -1785,13 +1813,12 @@ Não misturar fases sem decisão explícita.
 Branch: feature/next-step
 
 HEAD:
-15c03f8 feat: implement free exercise ordering and status flow
+2083881 feat: allow deleting completed sessions from history
 
-Working tree esperado (docs):
-M PROJECT_CONTEXT.md
-?? README.md
+Working tree: documentação (`README.md` / `PROJECT_CONTEXT.md`) pode estar à frente do último commit de código.
 
 Últimos commits relevantes:
+2083881 — exclusão de sessões COMPLETED no histórico (CASCADE existente; sem migration)
 15c03f8 — catálogo secundários, Room 7–8, status, ordem livre, faixa visual, testes
 2f9f32d — drafts da execução (chave sessão + id da linha da sessão)
 af1139d — horários locais no resumo
@@ -1801,7 +1828,7 @@ d74fcc1 — correção de teste pós-8.7
 7f33ed3 — picker vazio → Exercícios
 
 8.S–8.7 e Fases 9–11: histórico das fases (já auditadas).
-Pós-MVP nesta branch: catálogo fechado + secundários, status de exercício, skip, ordem livre.
+Pós-MVP nesta branch: catálogo fechado + secundários, status de exercício, skip, ordem livre, exclusão no histórico.
 Não documentar lacunas (ex. ausência de transação em resumeSessionExercise) como features feitas.
 ```
 
@@ -1848,7 +1875,8 @@ Fase 11 — Backend                   AUDITADA — ESCOPO INSUFICIENTEMENTE DEFI
     nenhum problema real; sem Bloco A)
    ↓
 feature/next-step (implementado; não é Fase 12 numerada):
-   catálogo / secundários / Room 7–8 / status / skip / ordem livre / drafts
+   catálogo / secundários / Room 7–8 / status / skip / ordem livre / drafts /
+   exclusão de sessões COMPLETED no histórico
 ```
 
 Não avançar para uma etapa posterior sem concluir e auditar a anterior.
@@ -1901,6 +1929,6 @@ Room    — versão 8 (migrations até 7→8; sem 8→9)
 
 Auditoria exploratória do MVP (pós-Fase 11): **CONCLUÍDA** — nenhum problema real; não é fase nova; sem Bloco A.
 
-Trabalho posterior na mesma branch: catálogo de músculos/equipamentos, secundários N:N, status de exercício, skip, “Fazer agora”, drafts. `README.md` é portfólio público (ficheiro separado).
+Trabalho posterior na mesma branch: catálogo de músculos/equipamentos, secundários N:N, status de exercício, skip, “Fazer agora”, drafts, exclusão de sessões concluídas no histórico. `README.md` é portfólio público (ficheiro separado).
 
 Fases 10 e 11 não são backlog de implementação.

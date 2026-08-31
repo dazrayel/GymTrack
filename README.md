@@ -43,7 +43,10 @@ A interface está em português. O projeto está em desenvolvimento (versão do 
 ### Acompanhamento
 
 - Tela inicial com estatísticas por período, treino em andamento, últimos treinos e recordes
-- Histórico de sessões concluídas
+- Histórico de sessões concluídas, com exclusão opcional de cada sessão
+- A exclusão exige confirmação num diálogo; **Cancelar** não remove nada
+- Só sessões com status `COMPLETED` podem ser excluídas; sessões `IN_PROGRESS` não são apagadas
+- Ao confirmar, a linha de `workout_sessions` é removida e os dados da sessão (`workout_session_exercises`, `workout_sets`) saem pelo **CASCADE** já definido no Room — **sem** migration nem mudança de schema
 - Estatísticas por exercício (marcas e evolução a partir das séries gravadas)
 
 A aba **Configurações** existe na navegação, mas a tela atual é apenas um título — não há opções implementadas.
@@ -91,6 +94,8 @@ Persistência principal:
 - Sessões (`workout_sessions`) e snapshot dos exercícios (`workout_session_exercises`)
 - Séries realizadas (`workout_sets`)
 
+Apagar uma sessão `COMPLETED` no histórico remove a linha em `workout_sessions`; `workout_session_exercises` e `workout_sets` saem pelo `ON DELETE CASCADE` já definido. **Não** houve migration nem mudança de versão do Room para essa funcionalidade.
+
 Migrations relevantes para o estado atual:
 
 | Migration | O que faz |
@@ -134,7 +139,7 @@ O projeto tem testes **JVM** (`app/src/test`) e **instrumentados** (`app/src/and
 - ViewModels (execução, resumo, exercícios, home, histórico, estatísticas, detalhe do treino)
 - Repositories (exercícios, sessões, treinos)
 - Room e migrations (incluindo 6→7 e 7→8)
-- UI Compose (execução, catálogo, resumo, entre outras)
+- UI Compose (execução, catálogo, resumo, histórico, entre outras)
 
 A suíte instrumentada usa Hilt (`HiltTestRunner`) e um emulador/dispositivo.
 
@@ -186,7 +191,7 @@ Testes instrumentados (emulador ligado):
 
 ## 📋 Estado atual
 
-O núcleo de catálogo, montagem de treinos, execução (incluindo skip, ordem livre e rascunhos), persistência Room 8, histórico e estatísticas básicas **está implementado e coberto por testes**.
+O núcleo de catálogo, montagem de treinos, execução (incluindo skip, ordem livre e rascunhos), persistência Room 8, histórico (incluindo exclusão de sessões concluídas) e estatísticas básicas **está implementado e coberto por testes**.
 
 Ainda é um projeto em evolução: não há conta de utilizador, sincronização remota nem ecrã de definições funcional.
 
