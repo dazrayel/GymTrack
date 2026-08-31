@@ -175,7 +175,7 @@ class ExercisesScreenTest {
             }
         }
         composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithTag("exercise_card_Supino reto").performClick()
+        composeTestRule.onNodeWithText("Supino reto", useUnmergedTree = true).performClick()
         composeTestRule.waitForIdle()
         assertEquals(exercise, edited)
         assertNull(statsName)
