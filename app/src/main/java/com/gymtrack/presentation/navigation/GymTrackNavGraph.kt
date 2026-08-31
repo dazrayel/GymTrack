@@ -162,6 +162,11 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToExercises = {
+                        navController.navigate(ROUTE_EXERCISES) {
+                            launchSingleTop = true
+                        }
+                    },
                     contentPadding = innerPadding,
                 )
             }

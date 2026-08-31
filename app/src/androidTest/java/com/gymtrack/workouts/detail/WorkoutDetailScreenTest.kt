@@ -121,7 +121,10 @@ class WorkoutDetailScreenTest {
     // SavedStateHandle receives the workoutId correctly via the route arg.
     // ──────────────────────────────────────────────────────────────────────────
 
-    private fun setScreen(onNavigateToExecution: (Long) -> Unit = {}) {
+    private fun setScreen(
+        onNavigateToExercises: () -> Unit = {},
+        onNavigateToExecution: (Long) -> Unit = {},
+    ) {
         composeTestRule.setContent {
             val navController = rememberNavController()
             NavHost(
@@ -135,9 +138,21 @@ class WorkoutDetailScreenTest {
                     WorkoutDetailScreen(
                         onNavigateBack = {},
                         onNavigateToExecution = onNavigateToExecution,
+                        onNavigateToExercises = onNavigateToExercises,
                         contentPadding = PaddingValues(),
                     )
                 }
+            }
+        }
+    }
+
+    private fun clearExerciseCatalog() {
+        runBlocking {
+            if (exerciseId != -1L) {
+                exerciseRepository.delete(
+                    Exercise(id = exerciseId, name = "", muscleGroup = "", equipmentType = ""),
+                )
+                exerciseId = -1L
             }
         }
     }
@@ -272,6 +287,7 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Selecionar exercício").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("go_to_exercises").assertDoesNotExist()
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -287,6 +303,39 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Supino Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("go_to_exercises").assertDoesNotExist()
+    }
+
+    @Test
+    fun picker_emptyLibrary_showsGoToExercisesAction() {
+        clearExerciseCatalog()
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        waitUntilTextIsDisplayed("Nenhum exercício disponível na biblioteca")
+        composeTestRule.onNodeWithText("Cadastre um exercício para adicioná-lo ao treino")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithTag("go_to_exercises").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Ir para exercícios").assertIsDisplayed()
+    }
+
+    @Test
+    fun picker_emptyLibrary_goToExercises_invokesNavigationCallback() {
+        clearExerciseCatalog()
+        var navigatedToExercises = false
+        setScreen(onNavigateToExercises = { navigatedToExercises = true })
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        waitUntilTextIsDisplayed("Ir para exercícios")
+        composeTestRule.onNodeWithTag("go_to_exercises").performClick()
+        composeTestRule.waitUntil(5_000) { navigatedToExercises }
+        composeTestRule.onNodeWithText("Selecionar exercício").assertIsNotDisplayed()
     }
 
     // ──────────────────────────────────────────────────────────────────────────

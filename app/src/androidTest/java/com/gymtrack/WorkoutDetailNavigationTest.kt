@@ -1,10 +1,14 @@
 package com.gymtrack
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -240,5 +244,41 @@ class WorkoutDetailNavigationTest {
         val session = runBlocking { workoutSessionRepository.observeInProgress().first() }
         assertEquals(sessionA, session!!.id)
         assertEquals(extraWorkoutId, session.workoutId)
+    }
+
+    @Test
+    fun navigation_emptyPicker_goToExercises_opensExercisesScreen() {
+        runBlocking {
+            exerciseRepository.delete(
+                Exercise(id = exerciseId, name = "", muscleGroup = "", equipmentType = ""),
+            )
+            exerciseId = -1L
+        }
+
+        composeTestRule.onNode(hasText("Treinos") and hasClickAction()).performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText("Meus treinos").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText(workoutName).performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText("Ir para exercícios").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Nenhum exercício disponível na biblioteca").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Ir para exercícios").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithTag("exercise_search").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText("Exercícios").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("exercise_search").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Voltar").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Selecionar exercício").assertDoesNotExist()
     }
 }

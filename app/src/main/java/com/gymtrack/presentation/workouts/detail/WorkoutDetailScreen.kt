@@ -73,6 +73,7 @@ import com.gymtrack.presentation.theme.GymTrackTheme
 fun WorkoutDetailScreen(
     onNavigateBack: () -> Unit,
     onNavigateToExecution: (sessionId: Long) -> Unit = {},
+    onNavigateToExercises: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
     viewModel: WorkoutDetailViewModel = hiltViewModel(),
@@ -97,6 +98,7 @@ fun WorkoutDetailScreen(
         onShowExercisePicker = viewModel::showExercisePicker,
         onDismissExercisePicker = viewModel::dismissExercisePicker,
         onSelectExercise = viewModel::selectExercise,
+        onNavigateToExercises = onNavigateToExercises,
         onDismissExerciseConfiguration = viewModel::dismissExerciseConfiguration,
         onSaveExerciseConfiguration = viewModel::saveExerciseConfiguration,
         onShowEditExercise = viewModel::showEditExercise,
@@ -130,6 +132,7 @@ private fun WorkoutDetailContent(
     onShowExercisePicker: () -> Unit,
     onDismissExercisePicker: () -> Unit,
     onSelectExercise: (Exercise) -> Unit,
+    onNavigateToExercises: () -> Unit,
     onDismissExerciseConfiguration: () -> Unit,
     onSaveExerciseConfiguration: (sets: Int, minReps: Int, maxReps: Int, weight: Double, restSeconds: Int, notes: String) -> Unit,
     onShowEditExercise: (WorkoutExerciseDetail) -> Unit,
@@ -269,6 +272,7 @@ private fun WorkoutDetailContent(
             exercises = availableExercises,
             onSelect = onSelectExercise,
             onDismiss = onDismissExercisePicker,
+            onNavigateToExercises = onNavigateToExercises,
         )
     }
 
@@ -505,16 +509,23 @@ private fun ExercisePickerDialog(
     exercises: List<Exercise>,
     onSelect: (Exercise) -> Unit,
     onDismiss: () -> Unit,
+    onNavigateToExercises: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.pick_exercise_title)) },
         text = {
             if (exercises.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.pick_exercise_empty),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = stringResource(R.string.pick_exercise_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = stringResource(R.string.pick_exercise_empty_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -549,7 +560,19 @@ private fun ExercisePickerDialog(
                 }
             }
         },
-        confirmButton = {},
+        confirmButton = {
+            if (exercises.isEmpty()) {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                        onNavigateToExercises()
+                    },
+                    modifier = Modifier.testTag("go_to_exercises"),
+                ) {
+                    Text(stringResource(R.string.go_to_exercises))
+                }
+            }
+        },
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
@@ -891,6 +914,7 @@ private fun WorkoutDetailContentLoadingPreview() {
             onShowExercisePicker = {},
             onDismissExercisePicker = {},
             onSelectExercise = {},
+            onNavigateToExercises = {},
             onDismissExerciseConfiguration = {},
             onSaveExerciseConfiguration = { _, _, _, _, _, _ -> },
             onShowEditExercise = {},
@@ -925,6 +949,7 @@ private fun WorkoutDetailContentEmptyPreview() {
             onShowExercisePicker = {},
             onDismissExercisePicker = {},
             onSelectExercise = {},
+            onNavigateToExercises = {},
             onDismissExerciseConfiguration = {},
             onSaveExerciseConfiguration = { _, _, _, _, _, _ -> },
             onShowEditExercise = {},
@@ -966,6 +991,7 @@ private fun WorkoutDetailContentListPreview() {
             onShowExercisePicker = {},
             onDismissExercisePicker = {},
             onSelectExercise = {},
+            onNavigateToExercises = {},
             onDismissExerciseConfiguration = {},
             onSaveExerciseConfiguration = { _, _, _, _, _, _ -> },
             onShowEditExercise = {},
