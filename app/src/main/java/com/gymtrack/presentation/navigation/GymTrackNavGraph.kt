@@ -54,12 +54,19 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                            if (destination == TopLevelDestination.HOME) {
+                                navController.popBackStack(
+                                    TopLevelDestination.HOME.route,
+                                    inclusive = false,
+                                )
+                            } else {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
                         },
                         icon = {

@@ -1,10 +1,14 @@
 package com.gymtrack.home
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -152,5 +156,67 @@ class HomeNavigationTest {
         assertEquals(workoutName, active.workoutName)
         val session = runBlocking { workoutSessionRepository.getSession(activeId) }!!
         assertEquals(WorkoutSessionStatus.IN_PROGRESS, session.status)
+    }
+
+    @Test
+    fun homeTab_fromExecution_returnsHomeWithoutStackingExecution() {
+        composeTestRule.onNode(hasText("Treinos") and hasClickAction()).performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText("Meus treinos").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText(workoutName).performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Iniciar treino").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithText("Treino em andamento")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeTestRule.onAllNodesWithText("Treino em andamento").onFirst().assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Voltar").assertIsDisplayed()
+
+        val started = runBlocking { workoutSessionRepository.observeInProgress().first() }!!
+        assertEquals(WorkoutSessionStatus.IN_PROGRESS, started.status)
+        assertEquals(workoutName, started.workoutName)
+
+        composeTestRule.onNode(hasText("Início") and hasClickAction()).performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithTag("home_in_progress").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithTag("home_in_progress").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_continue_in_progress").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Voltar").assertDoesNotExist()
+
+        val onHome = runBlocking { workoutSessionRepository.observeInProgress().first() }!!
+        assertEquals(started.id, onHome.id)
+        assertEquals(WorkoutSessionStatus.IN_PROGRESS, onHome.status)
+
+        composeTestRule.onNodeWithTag("home_continue_in_progress").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithText("Treino em andamento")
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
+        composeTestRule.onAllNodesWithText("Treino em andamento").onFirst().assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Voltar").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_continue_in_progress").assertDoesNotExist()
+
+        val reopened = runBlocking { workoutSessionRepository.observeInProgress().first() }!!
+        assertEquals(started.id, reopened.id)
+        assertEquals(WorkoutSessionStatus.IN_PROGRESS, reopened.status)
+
+        composeTestRule.onNodeWithContentDescription("Voltar").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithTag("home_in_progress").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithTag("home_in_progress").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_continue_in_progress").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Voltar").assertDoesNotExist()
     }
 }
