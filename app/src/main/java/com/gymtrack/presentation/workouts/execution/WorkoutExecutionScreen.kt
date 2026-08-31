@@ -1,7 +1,12 @@
 package com.gymtrack.presentation.workouts.execution
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -40,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -48,6 +55,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
@@ -201,6 +209,7 @@ private fun WorkoutExecutionContent(
                             RestContent(
                                 exerciseName = uiState.restExercise?.exerciseName.orEmpty(),
                                 remainingMillis = uiState.restRemainingMillis,
+                                restDurationMillis = (uiState.restExercise?.restSeconds ?: 0) * 1_000L,
                                 isPaused = uiState.isRestPaused,
                                 onPauseRest = onPauseRest,
                                 onResumeRest = onResumeRest,
@@ -652,10 +661,16 @@ private fun statusLabelRes(status: SessionExerciseListStatus): Int = when (statu
     SessionExerciseListStatus.PENDING -> R.string.exercise_status_pending
 }
 
+internal fun restRemainingFraction(remainingMillis: Long, durationMillis: Long): Float {
+    if (durationMillis <= 0L) return 0f
+    return (remainingMillis.toFloat() / durationMillis.toFloat()).coerceIn(0f, 1f)
+}
+
 @Composable
 private fun RestContent(
     exerciseName: String,
     remainingMillis: Long,
+    restDurationMillis: Long,
     isPaused: Boolean,
     onPauseRest: () -> Unit,
     onResumeRest: () -> Unit,
@@ -664,6 +679,20 @@ private fun RestContent(
 ) {
     val clock = formatRestClock(remainingMillis)
     val remainingDescription = stringResource(R.string.rest_remaining, clock)
+    val targetFraction = restRemainingFraction(remainingMillis, restDurationMillis)
+    var hasShownProgress by remember { mutableStateOf(false) }
+    val progressFraction by animateFloatAsState(
+        targetValue = targetFraction,
+        animationSpec = if (hasShownProgress) {
+            tween(durationMillis = 1_000, easing = LinearEasing)
+        } else {
+            snap()
+        },
+        label = "restRemainingArc",
+    )
+    LaunchedEffect(Unit) {
+        hasShownProgress = true
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -687,14 +716,38 @@ private fun RestContent(
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(16.dp))
-        Text(
-            text = clock,
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .testTag("rest_timer")
-                .semantics { contentDescription = remainingDescription },
-        )
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
+            val diameter = min(maxWidth * 0.72f, 280.dp).coerceAtLeast(168.dp)
+            val stroke = (diameter * 0.08f).coerceIn(8.dp, 14.dp)
+            Box(
+                modifier = Modifier.size(diameter),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(
+                    progress = { progressFraction },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("rest_progress"),
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = stroke,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    strokeCap = StrokeCap.Round,
+                    gapSize = 0.dp,
+                )
+                Text(
+                    text = clock,
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .testTag("rest_timer")
+                        .semantics { contentDescription = remainingDescription },
+                )
+            }
+        }
         Spacer(Modifier.height(24.dp))
         if (isPaused) {
             Button(

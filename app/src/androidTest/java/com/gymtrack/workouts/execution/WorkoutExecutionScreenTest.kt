@@ -673,8 +673,20 @@ class WorkoutExecutionScreenTest {
         waitUntilTextIsDisplayed("Descanso")
 
         composeTestRule.onNodeWithTag("rest_timer").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("rest_progress").assertIsDisplayed()
         composeTestRule.onNodeWithText("Pausar").assertIsDisplayed()
         composeTestRule.onNodeWithText("Pular").assertIsDisplayed()
+    }
+
+    @Test
+    fun workingScreen_doesNotShowRestProgress() {
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 1 de 2")
+
+        composeTestRule.onNodeWithTag("rest_progress").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("rest_timer").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Descanso").assertDoesNotExist()
     }
 
     @Test
@@ -759,6 +771,8 @@ class WorkoutExecutionScreenTest {
 
         waitUntilTextIsDisplayed("Série 2 de 2")
         composeTestRule.onNodeWithText("Descanso").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("rest_progress").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("rest_timer").assertDoesNotExist()
     }
 
     @Test
@@ -773,6 +787,7 @@ class WorkoutExecutionScreenTest {
 
         waitUntilTextIsDisplayed("Descanso")
         composeTestRule.onNodeWithTag("rest_timer").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("rest_progress").assertIsDisplayed()
         composeTestRule.onNodeWithText("Pausar").assertIsDisplayed()
     }
 
@@ -857,6 +872,7 @@ class WorkoutExecutionScreenTest {
 
         waitUntilTextIsDisplayed("Descanso")
         composeTestRule.onNodeWithTag("rest_timer").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("rest_progress").assertIsDisplayed()
         composeTestRule.onNodeWithTag("elapsed_timer").assertIsDisplayed()
         composeTestRule.onNodeWithText("Pausar").assertIsDisplayed()
         composeTestRule.onNodeWithText("Pular").assertIsDisplayed()
