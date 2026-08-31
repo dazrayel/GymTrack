@@ -9,6 +9,8 @@ import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
 import com.gymtrack.domain.repository.WorkoutSessionRepository
+import com.gymtrack.domain.time.formatLocalDate
+import com.gymtrack.domain.time.formatLocalTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +28,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import java.time.ZoneId
 
 private const val SESSION_ID = 50L
 
@@ -169,13 +172,15 @@ class WorkoutSessionSummaryViewModelTest {
     }
 
     @Test
-    fun completedSession_exposesUtcDateAndTimes() {
+    fun completedSession_exposesLocalDateAndTimes() {
         fakeRepo.emitSession(session)
         fakeRepo.emitExercises(listOf(exerciseA))
 
-        assertEquals("01/01/1970", viewModel.uiState.value.startedDate)
-        assertEquals("00:00", viewModel.uiState.value.startedTime)
-        assertEquals("00:01", viewModel.uiState.value.endedTime)
+        val zone = ZoneId.of("America/Sao_Paulo")
+        val state = viewModel.uiState.value.copy(zoneId = zone)
+        assertEquals(formatLocalDate(session.startedAtMillis, zone), state.startedDate)
+        assertEquals(formatLocalTime(session.startedAtMillis, zone), state.startedTime)
+        assertEquals(formatLocalTime(session.endedAtMillis!!, zone), state.endedTime)
         assertFalse(viewModel.uiState.value.sessionNotFound)
         assertEquals("Push Day", viewModel.uiState.value.session?.workoutName)
     }

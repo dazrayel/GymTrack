@@ -22,8 +22,9 @@ import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
-import com.gymtrack.domain.time.formatHistoryDate
-import com.gymtrack.domain.time.formatHistoryTime
+import com.gymtrack.domain.time.formatLocalDate
+import com.gymtrack.domain.time.formatLocalTime
+import java.time.ZoneId
 import com.gymtrack.presentation.workouts.summary.WorkoutSessionSummaryScreen
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -173,18 +174,19 @@ class WorkoutSessionSummaryScreenTest {
     }
 
     @Test
-    fun summary_showsUtcDateAndTimesFromPersistedSession() {
+    fun summary_showsLocalDateAndTimesFromPersistedSession() {
         val persisted = runBlocking { workoutSessionRepository.getSession(sessionId) }!!
+        val zone = ZoneId.systemDefault()
         setScreen()
         composeTestRule.waitForIdle()
 
         waitUntilTextIsDisplayed("Treino Resumo")
-        composeTestRule.onNodeWithText(formatHistoryDate(persisted.startedAtMillis)).assertIsDisplayed()
-        composeTestRule.onNodeWithText("Início: ${formatHistoryTime(persisted.startedAtMillis)}")
+        composeTestRule.onNodeWithText(formatLocalDate(persisted.startedAtMillis, zone)).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Início: ${formatLocalTime(persisted.startedAtMillis, zone)}")
             .assertIsDisplayed()
         val endedAt = persisted.endedAtMillis
         if (endedAt != null) {
-            composeTestRule.onNodeWithText("Término: ${formatHistoryTime(endedAt)}").assertIsDisplayed()
+            composeTestRule.onNodeWithText("Término: ${formatLocalTime(endedAt, zone)}").assertIsDisplayed()
             composeTestRule.onNodeWithTag("summary_duration").assertIsDisplayed()
         }
         composeTestRule.onNodeWithTag("summary_volume").assertIsDisplayed()

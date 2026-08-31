@@ -10,8 +10,9 @@ import com.gymtrack.domain.model.exerciseProgress
 import com.gymtrack.domain.model.exerciseVolume
 import com.gymtrack.domain.model.workoutProgress
 import com.gymtrack.domain.model.workoutVolume
-import com.gymtrack.domain.time.formatHistoryDate
-import com.gymtrack.domain.time.formatHistoryTime
+import com.gymtrack.domain.time.formatLocalDate
+import com.gymtrack.domain.time.formatLocalTime
+import java.time.ZoneId
 
 data class SessionExerciseSummary(
     val exerciseName: String,
@@ -32,18 +33,19 @@ data class WorkoutSessionSummaryUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val sessionNotFound: Boolean = false,
+    val zoneId: ZoneId = ZoneId.systemDefault(),
 ) {
     val durationMillis: Long
         get() = elapsedMillis(session, nowMillis = session?.endedAtMillis ?: 0L)
 
     val startedDate: String
-        get() = session?.let { formatHistoryDate(it.startedAtMillis) }.orEmpty()
+        get() = session?.let { formatLocalDate(it.startedAtMillis, zoneId) }.orEmpty()
 
     val startedTime: String
-        get() = session?.let { formatHistoryTime(it.startedAtMillis) }.orEmpty()
+        get() = session?.let { formatLocalTime(it.startedAtMillis, zoneId) }.orEmpty()
 
     val endedTime: String
-        get() = session?.endedAtMillis?.let { formatHistoryTime(it) }.orEmpty()
+        get() = session?.endedAtMillis?.let { formatLocalTime(it, zoneId) }.orEmpty()
 
     val progress
         get() = workoutProgress(exercises, setsByExerciseId)
