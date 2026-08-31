@@ -119,6 +119,66 @@ class HistoryViewModelTest {
         assertNull(vm.uiState.value.error)
     }
 
+    @Test
+    fun confirmDelete_removesOnlySelectedSession() = runTest(testDispatcher) {
+        val first = historyItem(sessionId = 1L, workoutName = "A")
+        val second = historyItem(sessionId = 2L, workoutName = "B")
+        fakeRepository.emit(listOf(first, second))
+        advanceUntilIdle()
+
+        viewModel.showDeleteConfirmation(first)
+        viewModel.confirmDelete()
+        advanceUntilIdle()
+
+        assertEquals(listOf(2L), viewModel.uiState.value.items.map { it.sessionId })
+        assertEquals(listOf(1L), fakeRepository.deletedSessionIds)
+        assertNull(viewModel.uiState.value.sessionToDelete)
+    }
+
+    @Test
+    fun dismissDeleteConfirmation_doesNotDelete() = runTest(testDispatcher) {
+        val item = historyItem(sessionId = 3L, workoutName = "C")
+        fakeRepository.emit(listOf(item))
+        advanceUntilIdle()
+
+        viewModel.showDeleteConfirmation(item)
+        assertEquals(item, viewModel.uiState.value.sessionToDelete)
+        viewModel.dismissDeleteConfirmation()
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.sessionToDelete)
+        assertEquals(listOf(item), viewModel.uiState.value.items)
+        assertTrue(fakeRepository.deletedSessionIds.isEmpty())
+    }
+
+    @Test
+    fun confirmDelete_lastSession_leavesEmptyList() = runTest(testDispatcher) {
+        val only = historyItem(sessionId = 9L, workoutName = "Único")
+        fakeRepository.emit(listOf(only))
+        advanceUntilIdle()
+
+        viewModel.showDeleteConfirmation(only)
+        viewModel.confirmDelete()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.items.isEmpty())
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertNull(viewModel.uiState.value.sessionToDelete)
+    }
+
+    @Test
+    fun confirmDelete_withoutSelection_doesNothing() = runTest(testDispatcher) {
+        val item = historyItem(sessionId = 4L, workoutName = "D")
+        fakeRepository.emit(listOf(item))
+        advanceUntilIdle()
+
+        viewModel.confirmDelete()
+        advanceUntilIdle()
+
+        assertEquals(listOf(item), viewModel.uiState.value.items)
+        assertTrue(fakeRepository.deletedSessionIds.isEmpty())
+    }
+
     private fun historyItem(
         sessionId: Long,
         workoutName: String,
@@ -138,10 +198,14 @@ class HistoryViewModelTest {
 private class FakeHistorySessionRepository : WorkoutSessionRepository {
 
     private val completed = MutableSharedFlow<List<WorkoutHistoryItem>>(extraBufferCapacity = 1)
+    private val currentItems = mutableListOf<WorkoutHistoryItem>()
     var shouldThrowOnObserve = false
+    val deletedSessionIds = mutableListOf<Long>()
 
     suspend fun emit(items: List<WorkoutHistoryItem>) {
-        completed.emit(items)
+        currentItems.clear()
+        currentItems.addAll(items)
+        completed.emit(currentItems.toList())
     }
 
     override fun observeCompletedSessions(): Flow<List<WorkoutHistoryItem>> {
@@ -179,4 +243,9 @@ private class FakeHistorySessionRepository : WorkoutSessionRepository {
     override suspend fun skipSessionExercise(sessionExerciseId: Long) = Unit
     override suspend fun resumeSessionExercise(sessionExerciseId: Long) = Unit
     override suspend fun finishSession(sessionId: Long) = Unit
+    override suspend fun deleteCompletedSession(sessionId: Long) {
+        deletedSessionIds.add(sessionId)
+        currentItems.removeAll { it.sessionId == sessionId }
+        completed.emit(currentItems.toList())
+    }
 }

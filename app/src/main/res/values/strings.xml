@@ -16,6 +16,9 @@
     <string name="history_item_meta">%1$s · %2$d exercícios · %3$d séries</string>
     <string name="history_volume">Volume: %1$s</string>
     <string name="history_session_cd">Sessão de %1$s em %2$s</string>
+    <string name="delete_history_session">Excluir treino?</string>
+    <string name="delete_history_session_message">Esta sessão será removida do histórico. Essa ação não pode ser desfeita.</string>
+    <string name="delete_history_session_cd">Excluir sessão %1$s do histórico</string>
     <string name="settings_title">Configurações</string>
 
     <!-- Home dashboard -->

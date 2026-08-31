@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.TestActivity
@@ -171,6 +172,56 @@ class HistoryScreenTest {
         composeTestRule.waitForIdle()
 
         assertEquals(42L, clickedId)
+    }
+
+    @Test
+    fun list_showsDeleteAction() {
+        setContent(HistoryUiState(isLoading = false, items = listOf(sampleItem)))
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("history_delete_42").assertIsDisplayed()
+    }
+
+    @Test
+    fun deleteDialog_cancelKeepsItem_confirmRemovesSession() {
+        val item = seedCompletedSession()
+        composeTestRule.setContent {
+            GymTrackTheme {
+                HistoryScreen(contentPadding = PaddingValues())
+            }
+        }
+        composeTestRule.waitForIdle()
+
+        waitUntilTextIsDisplayed(item.workoutName)
+        composeTestRule.onNodeWithTag("history_delete_${item.sessionId}").performClick()
+        composeTestRule.waitForIdle()
+
+        waitUntilTextIsDisplayed("Excluir treino?")
+        waitUntilTextIsDisplayed("Esta sessão será removida do histórico. Essa ação não pode ser desfeita.")
+        composeTestRule.onNodeWithTag("cancel_delete_history_button").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("history_item_${item.sessionId}").assertIsDisplayed()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText("Excluir treino?").fetchSemanticsNodes().isEmpty()
+        }
+
+        composeTestRule.onNodeWithTag("history_delete_${item.sessionId}").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Excluir treino?")
+        composeTestRule.onNodeWithTag("confirm_delete_history_button").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithTag("history_item_${item.sessionId}")
+                .fetchSemanticsNodes()
+                .isEmpty()
+        }
+        assertTrue(
+            composeTestRule.onAllNodesWithTag("history_item_${item.sessionId}")
+                .fetchSemanticsNodes()
+                .isEmpty(),
+        )
     }
 
     @Test

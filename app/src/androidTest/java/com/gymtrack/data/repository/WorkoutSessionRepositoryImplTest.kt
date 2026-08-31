@@ -940,6 +940,51 @@ class WorkoutSessionRepositoryImplTest {
         assertEquals(40.0, rows.single { it.exerciseName == "Squat" }.weight, 0.001)
     }
 
+    @Test
+    fun deleteCompletedSession_removesOnlyThatSessionAndDependents() = runBlocking {
+        val firstId = repository.startSession(workoutId).requireSessionId()
+        val firstExercises = repository.observeSessionExercises(firstId).first()
+        repository.completeSet(firstExercises[0].id, setIndex = 0, reps = 8, weight = 60.0)
+        repository.finishSession(firstId)
+
+        val secondId = repository.startSession(workoutId).requireSessionId()
+        val secondExercises = repository.observeSessionExercises(secondId).first()
+        repository.completeSet(secondExercises[0].id, setIndex = 0, reps = 7, weight = 55.0)
+        repository.finishSession(secondId)
+
+        val firstExerciseIds = firstExercises.map { it.id }
+        repository.deleteCompletedSession(firstId)
+
+        assertNull(repository.getSession(firstId))
+        assertNotNull(repository.getSession(secondId))
+        assertEquals(secondId, repository.observeCompletedSessions().first().single().sessionId)
+        assertTrue(db.workoutSessionExerciseDao().getBySessionId(firstId).first().isEmpty())
+        assertTrue(db.workoutSetDao().getBySessionId(firstId).first().isEmpty())
+        firstExerciseIds.forEach { sessionExerciseId ->
+            assertTrue(db.workoutSetDao().getBySessionExerciseId(sessionExerciseId).first().isEmpty())
+        }
+        assertEquals(2, repository.observeSessionExercises(secondId).first().size)
+        assertEquals(1, db.workoutSetDao().getBySessionId(secondId).first().size)
+        assertNotNull(workoutRepository.getById(workoutId).first())
+        assertNotNull(exerciseRepository.getById(exerciseId).first())
+        assertTrue(
+            repository.observeCompletedSetHistory().first().none { it.sessionId == firstId },
+        )
+        assertTrue(
+            repository.observeCompletedSetHistory().first().any { it.sessionId == secondId },
+        )
+    }
+
+    @Test
+    fun deleteCompletedSession_doesNotDeleteInProgressSession() = runBlocking {
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        repository.deleteCompletedSession(sessionId)
+        val session = repository.getSession(sessionId)
+        assertNotNull(session)
+        assertEquals(WorkoutSessionStatus.IN_PROGRESS, session!!.status)
+        assertEquals(2, repository.observeSessionExercises(sessionId).first().size)
+    }
+
     private fun StartSessionResult.requireSessionId(): Long = when (this) {
         is StartSessionResult.Created -> sessionId
         is StartSessionResult.Resumed -> sessionId

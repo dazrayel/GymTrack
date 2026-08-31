@@ -14,18 +14,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +67,9 @@ fun HistoryScreen(
     HistoryScreen(
         uiState = uiState,
         onSessionClick = onSessionClick,
+        onDeleteClick = viewModel::showDeleteConfirmation,
+        onConfirmDelete = viewModel::confirmDelete,
+        onDismissDelete = viewModel::dismissDeleteConfirmation,
         onErrorShown = viewModel::clearError,
         contentPadding = contentPadding,
         modifier = modifier,
@@ -73,6 +82,9 @@ fun HistoryScreen(
     uiState: HistoryUiState,
     onSessionClick: (Long) -> Unit,
     onErrorShown: () -> Unit,
+    onDeleteClick: (WorkoutHistoryItem) -> Unit = {},
+    onConfirmDelete: () -> Unit = {},
+    onDismissDelete: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
 ) {
@@ -136,11 +148,40 @@ fun HistoryScreen(
                         HistoryItem(
                             item = item,
                             onClick = { onSessionClick(item.sessionId) },
+                            onDeleteClick = { onDeleteClick(item) },
                         )
                     }
                 }
             }
         }
+    }
+
+    val sessionToDelete = uiState.sessionToDelete
+    if (sessionToDelete != null) {
+        AlertDialog(
+            onDismissRequest = onDismissDelete,
+            title = { Text(stringResource(R.string.delete_history_session)) },
+            text = { Text(stringResource(R.string.delete_history_session_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = onConfirmDelete,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error,
+                    ),
+                    modifier = Modifier.testTag("confirm_delete_history_button"),
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = onDismissDelete,
+                    modifier = Modifier.testTag("cancel_delete_history_button"),
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 }
 
@@ -148,6 +189,7 @@ fun HistoryScreen(
 private fun HistoryItem(
     item: WorkoutHistoryItem,
     onClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val date = formatHistoryDate(item.endedAtMillis ?: item.startedAtMillis)
@@ -170,35 +212,53 @@ private fun HistoryItem(
         ),
         shape = RoundedCornerShape(12.dp),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-            Text(
-                text = item.workoutName,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = date,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.padding(top = 2.dp),
-            )
-            Text(
-                text = stringResource(
-                    R.string.history_item_meta,
-                    duration,
-                    item.exerciseCount,
-                    item.completedSetCount,
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            Text(
-                text = stringResource(R.string.history_volume, volume),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.padding(top = 2.dp),
-            )
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+                Text(
+                    text = item.workoutName,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = date,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+                Text(
+                    text = stringResource(
+                        R.string.history_item_meta,
+                        duration,
+                        item.exerciseCount,
+                        item.completedSetCount,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                Text(
+                    text = stringResource(R.string.history_volume, volume),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.testTag("history_delete_${item.sessionId}"),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(
+                        R.string.delete_history_session_cd,
+                        item.workoutName,
+                    ),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }

@@ -1241,4 +1241,6 @@ private class FakeExecutionSessionRepository(
             restAfterSetIndex = null,
         )
     }
+
+    override suspend fun deleteCompletedSession(sessionId: Long) = Unit
 }

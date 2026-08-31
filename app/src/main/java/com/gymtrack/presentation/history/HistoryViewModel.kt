@@ -2,6 +2,7 @@ package com.gymtrack.presentation.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,5 +37,25 @@ class HistoryViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    fun showDeleteConfirmation(item: WorkoutHistoryItem) {
+        _uiState.update { it.copy(sessionToDelete = item) }
+    }
+
+    fun dismissDeleteConfirmation() {
+        _uiState.update { it.copy(sessionToDelete = null) }
+    }
+
+    fun confirmDelete() {
+        val item = _uiState.value.sessionToDelete ?: return
+        viewModelScope.launch {
+            try {
+                sessionRepository.deleteCompletedSession(item.sessionId)
+                _uiState.update { it.copy(sessionToDelete = null) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(sessionToDelete = null, error = e.message) }
+            }
+        }
     }
 }

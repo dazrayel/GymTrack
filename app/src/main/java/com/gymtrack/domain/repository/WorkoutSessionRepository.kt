@@ -57,4 +57,10 @@ interface WorkoutSessionRepository {
     suspend fun resumeSessionExercise(sessionExerciseId: Long)
 
     suspend fun finishSession(sessionId: Long)
+
+    /**
+     * Permanently removes a [COMPLETED][com.gymtrack.domain.model.WorkoutSessionStatus.COMPLETED]
+     * session and its snapshot/sets. In-progress sessions are left unchanged.
+     */
+    suspend fun deleteCompletedSession(sessionId: Long)
 }

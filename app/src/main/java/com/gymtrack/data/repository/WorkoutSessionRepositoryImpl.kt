@@ -253,6 +253,14 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteCompletedSession(sessionId: Long) {
+        withContext(Dispatchers.IO) {
+            val session = sessionDao.getByIdOnce(sessionId) ?: return@withContext
+            if (session.status != WorkoutSessionEntity.STATUS_COMPLETED) return@withContext
+            sessionDao.deleteById(sessionId)
+        }
+    }
+
     private fun syncExerciseCompletionStatus(sessionExerciseId: Long) {
         val entity = sessionExerciseDao.getByIdOnce(sessionExerciseId) ?: return
         val completed = setDao.countBySessionExerciseId(sessionExerciseId)
