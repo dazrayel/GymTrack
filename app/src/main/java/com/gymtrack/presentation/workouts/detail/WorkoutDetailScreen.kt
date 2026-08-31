@@ -561,16 +561,14 @@ private fun ExercisePickerDialog(
             }
         },
         confirmButton = {
-            if (exercises.isEmpty()) {
-                TextButton(
-                    onClick = {
-                        onDismiss()
-                        onNavigateToExercises()
-                    },
-                    modifier = Modifier.testTag("go_to_exercises"),
-                ) {
-                    Text(stringResource(R.string.go_to_exercises))
-                }
+            TextButton(
+                onClick = {
+                    onDismiss()
+                    onNavigateToExercises()
+                },
+                modifier = Modifier.testTag("go_to_exercises"),
+            ) {
+                Text(stringResource(R.string.go_to_exercises))
             }
         },
         dismissButton = {

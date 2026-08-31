@@ -287,7 +287,8 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Selecionar exercício").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("go_to_exercises").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("go_to_exercises").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Ir para exercícios").assertIsDisplayed()
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -303,7 +304,37 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Supino Teste").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("go_to_exercises").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("go_to_exercises").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Ir para exercícios").assertIsDisplayed()
+    }
+
+    @Test
+    fun picker_filledLibrary_goToExercises_invokesNavigationCallback() {
+        var navigatedToExercises = false
+        setScreen(onNavigateToExercises = { navigatedToExercises = true })
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Supino Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("go_to_exercises").performClick()
+        composeTestRule.waitUntil(5_000) { navigatedToExercises }
+        composeTestRule.onNodeWithText("Selecionar exercício").assertIsNotDisplayed()
+    }
+
+    @Test
+    fun picker_filledLibrary_cancel_dismissesPicker() {
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Selecionar exercício").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Cancelar").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Selecionar exercício").assertIsNotDisplayed()
     }
 
     @Test
