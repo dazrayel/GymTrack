@@ -35,6 +35,7 @@ class WorkoutExecutionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val workoutSessionRepository: WorkoutSessionRepository,
     private val timeProvider: TimeProvider,
+    private val draftStore: WorkoutExecutionDraftStore,
 ) : ViewModel() {
 
     private val sessionId: Long = checkNotNull(savedStateHandle["sessionId"])
@@ -153,12 +154,14 @@ class WorkoutExecutionViewModel @Inject constructor(
                 progressPercent = progress.progressPercent,
                 isLoading = false,
                 repsInput = if (shouldPrefill) {
-                    currentExercise.minRepetitions.toString()
+                    draftStore.get(sessionId, currentExercise.id)?.repsInput
+                        ?: currentExercise.minRepetitions.toString()
                 } else {
                     current.repsInput
                 },
                 weightInput = if (shouldPrefill) {
-                    formatWeight(currentExercise.plannedWeight)
+                    draftStore.get(sessionId, currentExercise.id)?.weightInput
+                        ?: formatWeight(currentExercise.plannedWeight)
                 } else {
                     current.weightInput
                 },
@@ -194,10 +197,24 @@ class WorkoutExecutionViewModel @Inject constructor(
 
     fun onRepsChanged(value: String) {
         _uiState.update { it.copy(repsInput = value, repsError = null) }
+        persistCurrentDraft()
     }
 
     fun onWeightChanged(value: String) {
         _uiState.update { it.copy(weightInput = value, weightError = null) }
+        persistCurrentDraft()
+    }
+
+    private fun persistCurrentDraft() {
+        val state = _uiState.value
+        val exercise = state.currentExercise ?: return
+        if (state.phase != WorkoutExecutionPhase.WORKING) return
+        draftStore.put(
+            sessionId = sessionId,
+            exerciseId = exercise.id,
+            repsInput = state.repsInput,
+            weightInput = state.weightInput,
+        )
     }
 
     fun completeCurrentSet() {
@@ -229,6 +246,7 @@ class WorkoutExecutionViewModel @Inject constructor(
                     reps = reps,
                     weight = weight,
                 )
+                draftStore.clear(sessionId, exercise.id)
                 if (exercise.restSeconds > 0) {
                     workoutSessionRepository.startRest(
                         sessionId = sessionId,
@@ -285,6 +303,7 @@ class WorkoutExecutionViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 workoutSessionRepository.finishSession(sessionId)
+                draftStore.clearSession(sessionId)
                 _uiState.update {
                     it.copy(
                         showFinishConfirmation = false,

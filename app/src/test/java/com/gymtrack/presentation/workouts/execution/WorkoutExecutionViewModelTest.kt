@@ -43,6 +43,7 @@ class WorkoutExecutionViewModelTest {
 
     private lateinit var fakeRepo: FakeExecutionSessionRepository
     private lateinit var clock: FakeTimeProvider
+    private lateinit var draftStore: WorkoutExecutionDraftStore
     private lateinit var viewModel: WorkoutExecutionViewModel
 
     private val session = WorkoutSession(
@@ -90,6 +91,7 @@ class WorkoutExecutionViewModelTest {
         Dispatchers.setMain(testDispatcher)
         clock = FakeTimeProvider(now = 1_000_000L)
         fakeRepo = FakeExecutionSessionRepository(clock)
+        draftStore = WorkoutExecutionDraftStore()
         buildViewModel()
     }
 
@@ -103,6 +105,7 @@ class WorkoutExecutionViewModelTest {
             savedStateHandle = SavedStateHandle(mapOf("sessionId" to SESSION_ID)),
             workoutSessionRepository = fakeRepo,
             timeProvider = clock,
+            draftStore = draftStore,
         )
     }
 
@@ -278,6 +281,82 @@ class WorkoutExecutionViewModelTest {
     @Test
     fun openingExercise_prefillsPlannedRepsAndWeight() {
         emitSessionWithExercises()
+
+        assertEquals("8", viewModel.uiState.value.repsInput)
+        assertEquals("60", viewModel.uiState.value.weightInput)
+    }
+
+    @Test
+    fun recreatingViewModel_restoresDraftForSameSessionAndExercise() {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("12")
+        viewModel.onWeightChanged("80")
+
+        buildViewModel()
+        emitSessionWithExercises()
+
+        assertEquals("12", viewModel.uiState.value.repsInput)
+        assertEquals("80", viewModel.uiState.value.weightInput)
+        assertEquals(exerciseA, viewModel.uiState.value.currentExercise)
+    }
+
+    @Test
+    fun draft_overridesPlannedPrefill() {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("15")
+        viewModel.onWeightChanged("72.5")
+
+        buildViewModel()
+        emitSessionWithExercises()
+
+        assertEquals("15", viewModel.uiState.value.repsInput)
+        assertEquals("72.5", viewModel.uiState.value.weightInput)
+        assertEquals("8", exerciseA.minRepetitions.toString())
+        assertEquals(60.0, exerciseA.plannedWeight, 0.0)
+    }
+
+    @Test
+    fun completeCurrentSet_clearsDraftForThatExercise() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("12")
+        viewModel.onWeightChanged("80")
+        viewModel.completeCurrentSet()
+
+        assertEquals(1, fakeRepo.completeSetCalls.size)
+        assertEquals(12, fakeRepo.completeSetCalls.single().reps)
+        assertEquals(80.0, fakeRepo.completeSetCalls.single().weight, 0.0)
+        assertNull(draftStore.get(SESSION_ID, exerciseA.id))
+    }
+
+    @Test
+    fun switchingExercise_doesNotShowPreviousExerciseDraft() {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("12")
+        viewModel.onWeightChanged("80")
+
+        fakeRepo.emitSets(
+            exerciseA.id,
+            listOf(set(exerciseA.id, 0), set(exerciseA.id, 1), set(exerciseA.id, 2)),
+        )
+
+        assertEquals(exerciseB, viewModel.uiState.value.currentExercise)
+        assertEquals("10", viewModel.uiState.value.repsInput)
+        assertEquals("14.5", viewModel.uiState.value.weightInput)
+        assertEquals(ExerciseInputDraft("12", "80"), draftStore.get(SESSION_ID, exerciseA.id))
+    }
+
+    @Test
+    fun confirmFinish_clearsSessionDrafts() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("12")
+        viewModel.onWeightChanged("80")
+        viewModel.confirmFinish()
+
+        assertNull(draftStore.get(SESSION_ID, exerciseA.id))
+
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB))
+        buildViewModel()
 
         assertEquals("8", viewModel.uiState.value.repsInput)
         assertEquals("60", viewModel.uiState.value.weightInput)

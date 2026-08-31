@@ -1,5 +1,6 @@
 package com.gymtrack.home
 
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
@@ -12,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.MainActivity
 import com.gymtrack.domain.model.Exercise
@@ -218,5 +220,43 @@ class HomeNavigationTest {
         composeTestRule.onNodeWithTag("home_in_progress").assertIsDisplayed()
         composeTestRule.onNodeWithTag("home_continue_in_progress").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Voltar").assertDoesNotExist()
+    }
+
+    @Test
+    fun homeTab_fromExecution_restoresTypedDraftViaContinueCta() {
+        composeTestRule.onNode(hasText("Treinos") and hasClickAction()).performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithText("Meus treinos").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithText(workoutName).performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Iniciar treino").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithTag("reps_field").fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule.onNodeWithTag("reps_field").performTextReplacement("12")
+        composeTestRule.onNodeWithTag("weight_field").performTextReplacement("77")
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNode(hasText("Início") and hasClickAction()).performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithTag("home_continue_in_progress").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithTag("home_continue_in_progress").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithTag("reps_field").fetchSemanticsNodes().isNotEmpty()
+        }
+
+        composeTestRule.onNodeWithTag("reps_field").assert(hasText("12"))
+        composeTestRule.onNodeWithTag("weight_field").assert(hasText("77"))
+        val active = runBlocking { workoutSessionRepository.observeInProgress().first() }!!
+        assertEquals(workoutName, active.workoutName)
+        assertEquals(WorkoutSessionStatus.IN_PROGRESS, active.status)
     }
 }
