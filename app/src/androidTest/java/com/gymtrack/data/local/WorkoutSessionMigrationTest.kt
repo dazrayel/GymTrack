@@ -542,6 +542,48 @@ class WorkoutSessionMigrationTest {
         }
     }
 
+    @Test
+    fun migration7To8_schemaValidates() {
+        helper.createDatabase(TEST_DB_7_8, 7).use { /* empty v7 */ }
+
+        helper.runMigrationsAndValidate(
+            TEST_DB_7_8,
+            8,
+            true,
+            GymTrackDatabase.MIGRATION_7_8,
+        )
+    }
+
+    @Test
+    fun migration7To8_existingSessionExercisesDefaultToPending() {
+        helper.createDatabase(TEST_DB_7_8, 7).use { v7 ->
+            v7.execSQL(
+                "INSERT INTO workout_sessions " +
+                    "(workoutName, workoutDescription, startedAtMillis, status) " +
+                    "VALUES ('Old', '', 1000, 'COMPLETED')",
+            )
+            val sessionId = queryId(v7, "SELECT id FROM workout_sessions LIMIT 1")
+            v7.execSQL(
+                "INSERT INTO workout_session_exercises " +
+                    "(sessionId, position, exerciseName, muscleGroup, equipmentType, " +
+                    "plannedSets, minRepetitions, maxRepetitions, plannedWeight, restSeconds, notes, " +
+                    "secondaryMuscles) " +
+                    "VALUES ($sessionId, 0, 'Bench', 'Chest', 'Barbell', 3, 8, 12, 60.0, 90, '', '')",
+            )
+        }
+
+        val v8 = helper.runMigrationsAndValidate(
+            TEST_DB_7_8,
+            8,
+            true,
+            GymTrackDatabase.MIGRATION_7_8,
+        )
+        val cursor = v8.query("SELECT status FROM workout_session_exercises")
+        cursor.moveToFirst()
+        assertEquals("PENDING", cursor.getString(0))
+        cursor.close()
+    }
+
     private fun indexNames(db: androidx.sqlite.db.SupportSQLiteDatabase, table: String): List<String> {
         val cursor = db.query(
             "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='$table'",
@@ -565,5 +607,6 @@ class WorkoutSessionMigrationTest {
         private const val TEST_DB = "session-migration-test"
         private const val TEST_DB_4_5 = "session-migration-test-4-5"
         private const val TEST_DB_5_6 = "session-migration-test-5-6"
+        private const val TEST_DB_7_8 = "session-migration-test-7-8"
     }
 }

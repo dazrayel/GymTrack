@@ -4,6 +4,7 @@ import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.ExerciseProgress
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
+import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
 import com.gymtrack.domain.model.WorkoutSet
 import com.gymtrack.domain.model.elapsedMillis
 import com.gymtrack.domain.model.exerciseProgress
@@ -22,6 +23,8 @@ data class SessionExerciseSummary(
     val sets: List<WorkoutSet>,
     val volume: Double,
     val progress: ExerciseProgress,
+    val isComplete: Boolean,
+    val isSkipped: Boolean,
 )
 
 data class WorkoutSessionSummaryUiState(
@@ -87,6 +90,9 @@ data class WorkoutSessionSummaryUiState(
                         currentOccurredAtMillis = occurredAt,
                         history = history,
                     ),
+                    isComplete = sets.size >= exercise.plannedSets,
+                    isSkipped = exercise.status == WorkoutSessionExerciseStatus.SKIPPED &&
+                        sets.size < exercise.plannedSets,
                 )
             }
         }

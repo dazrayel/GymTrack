@@ -52,7 +52,11 @@ class WorkoutSessionRepositoryImplTest {
             .allowMainThreadQueries()
             .build()
         workoutRepository = WorkoutRepositoryImpl(db.workoutDao(), db.workoutExerciseDao())
-        exerciseRepository = ExerciseRepositoryImpl(db.exerciseDao())
+        exerciseRepository = ExerciseRepositoryImpl(
+            db,
+            db.exerciseDao(),
+            db.exerciseSecondaryMuscleDao(),
+        )
         repository = WorkoutSessionRepositoryImpl(
             db,
             db.workoutSessionDao(),
@@ -161,8 +165,151 @@ class WorkoutSessionRepositoryImplTest {
         assertEquals(60.0, bench.plannedWeight, 0.001)
         assertEquals(90, bench.restSeconds)
         assertEquals("pause", bench.notes)
+        assertEquals(emptyList<String>(), bench.secondaryMuscles)
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.PENDING, bench.status)
         assertEquals("Squat", exercises[1].exerciseName)
         assertEquals(4, exercises[1].plannedSets)
+    }
+
+    @Test
+    fun skipSessionExercise_marksSkippedWithoutCreatingSet() = runBlocking {
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val bench = repository.observeSessionExercises(sessionId).first()[0]
+        repository.skipSessionExercise(bench.id)
+        val after = repository.observeSessionExercises(sessionId).first()[0]
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.SKIPPED, after.status)
+        assertTrue(repository.observeSets(bench.id).first().isEmpty())
+        assertEquals(3, after.plannedSets)
+        assertEquals(8, after.minRepetitions)
+        assertEquals(12, after.maxRepetitions)
+    }
+
+    @Test
+    fun skipSessionExercise_keepsExistingSets() = runBlocking {
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val bench = repository.observeSessionExercises(sessionId).first()[0]
+        repository.completeSet(bench.id, setIndex = 0, reps = 10, weight = 60.0)
+        repository.completeSet(bench.id, setIndex = 1, reps = 8, weight = 60.0)
+        repository.skipSessionExercise(bench.id)
+        val after = repository.observeSessionExercises(sessionId).first()[0]
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.SKIPPED, after.status)
+        assertEquals(2, repository.observeSets(bench.id).first().size)
+        assertEquals(
+            com.gymtrack.domain.model.WorkoutSessionExerciseStatus.SKIPPED,
+            after.status,
+        )
+    }
+
+    @Test
+    fun resumeSessionExercise_marksInProgress() = runBlocking {
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val bench = repository.observeSessionExercises(sessionId).first()[0]
+        repository.skipSessionExercise(bench.id)
+        repository.resumeSessionExercise(bench.id)
+        val after = repository.observeSessionExercises(sessionId).first()[0]
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.IN_PROGRESS, after.status)
+    }
+
+    @Test
+    fun resumeSessionExercise_fromPending_doesNotSkipOthersOrCreateSets() = runBlocking {
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val exercises = repository.observeSessionExercises(sessionId).first()
+        val bench = exercises[0]
+        val squat = exercises[1]
+        repository.resumeSessionExercise(squat.id)
+        val after = repository.observeSessionExercises(sessionId).first()
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.PENDING, after[0].status)
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.IN_PROGRESS, after[1].status)
+        assertTrue(repository.observeSets(bench.id).first().isEmpty())
+        assertTrue(repository.observeSets(squat.id).first().isEmpty())
+    }
+
+    @Test
+    fun resumeSessionExercise_persistsInProgress_afterNewRepositoryInstance() = runBlocking {
+        val curlId = db.exerciseDao().insert(
+            ExerciseEntity(name = "Curl", muscleGroup = "Arms", equipmentType = "Dumbbell"),
+        )
+        workoutRepository.addExercise(
+            WorkoutExercise(
+                workoutId = workoutId,
+                exerciseId = curlId,
+                position = 2,
+                sets = 3,
+                minRepetitions = 8,
+                maxRepetitions = 12,
+                weight = 10.0,
+                restSeconds = 0,
+            ),
+        )
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val exercises = repository.observeSessionExercises(sessionId).first()
+        val curl = exercises[2]
+        repository.resumeSessionExercise(curl.id)
+
+        val reread = WorkoutSessionRepositoryImpl(
+            db,
+            db.workoutSessionDao(),
+            db.workoutSessionExerciseDao(),
+            db.workoutSetDao(),
+            workoutRepository,
+            exerciseRepository,
+            com.gymtrack.domain.time.SystemTimeProvider(),
+        )
+        val after = reread.observeSessionExercises(sessionId).first()
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.PENDING, after[0].status)
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.PENDING, after[1].status)
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.IN_PROGRESS, after[2].status)
+        assertEquals(1, after.count { it.status == com.gymtrack.domain.model.WorkoutSessionExerciseStatus.IN_PROGRESS })
+        assertTrue(reread.observeSets(after[2].id).first().isEmpty())
+    }
+
+    @Test
+    fun finishSession_doesNotRewriteMixedExerciseStatuses() = runBlocking {
+        val curlId = db.exerciseDao().insert(
+            ExerciseEntity(name = "Finish Curl", muscleGroup = "Arms", equipmentType = "Dumbbell"),
+        )
+        workoutRepository.addExercise(
+            WorkoutExercise(
+                workoutId = workoutId,
+                exerciseId = curlId,
+                position = 2,
+                sets = 3,
+                minRepetitions = 8,
+                maxRepetitions = 12,
+                weight = 10.0,
+                restSeconds = 0,
+            ),
+        )
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val exercises = repository.observeSessionExercises(sessionId).first()
+        val bench = exercises[0]
+        val squat = exercises[1]
+        val curl = exercises[2]
+        repeat(4) { index ->
+            repository.completeSet(squat.id, setIndex = index, reps = 5, weight = 40.0)
+        }
+        repository.skipSessionExercise(curl.id)
+        repository.finishSession(sessionId)
+
+        val after = repository.observeSessionExercises(sessionId).first()
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.PENDING, after.first { it.id == bench.id }.status)
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.COMPLETED, after.first { it.id == squat.id }.status)
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.SKIPPED, after.first { it.id == curl.id }.status)
+        assertEquals(WorkoutSessionStatus.COMPLETED, repository.getSession(sessionId)!!.status)
+        assertTrue(repository.observeSets(bench.id).first().isEmpty())
+        assertEquals(4, repository.observeSets(squat.id).first().size)
+        assertTrue(repository.observeSets(curl.id).first().isEmpty())
+    }
+
+    @Test
+    fun completeAllSets_marksCompletedNotSkipped() = runBlocking {
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val squat = repository.observeSessionExercises(sessionId).first()[1]
+        repeat(4) { index ->
+            repository.completeSet(squat.id, setIndex = index, reps = 5, weight = 40.0)
+        }
+        val after = repository.observeSessionExercises(sessionId).first()[1]
+        assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.COMPLETED, after.status)
     }
 
     @Test
@@ -732,6 +879,51 @@ class WorkoutSessionRepositoryImplTest {
         val rows = repository.observeCompletedSetHistory().first().filter { it.sessionId == sessionId }
         assertTrue(rows.any { it.exerciseName == "Bench Press" && it.reps == 10 && it.weight == 50.0 })
         assertNull(repository.observeSessionExercises(sessionId).first()[0].exerciseId)
+    }
+
+    @Test
+    fun startSession_copiesSecondaryMusclesIntoSnapshot() = runBlocking {
+        exerciseRepository.save(
+            com.gymtrack.domain.model.Exercise(
+                id = exerciseId,
+                name = "Bench Press",
+                muscleGroup = "Chest",
+                equipmentType = "Barbell",
+                secondaryMuscles = listOf("Ombros", "Tríceps"),
+            ),
+        )
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val snapshot = repository.observeSessionExercises(sessionId).first()
+            .first { it.exerciseName == "Bench Press" }
+        assertEquals(listOf("Ombros", "Tríceps"), snapshot.secondaryMuscles)
+    }
+
+    @Test
+    fun startSession_catalogSecondaryEditDoesNotChangeExistingSnapshot() = runBlocking {
+        exerciseRepository.save(
+            com.gymtrack.domain.model.Exercise(
+                id = exerciseId,
+                name = "Bench Press",
+                muscleGroup = "Chest",
+                equipmentType = "Barbell",
+                secondaryMuscles = listOf("Ombros"),
+            ),
+        )
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        exerciseRepository.save(
+            com.gymtrack.domain.model.Exercise(
+                id = exerciseId,
+                name = "Bench Press",
+                muscleGroup = "Chest",
+                equipmentType = "Barbell",
+                secondaryMuscles = listOf("Tríceps", "Abdômen"),
+            ),
+        )
+        val snapshot = repository.observeSessionExercises(sessionId).first()
+            .first { it.exerciseName == "Bench Press" }
+        assertEquals(listOf("Ombros"), snapshot.secondaryMuscles)
+        val catalog = exerciseRepository.getById(exerciseId).first()!!
+        assertEquals(listOf("Abdômen", "Tríceps"), catalog.secondaryMuscles)
     }
 
     @Test

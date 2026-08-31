@@ -6,6 +6,7 @@ import com.gymtrack.R
 import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
+import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
 import com.gymtrack.domain.repository.WorkoutSessionRepository
@@ -84,6 +85,21 @@ class WorkoutExecutionViewModelTest {
         plannedWeight = 14.5,
         restSeconds = 0,
         notes = "Controle a descida",
+    )
+
+    private val exerciseC = WorkoutSessionExercise(
+        id = 30L,
+        sessionId = SESSION_ID,
+        exerciseId = 3L,
+        position = 2,
+        exerciseName = "Tríceps",
+        muscleGroup = "Braços",
+        equipmentType = "Polia",
+        plannedSets = 3,
+        minRepetitions = 8,
+        maxRepetitions = 12,
+        plannedWeight = 20.0,
+        restSeconds = 0,
     )
 
     @Before
@@ -166,6 +182,40 @@ class WorkoutExecutionViewModelTest {
         assertEquals(exerciseA.id, call.sessionExerciseId)
         assertEquals(8, call.reps)
         assertEquals(60.0, call.weight, 0.0)
+    }
+
+    @Test
+    fun completeCurrentSet_acceptsRepsInsidePlannedRange() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("10")
+        viewModel.completeCurrentSet()
+
+        assertEquals(10, fakeRepo.completeSetCalls.single().reps)
+        assertEquals(8, viewModel.uiState.value.exercises.single { it.id == exerciseA.id }.minRepetitions)
+        assertEquals(12, viewModel.uiState.value.exercises.single { it.id == exerciseA.id }.maxRepetitions)
+    }
+
+    @Test
+    fun completeCurrentSet_acceptsRepsBelowPlannedRange() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("6")
+        viewModel.completeCurrentSet()
+
+        assertEquals(6, fakeRepo.completeSetCalls.single().reps)
+        assertEquals(8, exerciseA.minRepetitions)
+        assertEquals(12, exerciseA.maxRepetitions)
+    }
+
+    @Test
+    fun completeCurrentSet_acceptsRepsAbovePlannedRange() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("15")
+        viewModel.completeCurrentSet()
+
+        assertEquals(15, fakeRepo.completeSetCalls.single().reps)
+        val snapshot = viewModel.uiState.value.exercises.single { it.id == exerciseA.id }
+        assertEquals(8, snapshot.minRepetitions)
+        assertEquals(12, snapshot.maxRepetitions)
     }
 
     @Test
@@ -326,6 +376,354 @@ class WorkoutExecutionViewModelTest {
         assertEquals(12, fakeRepo.completeSetCalls.single().reps)
         assertEquals(80.0, fakeRepo.completeSetCalls.single().weight, 0.0)
         assertNull(draftStore.get(SESSION_ID, exerciseA.id))
+    }
+
+    @Test
+    fun skipExercise_doesNotCreateSet_andAdvancesToNext() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.confirmSkip()
+
+        assertTrue(fakeRepo.completeSetCalls.isEmpty())
+        assertEquals(WorkoutSessionExerciseStatus.SKIPPED, viewModel.uiState.value.exercises[0].status)
+        assertEquals(exerciseB, viewModel.uiState.value.currentExercise)
+        assertEquals(0, viewModel.uiState.value.setsByExerciseId[exerciseA.id].orEmpty().size)
+        assertEquals(0, viewModel.uiState.value.currentSetIndex)
+        assertFalse(viewModel.uiState.value.isWorkoutComplete)
+    }
+
+    @Test
+    fun skipExercise_keepsPartialSets() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        fakeRepo.emitSets(exerciseA.id, listOf(set(exerciseA.id, 0), set(exerciseA.id, 1)))
+        viewModel.confirmSkip()
+
+        assertEquals(2, viewModel.uiState.value.setsByExerciseId[exerciseA.id]?.size)
+        assertEquals(WorkoutSessionExerciseStatus.SKIPPED, viewModel.uiState.value.exercises[0].status)
+        assertEquals(exerciseB, viewModel.uiState.value.currentExercise)
+        assertEquals(0, viewModel.uiState.value.currentSetIndex)
+    }
+
+    @Test
+    fun resumeSkipped_startsAtNextPendingSet() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        fakeRepo.emitSets(exerciseA.id, listOf(set(exerciseA.id, 0), set(exerciseA.id, 1)))
+        viewModel.confirmSkip()
+        viewModel.resumeExercise(exerciseA.id)
+
+        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(2, viewModel.uiState.value.currentSetIndex)
+        assertEquals(WorkoutSessionExerciseStatus.IN_PROGRESS, viewModel.uiState.value.currentExercise?.status)
+    }
+
+    @Test
+    fun resumeSkipped_withoutSets_startsAtFirstSet() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.confirmSkip()
+        viewModel.resumeExercise(exerciseA.id)
+
+        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(0, viewModel.uiState.value.currentSetIndex)
+    }
+
+    @Test
+    fun skipThenCompleteNext_doesNotAutoReturnToSkipped() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        viewModel.confirmSkip()
+        fakeRepo.emitSets(exerciseB.id, listOf(set(exerciseB.id, 0), set(exerciseB.id, 1)))
+
+        assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(
+            WorkoutSessionExerciseStatus.SKIPPED,
+            viewModel.uiState.value.exercises.first { it.id == exerciseA.id }.status,
+        )
+        assertTrue(viewModel.uiState.value.pendingSkippedExercises.any { it.id == exerciseA.id })
+    }
+
+    @Test
+    fun skipDoesNotMixDrafts() {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("12")
+        viewModel.onWeightChanged("80")
+        viewModel.confirmSkip()
+
+        assertEquals("10", viewModel.uiState.value.repsInput)
+        assertEquals("14.5", viewModel.uiState.value.weightInput)
+        assertEquals("12", draftStore.get(SESSION_ID, exerciseA.id)?.repsInput)
+        assertNull(draftStore.get(SESSION_ID, exerciseB.id))
+    }
+
+    @Test
+    fun recreatingViewModel_keepsSkippedStatus() {
+        emitSessionWithExercises()
+        viewModel.confirmSkip()
+        val persisted = listOf(
+            exerciseA.copy(status = WorkoutSessionExerciseStatus.SKIPPED),
+            exerciseB,
+        )
+        buildViewModel()
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(persisted)
+
+        assertEquals(exerciseB.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(
+            WorkoutSessionExerciseStatus.SKIPPED,
+            viewModel.uiState.value.exercises.first { it.id == exerciseA.id }.status,
+        )
+        assertFalse(
+            viewModel.uiState.value.exercises.any {
+                it.status == WorkoutSessionExerciseStatus.COMPLETED && it.id == exerciseA.id
+            },
+        )
+    }
+
+    @Test
+    fun selectPendingLaterExercise_makesItCurrent_withoutSkippingOthers() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+
+        viewModel.resumeExercise(exerciseC.id)
+
+        val state = viewModel.uiState.value
+        assertEquals(exerciseC.id, state.currentExercise?.id)
+        assertEquals(WorkoutSessionExerciseStatus.IN_PROGRESS, state.currentExercise?.status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[0].status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[1].status)
+        assertEquals(0, state.currentSetIndex)
+        assertTrue(state.setsByExerciseId.values.all { it.isEmpty() })
+        assertTrue(fakeRepo.completeSetCalls.isEmpty())
+    }
+
+    @Test
+    fun selectPendingEarlierExercise_demotesPreviousInProgressToPending() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        fakeRepo.emitSets(exerciseC.id, listOf(set(exerciseC.id, 0)))
+        viewModel.resumeExercise(exerciseC.id)
+        viewModel.resumeExercise(exerciseA.id)
+
+        val state = viewModel.uiState.value
+        assertEquals(exerciseA.id, state.currentExercise?.id)
+        assertEquals(WorkoutSessionExerciseStatus.IN_PROGRESS, state.exercises[0].status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[2].status)
+        assertEquals(1, state.setsByExerciseId[exerciseC.id]?.size)
+        assertEquals(1, state.exercises.count { it.status == WorkoutSessionExerciseStatus.IN_PROGRESS })
+    }
+
+    @Test
+    fun selectOtherExercise_keepsPartialSets_andResumeContinuesAtNextSet() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        fakeRepo.emitSets(exerciseA.id, listOf(set(exerciseA.id, 0), set(exerciseA.id, 1)))
+
+        viewModel.resumeExercise(exerciseC.id)
+        assertEquals(2, viewModel.uiState.value.setsByExerciseId[exerciseA.id]?.size)
+        assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
+
+        viewModel.resumeExercise(exerciseA.id)
+        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(2, viewModel.uiState.value.currentSetIndex)
+        assertEquals(2, viewModel.uiState.value.setsByExerciseId[exerciseA.id]?.size)
+    }
+
+    @Test
+    fun selectOtherExercise_preservesDraftOfPreviousExercise() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        viewModel.onRepsChanged("12")
+        viewModel.onWeightChanged("77")
+
+        viewModel.resumeExercise(exerciseC.id)
+        assertEquals("12", draftStore.get(SESSION_ID, exerciseA.id)?.repsInput)
+        assertEquals("77", draftStore.get(SESSION_ID, exerciseA.id)?.weightInput)
+
+        viewModel.resumeExercise(exerciseA.id)
+        assertEquals("12", viewModel.uiState.value.repsInput)
+        assertEquals("77", viewModel.uiState.value.weightInput)
+    }
+
+    @Test
+    fun completedExercise_cannotBeSelectedAndHasNoSelectAction() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        fakeRepo.emitSets(
+            exerciseA.id,
+            listOf(set(exerciseA.id, 0), set(exerciseA.id, 1), set(exerciseA.id, 2)),
+        )
+
+        val row = viewModel.uiState.value.sessionExerciseRows.first { it.exercise.id == exerciseA.id }
+        assertTrue(row.isComplete)
+        assertFalse(row.canSelectNow)
+        assertEquals(SessionExerciseListStatus.COMPLETED, row.listStatus)
+
+        viewModel.resumeExercise(exerciseA.id)
+        assertEquals(exerciseB.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(3, viewModel.uiState.value.setsByExerciseId[exerciseA.id]?.size)
+    }
+
+    @Test
+    fun selectSkippedExercise_marksInProgressAtFirstSet() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        viewModel.confirmSkip()
+        viewModel.resumeExercise(exerciseA.id)
+
+        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(WorkoutSessionExerciseStatus.IN_PROGRESS, viewModel.uiState.value.currentExercise?.status)
+        assertEquals(0, viewModel.uiState.value.currentSetIndex)
+    }
+
+    @Test
+    fun recreatingViewModel_keepsManuallySelectedExercise() {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(
+            listOf(
+                exerciseA,
+                exerciseB,
+                exerciseC.copy(status = WorkoutSessionExerciseStatus.IN_PROGRESS),
+            ),
+        )
+        assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
+
+        buildViewModel()
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(
+            listOf(
+                exerciseA,
+                exerciseB,
+                exerciseC.copy(status = WorkoutSessionExerciseStatus.IN_PROGRESS),
+            ),
+        )
+
+        assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(
+            WorkoutSessionExerciseStatus.IN_PROGRESS,
+            viewModel.uiState.value.currentExercise?.status,
+        )
+    }
+
+    @Test
+    fun completingManuallySelectedExercise_returnsToFirstIncompletePending() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        viewModel.resumeExercise(exerciseC.id)
+        repeat(3) { viewModel.completeCurrentSet() }
+
+        val state = viewModel.uiState.value
+        assertEquals(WorkoutSessionExerciseStatus.COMPLETED, state.exercises[2].status)
+        assertEquals(exerciseA.id, state.currentExercise?.id)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[0].status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[1].status)
+        assertFalse(state.exercises.any { it.status == WorkoutSessionExerciseStatus.SKIPPED })
+    }
+
+    @Test
+    fun selectChain_aToCToBToA_neverSkipsOrCreatesSets() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        assertTrue(
+            viewModel.uiState.value.exercises.none {
+                it.status == WorkoutSessionExerciseStatus.IN_PROGRESS
+            },
+        )
+
+        viewModel.resumeExercise(exerciseC.id)
+        var state = viewModel.uiState.value
+        assertEquals(exerciseC.id, state.currentExercise?.id)
+        assertEquals(WorkoutSessionExerciseStatus.IN_PROGRESS, state.exercises[2].status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[0].status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[1].status)
+        assertEquals(1, state.exercises.count { it.status == WorkoutSessionExerciseStatus.IN_PROGRESS })
+        assertFalse(state.exercises.any { it.status == WorkoutSessionExerciseStatus.SKIPPED })
+
+        viewModel.resumeExercise(exerciseB.id)
+        state = viewModel.uiState.value
+        assertEquals(exerciseB.id, state.currentExercise?.id)
+        assertEquals(WorkoutSessionExerciseStatus.IN_PROGRESS, state.exercises[1].status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[0].status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[2].status)
+        assertEquals(1, state.exercises.count { it.status == WorkoutSessionExerciseStatus.IN_PROGRESS })
+
+        viewModel.resumeExercise(exerciseA.id)
+        state = viewModel.uiState.value
+        assertEquals(exerciseA.id, state.currentExercise?.id)
+        assertEquals(WorkoutSessionExerciseStatus.IN_PROGRESS, state.exercises[0].status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[1].status)
+        assertEquals(WorkoutSessionExerciseStatus.PENDING, state.exercises[2].status)
+        assertEquals(1, state.exercises.count { it.status == WorkoutSessionExerciseStatus.IN_PROGRESS })
+        assertFalse(state.exercises.any { it.status == WorkoutSessionExerciseStatus.SKIPPED })
+        assertTrue(fakeRepo.completeSetCalls.isEmpty())
+        assertTrue(state.setsByExerciseId.values.all { it.isEmpty() })
+    }
+
+    @Test
+    fun selectSwap_preservesPartialSetsOnBothExercises() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        fakeRepo.emitSets(exerciseA.id, listOf(set(exerciseA.id, 0)))
+        fakeRepo.emitSets(exerciseC.id, listOf(set(exerciseC.id, 0), set(exerciseC.id, 1)))
+        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
+
+        viewModel.resumeExercise(exerciseC.id)
+        var state = viewModel.uiState.value
+        assertEquals(exerciseC.id, state.currentExercise?.id)
+        assertEquals(1, state.setsByExerciseId[exerciseA.id]?.size)
+        assertEquals(2, state.setsByExerciseId[exerciseC.id]?.size)
+        assertEquals(2, state.currentSetIndex)
+        assertTrue(fakeRepo.completeSetCalls.isEmpty())
+
+        viewModel.resumeExercise(exerciseA.id)
+        state = viewModel.uiState.value
+        assertEquals(exerciseA.id, state.currentExercise?.id)
+        assertEquals(1, state.currentSetIndex)
+        assertEquals(1, state.setsByExerciseId[exerciseA.id]?.size)
+        assertEquals(2, state.setsByExerciseId[exerciseC.id]?.size)
+
+        viewModel.resumeExercise(exerciseC.id)
+        state = viewModel.uiState.value
+        assertEquals(exerciseC.id, state.currentExercise?.id)
+        assertEquals(2, state.currentSetIndex)
+        assertEquals(2, state.setsByExerciseId[exerciseC.id]?.size)
+        assertEquals(1, state.setsByExerciseId[exerciseA.id]?.size)
+        assertTrue(fakeRepo.completeSetCalls.isEmpty())
+    }
+
+    @Test
+    fun skippedPartialExercise_resumeThenCompleteRemaining_marksCompleted() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+        fakeRepo.emitSets(exerciseA.id, listOf(set(exerciseA.id, 0)))
+        viewModel.confirmSkip()
+        assertEquals(WorkoutSessionExerciseStatus.SKIPPED, viewModel.uiState.value.exercises[0].status)
+        assertEquals(1, viewModel.uiState.value.setsByExerciseId[exerciseA.id]?.size)
+
+        viewModel.resumeExercise(exerciseA.id)
+        var state = viewModel.uiState.value
+        assertEquals(exerciseA.id, state.currentExercise?.id)
+        assertEquals(WorkoutSessionExerciseStatus.IN_PROGRESS, state.currentExercise?.status)
+        assertEquals(1, state.currentSetIndex)
+        assertEquals(1, state.setsByExerciseId[exerciseA.id]?.size)
+
+        viewModel.completeCurrentSet()
+        viewModel.completeCurrentSet()
+
+        state = viewModel.uiState.value
+        assertEquals(3, state.setsByExerciseId[exerciseA.id]?.size)
+        assertEquals(WorkoutSessionExerciseStatus.COMPLETED, state.exercises[0].status)
+        assertFalse(state.exercises[0].status == WorkoutSessionExerciseStatus.SKIPPED)
+        assertFalse(
+            state.exercises.any {
+                it.id == exerciseA.id && it.status == WorkoutSessionExerciseStatus.IN_PROGRESS
+            },
+        )
+    }
+
+    @Test
+    fun requestFinish_withPending_setsPendingFlag() {
+        emitSessionWithExercises()
+        viewModel.requestFinish()
+        assertTrue(viewModel.uiState.value.showFinishConfirmation)
+        assertTrue(viewModel.uiState.value.finishHasPendingExercises)
     }
 
     @Test
@@ -744,6 +1142,16 @@ private class FakeExecutionSessionRepository(
             weight = weight,
             completedAtMillis = 1L,
         )
+        val planned = exercisesFlow.value.find { it.id == sessionExerciseId }?.plannedSets ?: Int.MAX_VALUE
+        if (flow.value.size >= planned) {
+            exercisesFlow.value = exercisesFlow.value.map { exercise ->
+                if (exercise.id == sessionExerciseId) {
+                    exercise.copy(status = WorkoutSessionExerciseStatus.COMPLETED)
+                } else {
+                    exercise
+                }
+            }
+        }
         return nextSetId
     }
 
@@ -793,6 +1201,31 @@ private class FakeExecutionSessionRepository(
             restSessionExerciseId = null,
             restAfterSetIndex = null,
         )
+    }
+
+    override suspend fun skipSessionExercise(sessionExerciseId: Long) {
+        exercisesFlow.value = exercisesFlow.value.map { exercise ->
+            if (exercise.id == sessionExerciseId) {
+                exercise.copy(status = WorkoutSessionExerciseStatus.SKIPPED)
+            } else {
+                exercise
+            }
+        }
+    }
+
+    override suspend fun resumeSessionExercise(sessionExerciseId: Long) {
+        val completed = setsFlows[sessionExerciseId]?.value?.size ?: 0
+        val planned = exercisesFlow.value.find { it.id == sessionExerciseId }?.plannedSets ?: 0
+        if (completed >= planned) return
+        exercisesFlow.value = exercisesFlow.value.map { exercise ->
+            when {
+                exercise.id == sessionExerciseId ->
+                    exercise.copy(status = WorkoutSessionExerciseStatus.IN_PROGRESS)
+                exercise.status == WorkoutSessionExerciseStatus.IN_PROGRESS ->
+                    exercise.copy(status = WorkoutSessionExerciseStatus.PENDING)
+                else -> exercise
+            }
+        }
     }
 
     override suspend fun finishSession(sessionId: Long) {

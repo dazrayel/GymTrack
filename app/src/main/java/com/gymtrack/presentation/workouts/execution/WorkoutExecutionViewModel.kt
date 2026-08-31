@@ -8,7 +8,9 @@ import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
+import com.gymtrack.domain.model.areAllSessionExercisesComplete
 import com.gymtrack.domain.model.elapsedMillis
+import com.gymtrack.domain.model.resolveCurrentExerciseIndex
 import com.gymtrack.domain.model.workoutProgress
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
@@ -108,12 +110,14 @@ class WorkoutExecutionViewModel @Inject constructor(
         exercises: List<WorkoutSessionExercise>,
         setsByExerciseId: Map<Long, List<WorkoutSet>>,
     ) {
-        val pendingIndex = exercises.indexOfFirst { exercise ->
-            (setsByExerciseId[exercise.id]?.size ?: 0) < exercise.plannedSets
-        }
-        val isComplete = pendingIndex < 0
+        val pendingIndex = resolveCurrentExerciseIndex(exercises, setsByExerciseId)
+        val isComplete = areAllSessionExercisesComplete(exercises, setsByExerciseId)
         val exerciseIndex = if (isComplete) 0 else pendingIndex
-        val currentExercise = if (isComplete) null else exercises.getOrNull(exerciseIndex)
+        val currentExercise = if (isComplete || pendingIndex < 0) {
+            null
+        } else {
+            exercises.getOrNull(pendingIndex)
+        }
         val setIndex = currentExercise?.let { setsByExerciseId[it.id]?.size ?: 0 } ?: 0
         val remaining = remainingFrom(session)
         val isCompleted = session?.status == WorkoutSessionStatus.COMPLETED
@@ -291,8 +295,51 @@ class WorkoutExecutionViewModel @Inject constructor(
         }
     }
 
+    fun requestSkip() {
+        val state = _uiState.value
+        if (state.phase != WorkoutExecutionPhase.WORKING) return
+        if (state.currentExercise == null) return
+        _uiState.update { it.copy(showSkipConfirmation = true) }
+    }
+
+    fun dismissSkipConfirmation() {
+        _uiState.update { it.copy(showSkipConfirmation = false) }
+    }
+
+    fun confirmSkip() {
+        val exercise = _uiState.value.currentExercise ?: return
+        if (_uiState.value.phase != WorkoutExecutionPhase.WORKING) return
+        viewModelScope.launch {
+            try {
+                workoutSessionRepository.skipSessionExercise(exercise.id)
+                _uiState.update { it.copy(showSkipConfirmation = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(showSkipConfirmation = false, error = e.message) }
+            }
+        }
+    }
+
+    fun resumeExercise(sessionExerciseId: Long) {
+        val state = _uiState.value
+        if (state.phase != WorkoutExecutionPhase.WORKING) return
+        val target = state.exercises.firstOrNull { it.id == sessionExerciseId } ?: return
+        val completedSets = state.setsByExerciseId[target.id]?.size ?: 0
+        if (completedSets >= target.plannedSets) return
+        if (state.currentExercise?.id == sessionExerciseId) return
+        viewModelScope.launch {
+            try {
+                workoutSessionRepository.resumeSessionExercise(sessionExerciseId)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
     fun requestFinish() {
-        _uiState.update { it.copy(showFinishConfirmation = true) }
+        val pending = _uiState.value.hasIncompleteExercises
+        _uiState.update {
+            it.copy(showFinishConfirmation = true, finishHasPendingExercises = pending)
+        }
     }
 
     fun dismissFinishConfirmation() {

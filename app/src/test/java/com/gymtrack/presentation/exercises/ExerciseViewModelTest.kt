@@ -182,6 +182,86 @@ class ExerciseViewModelTest {
         assertEquals(42L, viewModel.uiState.value.exercises.first().id)
     }
 
+    @Test
+    fun saveExercise_blankMuscleGroup_doesNotSave() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        viewModel.saveExercise("Supino", "  ", "Barra")
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.exercises.isEmpty())
+    }
+
+    @Test
+    fun saveExercise_blankName_doesNotSave() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        viewModel.saveExercise("  ", "Peitoral", "Barra")
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.exercises.isEmpty())
+    }
+
+    @Test
+    fun saveExercise_persistsSelectedMuscleGroupAndEquipment() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        viewModel.saveExercise("Supino", "Peitoral", "Barra")
+        advanceUntilIdle()
+
+        val exercise = viewModel.uiState.value.exercises.single()
+        assertEquals("Peitoral", exercise.muscleGroup)
+        assertEquals("Barra", exercise.equipmentType)
+    }
+
+    @Test
+    fun saveExercise_persistsMultipleSecondaries() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        viewModel.saveExercise("Supino", "Peitoral", "Barra", listOf("Ombros", "Tríceps"))
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf("Ombros", "Tríceps"),
+            viewModel.uiState.value.exercises.single().secondaryMuscles,
+        )
+    }
+
+    @Test
+    fun saveExercise_dropsSecondaryEqualToPrimary() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        viewModel.saveExercise("Supino", "Peitoral", "Barra", listOf("Peitoral", "Costas"))
+        advanceUntilIdle()
+
+        assertEquals(listOf("Costas"), viewModel.uiState.value.exercises.single().secondaryMuscles)
+    }
+
+    @Test
+    fun saveExercise_deduplicatesSecondaries() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        viewModel.saveExercise("Supino", "Peitoral", "Barra", listOf("Ombros", "Ombros", "Ombros"))
+        advanceUntilIdle()
+
+        assertEquals(listOf("Ombros"), viewModel.uiState.value.exercises.single().secondaryMuscles)
+    }
+
+    @Test
+    fun saveExercise_changingPrimaryRemovesMatchingSecondary() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        viewModel.saveExercise("Supino", "Peitoral", "Barra", listOf("Costas", "Ombros"))
+        advanceUntilIdle()
+        val original = viewModel.uiState.value.exercises.single()
+        viewModel.showEditDialog(original)
+        viewModel.saveExercise("Supino", "Costas", "Barra", original.secondaryMuscles)
+        advanceUntilIdle()
+
+        assertEquals(listOf("Ombros"), viewModel.uiState.value.exercises.single().secondaryMuscles)
+        assertEquals("Costas", viewModel.uiState.value.exercises.single().muscleGroup)
+    }
+
     // ─── Delete exercise ──────────────────────────────────────────────────────
 
     @Test

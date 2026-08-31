@@ -29,6 +29,7 @@ class ExerciseDomainModelTest {
         assertEquals("Wide Push-up", copy.name)
         assertEquals("Chest", copy.muscleGroup)
         assertEquals("Bodyweight", copy.equipmentType)
+        assertEquals(emptyList<String>(), original.secondaryMuscles)
     }
 
     @Test

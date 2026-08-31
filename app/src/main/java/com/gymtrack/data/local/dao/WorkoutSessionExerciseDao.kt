@@ -24,6 +24,18 @@ interface WorkoutSessionExerciseDao {
     @Insert
     fun insertAll(sessionExercises: List<WorkoutSessionExerciseEntity>): List<Long>
 
+    @Query("SELECT * FROM workout_session_exercises WHERE id = :id")
+    fun getByIdOnce(id: Long): WorkoutSessionExerciseEntity?
+
+    @Query("UPDATE workout_session_exercises SET status = :status WHERE id = :id")
+    fun updateStatus(id: Long, status: String): Int
+
+    @Query(
+        "UPDATE workout_session_exercises SET status = :pending " +
+            "WHERE sessionId = :sessionId AND status = :inProgress",
+    )
+    fun clearInProgress(sessionId: Long, pending: String, inProgress: String): Int
+
     @Query("DELETE FROM workout_session_exercises WHERE id = :id")
     fun deleteById(id: Long): Int
 }

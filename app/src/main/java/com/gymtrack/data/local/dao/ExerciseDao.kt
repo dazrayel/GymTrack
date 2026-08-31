@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.gymtrack.data.local.entity.ExerciseEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -25,6 +26,9 @@ interface ExerciseDao {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(exercise: ExerciseEntity): Long
+
+    @Update
+    fun update(exercise: ExerciseEntity): Int
 
     @Query("DELETE FROM exercises WHERE id = :id")
     fun deleteById(id: Long): Int

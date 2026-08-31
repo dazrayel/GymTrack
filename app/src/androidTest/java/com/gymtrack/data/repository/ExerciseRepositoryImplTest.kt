@@ -48,7 +48,7 @@ class ExerciseRepositoryImplTest {
             .allowMainThreadQueries()
             .build()
         dao = db.exerciseDao()
-        repository = ExerciseRepositoryImpl(dao)
+        repository = ExerciseRepositoryImpl(db, dao, db.exerciseSecondaryMuscleDao())
     }
 
     @After
@@ -164,5 +164,62 @@ class ExerciseRepositoryImplTest {
         val result = repository.getAll().first()
 
         assertTrue(result.all { it is Exercise })
+    }
+
+    @Test
+    fun save_roundTripsSecondaryMusclesWithoutDuplicatesOrPrimary() = runBlocking {
+        val id = repository.save(
+            Exercise(
+                name = "Supino",
+                muscleGroup = "Peitoral",
+                equipmentType = "Barra",
+                secondaryMuscles = listOf("Ombros", "Peitoral", "Ombros", "Tríceps"),
+            ),
+        )
+
+        val saved = repository.getById(id).first()!!
+        assertEquals(listOf("Ombros", "Tríceps"), saved.secondaryMuscles)
+        assertEquals("Peitoral", saved.muscleGroup)
+    }
+
+    @Test
+    fun save_replacesSecondaryMuscles() = runBlocking {
+        val id = repository.save(
+            Exercise(
+                name = "Supino",
+                muscleGroup = "Peitoral",
+                equipmentType = "Barra",
+                secondaryMuscles = listOf("Ombros", "Tríceps"),
+            ),
+        )
+        repository.save(
+            Exercise(
+                id = id,
+                name = "Supino",
+                muscleGroup = "Peitoral",
+                equipmentType = "Barra",
+                secondaryMuscles = listOf("Abdômen"),
+            ),
+        )
+
+        assertEquals(listOf("Abdômen"), repository.getById(id).first()!!.secondaryMuscles)
+    }
+
+    @Test
+    fun delete_cascadesSecondaryMuscles() = runBlocking {
+        val id = repository.save(
+            Exercise(
+                name = "Supino",
+                muscleGroup = "Peitoral",
+                equipmentType = "Barra",
+                secondaryMuscles = listOf("Ombros", "Tríceps"),
+            ),
+        )
+        val saved = repository.getById(id).first()!!
+        repository.delete(saved)
+
+        assertNull(repository.getById(id).first())
+        val leftover = db.exerciseSecondaryMuscleDao().getAll().first()
+        assertTrue(leftover.none { it.exerciseId == id })
     }
 }

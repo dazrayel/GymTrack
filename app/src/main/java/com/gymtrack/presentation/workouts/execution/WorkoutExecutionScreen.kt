@@ -35,7 +35,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -49,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
+import com.gymtrack.domain.model.formatRepetitionTarget
 import com.gymtrack.domain.time.formatElapsedMillis
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,6 +81,10 @@ fun WorkoutExecutionScreen(
         onPauseRest = viewModel::pauseRest,
         onResumeRest = viewModel::resumeRest,
         onSkipRest = viewModel::skipRest,
+        onRequestSkip = viewModel::requestSkip,
+        onDismissSkipConfirmation = viewModel::dismissSkipConfirmation,
+        onConfirmSkip = viewModel::confirmSkip,
+        onResumeExercise = viewModel::resumeExercise,
         onRequestFinish = viewModel::requestFinish,
         onDismissFinishConfirmation = viewModel::dismissFinishConfirmation,
         onConfirmFinish = viewModel::confirmFinish,
@@ -98,6 +105,10 @@ private fun WorkoutExecutionContent(
     onPauseRest: () -> Unit,
     onResumeRest: () -> Unit,
     onSkipRest: () -> Unit,
+    onRequestSkip: () -> Unit,
+    onDismissSkipConfirmation: () -> Unit,
+    onConfirmSkip: () -> Unit,
+    onResumeExercise: (Long) -> Unit,
     onRequestFinish: () -> Unit,
     onDismissFinishConfirmation: () -> Unit,
     onConfirmFinish: () -> Unit,
@@ -105,6 +116,7 @@ private fun WorkoutExecutionContent(
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    var showSessionExercises by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.error) {
         val message = uiState.error ?: return@LaunchedEffect
@@ -200,10 +212,19 @@ private fun WorkoutExecutionContent(
                         else -> {
                             val exercise = uiState.currentExercise
                             if (exercise == null) {
-                                CompletedWorkoutContent(
-                                    workoutName = uiState.session?.workoutName.orEmpty(),
-                                    modifier = Modifier.weight(1f),
-                                )
+                                if (uiState.hasIncompleteExercises) {
+                                    PendingExercisesPanel(
+                                        workoutName = uiState.session?.workoutName.orEmpty(),
+                                        rows = uiState.sessionExerciseRows,
+                                        onResumeExercise = onResumeExercise,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                } else {
+                                    CompletedWorkoutContent(
+                                        workoutName = uiState.session?.workoutName.orEmpty(),
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
                             } else {
                                 ActiveSetContent(
                                     workoutName = uiState.session?.workoutName.orEmpty(),
@@ -212,6 +233,8 @@ private fun WorkoutExecutionContent(
                                     notes = exercise.notes,
                                     currentSetNumber = uiState.currentSetIndex + 1,
                                     plannedSets = exercise.plannedSets,
+                                    minRepetitions = exercise.minRepetitions,
+                                    maxRepetitions = exercise.maxRepetitions,
                                     repsInput = uiState.repsInput,
                                     weightInput = uiState.weightInput,
                                     repsError = uiState.repsError,
@@ -219,6 +242,8 @@ private fun WorkoutExecutionContent(
                                     onRepsChanged = onRepsChanged,
                                     onWeightChanged = onWeightChanged,
                                     onCompleteSet = onCompleteSet,
+                                    onRequestSkip = onRequestSkip,
+                                    onOpenSessionExercises = { showSessionExercises = true },
                                     modifier = Modifier.weight(1f),
                                 )
                             }
@@ -233,7 +258,17 @@ private fun WorkoutExecutionContent(
         AlertDialog(
             onDismissRequest = onDismissFinishConfirmation,
             title = { Text(stringResource(R.string.finish_workout_title)) },
-            text = { Text(stringResource(R.string.finish_workout_message)) },
+            text = {
+                Text(
+                    stringResource(
+                        if (uiState.finishHasPendingExercises) {
+                            R.string.finish_workout_pending_message
+                        } else {
+                            R.string.finish_workout_message
+                        },
+                    ),
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = onConfirmFinish,
@@ -246,6 +281,64 @@ private fun WorkoutExecutionContent(
                 TextButton(
                     onClick = onDismissFinishConfirmation,
                     modifier = Modifier.testTag("cancel_finish_button"),
+                ) {
+                    Text(
+                        stringResource(
+                            if (uiState.finishHasPendingExercises) {
+                                R.string.continue_workout
+                            } else {
+                                R.string.cancel
+                            },
+                        ),
+                    )
+                }
+            },
+        )
+    }
+
+    if (showSessionExercises && uiState.phase == WorkoutExecutionPhase.WORKING) {
+        AlertDialog(
+            onDismissRequest = { showSessionExercises = false },
+            title = { Text(stringResource(R.string.session_exercises)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    SessionExercisesList(
+                        rows = uiState.sessionExerciseRows,
+                        onResumeExercise = { id ->
+                            onResumeExercise(id)
+                            showSessionExercises = false
+                        },
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showSessionExercises = false },
+                    modifier = Modifier.testTag("close_session_exercises_button"),
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
+
+    if (uiState.showSkipConfirmation) {
+        AlertDialog(
+            onDismissRequest = onDismissSkipConfirmation,
+            title = { Text(stringResource(R.string.skip_exercise_title)) },
+            text = { Text(stringResource(R.string.skip_exercise_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = onConfirmSkip,
+                    modifier = Modifier.testTag("confirm_skip_button"),
+                ) {
+                    Text(stringResource(R.string.skip))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = onDismissSkipConfirmation,
+                    modifier = Modifier.testTag("cancel_skip_button"),
                 ) {
                     Text(stringResource(R.string.cancel))
                 }
@@ -358,6 +451,8 @@ private fun ActiveSetContent(
     notes: String,
     currentSetNumber: Int,
     plannedSets: Int,
+    minRepetitions: Int,
+    maxRepetitions: Int,
     repsInput: String,
     weightInput: String,
     repsError: Int?,
@@ -365,6 +460,8 @@ private fun ActiveSetContent(
     onRepsChanged: (String) -> Unit,
     onWeightChanged: (String) -> Unit,
     onCompleteSet: () -> Unit,
+    onRequestSkip: () -> Unit,
+    onOpenSessionExercises: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -398,6 +495,14 @@ private fun ActiveSetContent(
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
         )
+        formatRepetitionTarget(minRepetitions, maxRepetitions)?.let { target ->
+            Text(
+                text = stringResource(R.string.execution_reps_target, target),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                modifier = Modifier.testTag("reps_target"),
+            )
+        }
         if (notes.isNotBlank()) {
             Text(
                 text = notes,
@@ -437,7 +542,114 @@ private fun ActiveSetContent(
         ) {
             Text(stringResource(R.string.complete_set))
         }
+        OutlinedButton(
+            onClick = onOpenSessionExercises,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("session_exercises_button"),
+        ) {
+            Text(stringResource(R.string.session_exercises))
+        }
+        OutlinedButton(
+            onClick = onRequestSkip,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("skip_exercise_button"),
+        ) {
+            Text(stringResource(R.string.skip_exercise))
+        }
     }
+}
+
+@Composable
+private fun PendingExercisesPanel(
+    workoutName: String,
+    rows: List<SessionExerciseRow>,
+    onResumeExercise: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (workoutName.isNotBlank()) {
+            Text(
+                text = workoutName,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            )
+        }
+        Text(
+            text = stringResource(R.string.session_exercises),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        SessionExercisesList(
+            rows = rows,
+            onResumeExercise = onResumeExercise,
+        )
+    }
+}
+
+@Composable
+private fun SessionExercisesList(
+    rows: List<SessionExerciseRow>,
+    onResumeExercise: (Long) -> Unit,
+) {
+    if (rows.isEmpty()) return
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("session_exercises_list"),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        rows.forEach { row ->
+            val name = row.exercise.exerciseName
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("session_exercise_row_$name"),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Text(
+                    text = stringResource(statusLabelRes(row.listStatus)),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.testTag("session_exercise_status_$name"),
+                )
+                Text(
+                    text = stringResource(
+                        R.string.pending_exercise_sets,
+                        row.completedSets,
+                        row.exercise.plannedSets,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                )
+                if (row.canSelectNow) {
+                    OutlinedButton(
+                        onClick = { onResumeExercise(row.exercise.id) },
+                        modifier = Modifier.testTag("resume_exercise_$name"),
+                    ) {
+                        Text(stringResource(R.string.do_exercise_now))
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun statusLabelRes(status: SessionExerciseListStatus): Int = when (status) {
+    SessionExerciseListStatus.COMPLETED -> R.string.exercise_status_completed
+    SessionExerciseListStatus.SKIPPED -> R.string.exercise_status_skipped
+    SessionExerciseListStatus.IN_PROGRESS -> R.string.exercise_status_in_progress
+    SessionExerciseListStatus.PENDING -> R.string.exercise_status_pending
 }
 
 @Composable

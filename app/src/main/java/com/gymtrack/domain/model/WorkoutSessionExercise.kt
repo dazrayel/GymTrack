@@ -14,4 +14,6 @@ data class WorkoutSessionExercise(
     val plannedWeight: Double,
     val restSeconds: Int,
     val notes: String = "",
+    val secondaryMuscles: List<String> = emptyList(),
+    val status: WorkoutSessionExerciseStatus = WorkoutSessionExerciseStatus.PENDING,
 )

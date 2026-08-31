@@ -1,11 +1,17 @@
 package com.gymtrack.data.repository
 
+import androidx.room.withTransaction
+import com.gymtrack.data.local.GymTrackDatabase
 import com.gymtrack.data.local.dao.ExerciseDao
+import com.gymtrack.data.local.dao.ExerciseSecondaryMuscleDao
 import com.gymtrack.data.local.entity.ExerciseEntity
+import com.gymtrack.data.local.entity.ExerciseSecondaryMuscleEntity
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.sanitizedSecondaryMuscles
 import com.gymtrack.domain.repository.ExerciseRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -13,20 +19,51 @@ import javax.inject.Singleton
 
 @Singleton
 class ExerciseRepositoryImpl @Inject constructor(
+    private val database: GymTrackDatabase,
     private val dao: ExerciseDao,
+    private val secondaryMuscleDao: ExerciseSecondaryMuscleDao,
 ) : ExerciseRepository {
 
     override fun getAll(): Flow<List<Exercise>> =
-        dao.getAll().map { list -> list.map { it.toDomain() } }
+        combine(dao.getAll(), secondaryMuscleDao.getAll()) { exercises, secondaries ->
+            val byExercise = secondaries.groupBy { it.exerciseId }
+            exercises.map { entity ->
+                entity.toDomain(byExercise[entity.id].orEmpty().map { it.muscle })
+            }
+        }
 
     override fun getById(id: Long): Flow<Exercise?> =
-        dao.getById(id).map { it?.toDomain() }
+        combine(dao.getById(id), secondaryMuscleDao.getMuscles(id)) { entity, muscles ->
+            entity?.toDomain(muscles)
+        }
 
     override fun search(query: String): Flow<List<Exercise>> =
-        dao.search(query).map { list -> list.map { it.toDomain() } }
+        combine(dao.search(query), secondaryMuscleDao.getAll()) { exercises, secondaries ->
+            val byExercise = secondaries.groupBy { it.exerciseId }
+            exercises.map { entity ->
+                entity.toDomain(byExercise[entity.id].orEmpty().map { it.muscle })
+            }
+        }
 
     override suspend fun save(exercise: Exercise): Long = withContext(Dispatchers.IO) {
-        dao.insert(exercise.toEntity())
+        val secondaries = sanitizedSecondaryMuscles(exercise.muscleGroup, exercise.secondaryMuscles)
+        database.withTransaction {
+            val id = if (exercise.id == 0L) {
+                dao.insert(exercise.copy(secondaryMuscles = secondaries).toEntity())
+            } else {
+                dao.update(exercise.copy(secondaryMuscles = secondaries).toEntity())
+                exercise.id
+            }
+            secondaryMuscleDao.deleteByExerciseId(id)
+            if (secondaries.isNotEmpty()) {
+                secondaryMuscleDao.insertAll(
+                    secondaries.map { muscle ->
+                        ExerciseSecondaryMuscleEntity(exerciseId = id, muscle = muscle)
+                    },
+                )
+            }
+            id
+        }
     }
 
     override suspend fun delete(exercise: Exercise) {
@@ -34,11 +71,12 @@ class ExerciseRepositoryImpl @Inject constructor(
     }
 }
 
-private fun ExerciseEntity.toDomain() = Exercise(
+private fun ExerciseEntity.toDomain(secondaryMuscles: List<String>) = Exercise(
     id = id,
     name = name,
     muscleGroup = muscleGroup,
     equipmentType = equipmentType,
+    secondaryMuscles = sanitizedSecondaryMuscles(muscleGroup, secondaryMuscles),
 )
 
 private fun Exercise.toEntity() = ExerciseEntity(

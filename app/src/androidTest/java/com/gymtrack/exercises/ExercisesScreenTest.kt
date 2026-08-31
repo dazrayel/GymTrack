@@ -10,6 +10,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.TestActivity
 import com.gymtrack.domain.model.Exercise
@@ -57,7 +59,7 @@ class ExercisesScreenTest {
                     onExerciseClick = onExerciseClick,
                     onExerciseStatsClick = onExerciseStatsClick,
                     onDeleteClick = onDeleteClick,
-                    onSaveExercise = { _, _, _ -> },
+                    onSaveExercise = { _, _, _, _ -> },
                     onDismissDialog = {},
                     onConfirmDelete = {},
                     onDismissDelete = {},
@@ -87,6 +89,26 @@ class ExercisesScreenTest {
         composeTestRule.onNodeWithText("Supino reto").assertIsDisplayed()
         composeTestRule.onNodeWithTag("exercise_view_performance_Supino reto").assertIsDisplayed()
         composeTestRule.onNodeWithText("Ver desempenho").assertIsDisplayed()
+    }
+
+    @Test
+    fun list_showsPrimaryAndSecondaryMuscles() {
+        setContent(
+            ExerciseUiState(
+                isLoading = false,
+                exercises = listOf(
+                    Exercise(
+                        id = 1,
+                        name = "Supino reto",
+                        muscleGroup = "Peitoral",
+                        equipmentType = "Barra",
+                        secondaryMuscles = listOf("Ombros", "Tríceps"),
+                    ),
+                ),
+            ),
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Peitoral · Ombros, Tríceps · Barra").assertIsDisplayed()
     }
 
     @Test
@@ -166,7 +188,7 @@ class ExercisesScreenTest {
                     },
                     onExerciseStatsClick = { statsName = it },
                     onDeleteClick = {},
-                    onSaveExercise = { _, _, _ -> },
+                    onSaveExercise = { _, _, _, _ -> },
                     onDismissDialog = {},
                     onConfirmDelete = {},
                     onDismissDelete = {},
@@ -228,7 +250,7 @@ class ExercisesScreenTest {
                         deleted = it
                         uiState = uiState.copy(showDeleteConfirmation = true, exerciseToDelete = it)
                     },
-                    onSaveExercise = { _, _, _ -> },
+                    onSaveExercise = { _, _, _, _ -> },
                     onDismissDialog = {},
                     onConfirmDelete = {},
                     onDismissDelete = {},
@@ -243,4 +265,132 @@ class ExercisesScreenTest {
         assertNull(statsName)
         composeTestRule.onNodeWithText("Excluir exercício").assertIsDisplayed()
     }
+
+    @Test
+    fun addDialog_requiresPrimaryMuscle() {
+        var saved: Quadruple? = null
+        composeTestRule.setContent {
+            GymTrackTheme {
+                ExercisesScreen(
+                    uiState = ExerciseUiState(isLoading = false, showAddEditDialog = true),
+                    outerPadding = PaddingValues(),
+                    onNavigateBack = {},
+                    onSearchQueryChange = {},
+                    onAddClick = {},
+                    onExerciseClick = {},
+                    onExerciseStatsClick = {},
+                    onDeleteClick = {},
+                    onSaveExercise = { name, muscle, equipment, secondaries ->
+                        saved = Quadruple(name, muscle, equipment, secondaries)
+                    },
+                    onDismissDialog = {},
+                    onConfirmDelete = {},
+                    onDismissDelete = {},
+                    onErrorShown = {},
+                )
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("exercise_name_field").performTextInput("Supino")
+        composeTestRule.onNodeWithTag("equipment_field").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("equipment_option_Barra").performClick()
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+        assertNull(saved)
+        composeTestRule.onNodeWithText("Campo obrigatório").assertIsDisplayed()
+    }
+
+    @Test
+    fun addDialog_selectsPrimaryEquipmentAndSecondaries() {
+        var savedName = ""
+        var savedMuscle = ""
+        var savedEquipment = ""
+        var savedSecondaries = emptyList<String>()
+        composeTestRule.setContent {
+            GymTrackTheme {
+                ExercisesScreen(
+                    uiState = ExerciseUiState(isLoading = false, showAddEditDialog = true),
+                    outerPadding = PaddingValues(),
+                    onNavigateBack = {},
+                    onSearchQueryChange = {},
+                    onAddClick = {},
+                    onExerciseClick = {},
+                    onExerciseStatsClick = {},
+                    onDeleteClick = {},
+                    onSaveExercise = { name, muscle, equipment, secondaries ->
+                        savedName = name
+                        savedMuscle = muscle
+                        savedEquipment = equipment
+                        savedSecondaries = secondaries
+                    },
+                    onDismissDialog = {},
+                    onConfirmDelete = {},
+                    onDismissDelete = {},
+                    onErrorShown = {},
+                )
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("exercise_name_field").performTextInput("Supino")
+        composeTestRule.onNodeWithTag("primary_muscle_field").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("primary_muscle_option_Peitoral").performClick()
+        composeTestRule.onNodeWithTag("secondary_muscle_Costas").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("secondary_muscle_Ombros").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("equipment_field").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("equipment_option_Barra").performClick()
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals("Supino", savedName)
+        assertEquals("Peitoral", savedMuscle)
+        assertEquals("Barra", savedEquipment)
+        assertEquals(listOf("Costas", "Ombros"), savedSecondaries)
+    }
+
+    @Test
+    fun addDialog_changingPrimaryRemovesMatchingSecondary() {
+        var savedSecondaries = listOf("sentinel")
+        var savedMuscle = ""
+        composeTestRule.setContent {
+            GymTrackTheme {
+                ExercisesScreen(
+                    uiState = ExerciseUiState(isLoading = false, showAddEditDialog = true),
+                    outerPadding = PaddingValues(),
+                    onNavigateBack = {},
+                    onSearchQueryChange = {},
+                    onAddClick = {},
+                    onExerciseClick = {},
+                    onExerciseStatsClick = {},
+                    onDeleteClick = {},
+                    onSaveExercise = { _, muscle, _, secondaries ->
+                        savedMuscle = muscle
+                        savedSecondaries = secondaries
+                    },
+                    onDismissDialog = {},
+                    onConfirmDelete = {},
+                    onDismissDelete = {},
+                    onErrorShown = {},
+                )
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("exercise_name_field").performTextInput("Remada")
+        composeTestRule.onNodeWithTag("primary_muscle_field").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("primary_muscle_option_Peitoral").performClick()
+        composeTestRule.onNodeWithTag("secondary_muscle_Costas").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("primary_muscle_field").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("primary_muscle_option_Costas").performClick()
+        composeTestRule.onNodeWithTag("equipment_field").performScrollTo().performClick()
+        composeTestRule.onNodeWithTag("equipment_option_Barra").performClick()
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals("Costas", savedMuscle)
+        assertEquals(emptyList<String>(), savedSecondaries)
+    }
+
+    private data class Quadruple(
+        val name: String,
+        val muscle: String,
+        val equipment: String,
+        val secondaries: List<String>,
+    )
 }

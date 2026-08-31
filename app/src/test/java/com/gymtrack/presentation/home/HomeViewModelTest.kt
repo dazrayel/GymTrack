@@ -471,5 +471,7 @@ private class FakeHomeSessionRepository : WorkoutSessionRepository {
     override suspend fun pauseRest(sessionId: Long) = Unit
     override suspend fun resumeRest(sessionId: Long) = Unit
     override suspend fun skipRest(sessionId: Long) = Unit
+    override suspend fun skipSessionExercise(sessionExerciseId: Long) = Unit
+    override suspend fun resumeSessionExercise(sessionExerciseId: Long) = Unit
     override suspend fun finishSession(sessionId: Long) = Unit
 }

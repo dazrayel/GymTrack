@@ -2,6 +2,7 @@ package com.gymtrack.presentation.workouts.execution
 
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
+import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
 import com.gymtrack.domain.model.WorkoutSet
 
 data class WorkoutExecutionUiState(
@@ -25,6 +26,8 @@ data class WorkoutExecutionUiState(
     val totalExercises: Int = 0,
     val progressPercent: Int = 0,
     val showFinishConfirmation: Boolean = false,
+    val finishHasPendingExercises: Boolean = false,
+    val showSkipConfirmation: Boolean = false,
     val sessionFinishedEvent: Long? = null,
     val repsInput: String = "",
     val weightInput: String = "",
@@ -40,12 +43,69 @@ data class WorkoutExecutionUiState(
         get() = exercises.firstOrNull { it.id == restSessionExerciseId }
 
     val currentExercise: WorkoutSessionExercise?
-        get() = if (isWorkoutComplete && phase != WorkoutExecutionPhase.RESTING) {
-            null
-        } else {
-            exercises.getOrNull(currentExerciseIndex)
+        get() {
+            if (isWorkoutComplete && phase != WorkoutExecutionPhase.RESTING) return null
+            if (currentExerciseIndex !in exercises.indices) return null
+            return exercises[currentExerciseIndex]
+        }
+
+    val pendingSkippedExercises: List<WorkoutSessionExercise>
+        get() {
+            val currentId = currentExercise?.id
+            return exercises.filter { exercise ->
+                exercise.id != currentId &&
+                    exercise.status == WorkoutSessionExerciseStatus.SKIPPED &&
+                    (setsByExerciseId[exercise.id]?.size ?: 0) < exercise.plannedSets
+            }
+        }
+
+    val sessionExerciseRows: List<SessionExerciseRow>
+        get() {
+            val currentId = currentExercise?.id
+            return exercises.map { exercise ->
+                val completedSets = setsByExerciseId[exercise.id]?.size ?: 0
+                val isComplete = completedSets >= exercise.plannedSets
+                SessionExerciseRow(
+                    exercise = exercise,
+                    completedSets = completedSets,
+                    isCurrent = exercise.id == currentId,
+                    isComplete = isComplete,
+                )
+            }
+        }
+
+    val hasIncompleteExercises: Boolean
+        get() = exercises.any { exercise ->
+            (setsByExerciseId[exercise.id]?.size ?: 0) < exercise.plannedSets
         }
 
     val currentExerciseSets: List<WorkoutSet>
         get() = currentExercise?.let { setsByExerciseId[it.id].orEmpty() }.orEmpty()
+}
+
+data class SessionExerciseRow(
+    val exercise: WorkoutSessionExercise,
+    val completedSets: Int,
+    val isCurrent: Boolean,
+    val isComplete: Boolean,
+) {
+    val canSelectNow: Boolean
+        get() = !isComplete && !isCurrent
+
+    val listStatus: SessionExerciseListStatus
+        get() = when {
+            isComplete -> SessionExerciseListStatus.COMPLETED
+            exercise.status == WorkoutSessionExerciseStatus.SKIPPED ->
+                SessionExerciseListStatus.SKIPPED
+            isCurrent || exercise.status == WorkoutSessionExerciseStatus.IN_PROGRESS ->
+                SessionExerciseListStatus.IN_PROGRESS
+            else -> SessionExerciseListStatus.PENDING
+        }
+}
+
+enum class SessionExerciseListStatus {
+    PENDING,
+    IN_PROGRESS,
+    SKIPPED,
+    COMPLETED,
 }

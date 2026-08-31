@@ -5,4 +5,5 @@ data class Exercise(
     val name: String,
     val muscleGroup: String,
     val equipmentType: String,
+    val secondaryMuscles: List<String> = emptyList(),
 )

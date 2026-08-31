@@ -275,6 +275,17 @@ private fun ExerciseSummaryCard(
                 ),
                 style = MaterialTheme.typography.bodyMedium,
             )
+            Text(
+                text = stringResource(
+                    when {
+                        exercise.isComplete -> R.string.exercise_status_completed
+                        exercise.isSkipped -> R.string.exercise_status_skipped
+                        else -> R.string.exercise_status_pending
+                    },
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            )
             exercise.sets.forEach { set ->
                 Text(
                     text = stringResource(

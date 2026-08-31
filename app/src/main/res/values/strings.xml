@@ -63,8 +63,10 @@
 
     <!-- Exercise fields -->
     <string name="exercise_name">Nome</string>
-    <string name="exercise_muscle_group">Grupo muscular</string>
-    <string name="exercise_equipment_type">Tipo de equipamento</string>
+    <string name="exercise_muscle_group">Grupo muscular primário</string>
+    <string name="exercise_secondary_muscles">Músculos secundários</string>
+    <string name="exercise_equipment_type">Equipamento</string>
+    <string name="exercise_equipment_other">Outro</string>
 
     <!-- Exercise actions -->
     <string name="add_exercise">Adicionar exercício</string>
@@ -104,6 +106,7 @@
     <string name="complete_set">Concluir série</string>
     <string name="current_set">Série %1$d de %2$d</string>
     <string name="reps_label">Repetições</string>
+    <string name="execution_reps_target">Meta: %1$s reps</string>
     <string name="validation_reps_min">As repetições devem ser pelo menos 1</string>
     <string name="rest_title">Descanso</string>
     <string name="rest_paused">Descanso pausado</string>
@@ -120,6 +123,20 @@
     <string name="finish_workout">Finalizar</string>
     <string name="finish_workout_title">Finalizar treino?</string>
     <string name="finish_workout_message">O treino será encerrado. Você poderá ver o resumo do que foi realizado.</string>
+    <string name="finish_workout_pending_message">Existem exercícios pendentes. Deseja finalizar mesmo assim?</string>
+    <string name="continue_workout">Continuar treino</string>
+    <string name="skip_exercise">Pular exercício</string>
+    <string name="skip_exercise_title">Pular exercício?</string>
+    <string name="skip_exercise_message">Você poderá realizá-lo depois.</string>
+    <string name="skip">Pular</string>
+    <string name="pending_exercises">Exercícios pendentes</string>
+    <string name="session_exercises">Exercícios</string>
+    <string name="do_exercise_now">Fazer agora</string>
+    <string name="exercise_status_skipped">Pulado</string>
+    <string name="exercise_status_completed">Concluído</string>
+    <string name="exercise_status_pending">Pendente</string>
+    <string name="exercise_status_in_progress">Em andamento</string>
+    <string name="pending_exercise_sets">%1$d/%2$d séries</string>
     <string name="session_summary_title">Resumo do treino</string>
     <string name="session_start">Início: %1$s</string>
     <string name="session_end">Término: %1$s</string>

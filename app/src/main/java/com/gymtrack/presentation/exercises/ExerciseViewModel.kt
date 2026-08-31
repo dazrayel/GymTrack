@@ -3,6 +3,7 @@ package com.gymtrack.presentation.exercises
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.sanitizedSecondaryMuscles
 import com.gymtrack.domain.repository.ExerciseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -61,19 +62,28 @@ class ExerciseViewModel @Inject constructor(
         _uiState.update { it.copy(showAddEditDialog = false, exerciseToEdit = null) }
     }
 
-    fun saveExercise(name: String, muscleGroup: String, equipmentType: String) {
+    fun saveExercise(
+        name: String,
+        muscleGroup: String,
+        equipmentType: String,
+        secondaryMuscles: List<String> = emptyList(),
+    ) {
+        if (name.isBlank() || muscleGroup.isBlank() || equipmentType.isBlank()) return
         val toEdit = _uiState.value.exerciseToEdit
+        val sanitized = sanitizedSecondaryMuscles(muscleGroup.trim(), secondaryMuscles)
         val exercise = if (toEdit != null) {
             toEdit.copy(
                 name = name.trim(),
                 muscleGroup = muscleGroup.trim(),
                 equipmentType = equipmentType.trim(),
+                secondaryMuscles = sanitized,
             )
         } else {
             Exercise(
                 name = name.trim(),
                 muscleGroup = muscleGroup.trim(),
                 equipmentType = equipmentType.trim(),
+                secondaryMuscles = sanitized,
             )
         }
         viewModelScope.launch {

@@ -5,12 +5,14 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.gymtrack.data.local.dao.ExerciseDao
+import com.gymtrack.data.local.dao.ExerciseSecondaryMuscleDao
 import com.gymtrack.data.local.dao.WorkoutDao
 import com.gymtrack.data.local.dao.WorkoutExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSessionDao
 import com.gymtrack.data.local.dao.WorkoutSessionExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSetDao
 import com.gymtrack.data.local.entity.ExerciseEntity
+import com.gymtrack.data.local.entity.ExerciseSecondaryMuscleEntity
 import com.gymtrack.data.local.entity.WorkoutEntity
 import com.gymtrack.data.local.entity.WorkoutExerciseEntity
 import com.gymtrack.data.local.entity.WorkoutSessionEntity
@@ -20,18 +22,20 @@ import com.gymtrack.data.local.entity.WorkoutSetEntity
 @Database(
     entities = [
         ExerciseEntity::class,
+        ExerciseSecondaryMuscleEntity::class,
         WorkoutEntity::class,
         WorkoutExerciseEntity::class,
         WorkoutSessionEntity::class,
         WorkoutSessionExerciseEntity::class,
         WorkoutSetEntity::class,
     ],
-    version = 6,
+    version = 8,
     exportSchema = true,
 )
 abstract class GymTrackDatabase : RoomDatabase() {
 
     abstract fun exerciseDao(): ExerciseDao
+    abstract fun exerciseSecondaryMuscleDao(): ExerciseSecondaryMuscleDao
     abstract fun workoutDao(): WorkoutDao
     abstract fun workoutExerciseDao(): WorkoutExerciseDao
     abstract fun workoutSessionDao(): WorkoutSessionDao
@@ -205,6 +209,124 @@ abstract class GymTrackDatabase : RoomDatabase() {
                 db.execSQL(
                     "CREATE UNIQUE INDEX IF NOT EXISTS `index_workout_sessions_inProgressLock` " +
                         "ON `workout_sessions` (`inProgressLock`)",
+                )
+            }
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `exercise_secondary_muscles` " +
+                        "(`exerciseId` INTEGER NOT NULL, " +
+                        "`muscle` TEXT NOT NULL, " +
+                        "PRIMARY KEY(`exerciseId`, `muscle`), " +
+                        "FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) " +
+                        "ON UPDATE NO ACTION ON DELETE CASCADE )",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_exercise_secondary_muscles_exerciseId` " +
+                        "ON `exercise_secondary_muscles` (`exerciseId`)",
+                )
+                db.execSQL(
+                    "ALTER TABLE `workout_session_exercises` " +
+                        "ADD COLUMN `secondaryMuscles` TEXT NOT NULL DEFAULT ''",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Peitoral' " +
+                        "WHERE lower(`muscleGroup`) IN ('peito', 'chest', 'peitoral')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Costas' " +
+                        "WHERE lower(`muscleGroup`) IN ('back', 'costas')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Ombros' " +
+                        "WHERE lower(`muscleGroup`) IN ('shoulders', 'ombros')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Bíceps' " +
+                        "WHERE lower(`muscleGroup`) IN ('biceps', 'bíceps')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Tríceps' " +
+                        "WHERE lower(`muscleGroup`) IN ('triceps', 'tríceps')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Antebraço' " +
+                        "WHERE lower(`muscleGroup`) IN ('forearm', 'forearms', 'antebraço', 'antebraços')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Quadríceps' " +
+                        "WHERE lower(`muscleGroup`) IN ('quadriceps', 'quads', 'quadríceps')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Posteriores' " +
+                        "WHERE lower(`muscleGroup`) IN ('hamstrings', 'posteriores', 'posteriores de coxa')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Glúteos' " +
+                        "WHERE lower(`muscleGroup`) IN ('glutes', 'glúteos')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Panturrilhas' " +
+                        "WHERE lower(`muscleGroup`) IN ('calves', 'panturrilhas')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Lombar' " +
+                        "WHERE lower(`muscleGroup`) IN ('lower back', 'lombar')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Trapézio' " +
+                        "WHERE lower(`muscleGroup`) IN ('traps', 'trapézio')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `muscleGroup` = 'Abdômen' " +
+                        "WHERE lower(`muscleGroup`) IN ('abs', 'abdomen', 'abdômen')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `equipmentType` = 'Barra' " +
+                        "WHERE lower(`equipmentType`) IN ('barra', 'barbell')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `equipmentType` = 'Halteres' " +
+                        "WHERE lower(`equipmentType`) IN ('halteres', 'dumbbell', 'dumbbells')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `equipmentType` = 'Máquina' " +
+                        "WHERE lower(`equipmentType`) IN ('máquina', 'maquina', 'machine')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `equipmentType` = 'Smith' " +
+                        "WHERE lower(`equipmentType`) IN ('smith', 'smith machine')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `equipmentType` = 'Cabos' " +
+                        "WHERE lower(`equipmentType`) IN ('cabo', 'cabos', 'cable', 'cables')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `equipmentType` = 'Peso corporal' " +
+                        "WHERE lower(`equipmentType`) IN ('peso corporal', 'bodyweight')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `equipmentType` = 'Kettlebell' " +
+                        "WHERE lower(`equipmentType`) = 'kettlebell'",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `equipmentType` = 'Elástico' " +
+                        "WHERE lower(`equipmentType`) IN ('elástico', 'elastico', 'band', 'bands')",
+                )
+                db.execSQL(
+                    "UPDATE `exercises` SET `equipmentType` = 'Outro' " +
+                        "WHERE lower(`equipmentType`) IN ('outro', 'other')",
+                )
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE `workout_session_exercises` " +
+                        "ADD COLUMN `status` TEXT NOT NULL DEFAULT 'PENDING'",
                 )
             }
         }

@@ -52,5 +52,9 @@ interface WorkoutSessionRepository {
 
     suspend fun skipRest(sessionId: Long)
 
+    suspend fun skipSessionExercise(sessionExerciseId: Long)
+
+    suspend fun resumeSessionExercise(sessionExerciseId: Long)
+
     suspend fun finishSession(sessionId: Long)
 }

@@ -41,4 +41,13 @@ data class WorkoutSessionExerciseEntity(
     val plannedWeight: Double,
     val restSeconds: Int,
     val notes: String = "",
-)
+    val secondaryMuscles: String = "",
+    val status: String = STATUS_PENDING,
+) {
+    companion object {
+        const val STATUS_PENDING = "PENDING"
+        const val STATUS_IN_PROGRESS = "IN_PROGRESS"
+        const val STATUS_COMPLETED = "COMPLETED"
+        const val STATUS_SKIPPED = "SKIPPED"
+    }
+}

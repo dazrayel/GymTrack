@@ -6,6 +6,7 @@ import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
+import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
 import com.gymtrack.domain.repository.WorkoutSessionRepository
@@ -80,6 +81,21 @@ class WorkoutSessionSummaryViewModelTest {
         minRepetitions = 10,
         maxRepetitions = 12,
         plannedWeight = 14.0,
+        restSeconds = 0,
+    )
+
+    private val exerciseC = WorkoutSessionExercise(
+        id = 30L,
+        sessionId = SESSION_ID,
+        exerciseId = 3L,
+        position = 2,
+        exerciseName = "Tríceps Snapshot",
+        muscleGroup = "Braços",
+        equipmentType = "Polia",
+        plannedSets = 3,
+        minRepetitions = 8,
+        maxRepetitions = 12,
+        plannedWeight = 20.0,
         restSeconds = 0,
     )
 
@@ -169,6 +185,33 @@ class WorkoutSessionSummaryViewModelTest {
         assertTrue(viewModel.uiState.value.sessionNotFound)
         assertFalse(viewModel.uiState.value.isLoading)
         assertEquals(null, viewModel.uiState.value.session)
+    }
+
+    @Test
+    fun mixedPendingCompletedSkipped_mapToDistinctSummaryFlags() {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(
+            listOf(
+                exerciseA,
+                exerciseB.copy(status = WorkoutSessionExerciseStatus.COMPLETED),
+                exerciseC.copy(status = WorkoutSessionExerciseStatus.SKIPPED),
+            ),
+        )
+        fakeRepo.emitSets(
+            exerciseB.id,
+            listOf(set(exerciseB.id, 0), set(exerciseB.id, 1)),
+        )
+
+        val summaries = viewModel.uiState.value.exerciseSummaries
+        assertEquals("Supino Snapshot", summaries[0].exerciseName)
+        assertFalse(summaries[0].isComplete)
+        assertFalse(summaries[0].isSkipped)
+        assertEquals("Crucifixo Snapshot", summaries[1].exerciseName)
+        assertTrue(summaries[1].isComplete)
+        assertFalse(summaries[1].isSkipped)
+        assertEquals("Tríceps Snapshot", summaries[2].exerciseName)
+        assertFalse(summaries[2].isComplete)
+        assertTrue(summaries[2].isSkipped)
     }
 
     @Test
@@ -299,5 +342,7 @@ private class FakeSummarySessionRepository : WorkoutSessionRepository {
     override suspend fun pauseRest(sessionId: Long) = Unit
     override suspend fun resumeRest(sessionId: Long) = Unit
     override suspend fun skipRest(sessionId: Long) = Unit
+    override suspend fun skipSessionExercise(sessionExerciseId: Long) = Unit
+    override suspend fun resumeSessionExercise(sessionExerciseId: Long) = Unit
     override suspend fun finishSession(sessionId: Long) = Unit
 }

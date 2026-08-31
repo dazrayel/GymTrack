@@ -2,6 +2,7 @@ package com.gymtrack.workouts.execution
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -56,6 +57,7 @@ class WorkoutExecutionScreenTest {
     private var workoutId: Long = -1L
     private var exerciseAId: Long = -1L
     private var exerciseBId: Long = -1L
+    private var exerciseCId: Long = -1L
     private var sessionId: Long = -1L
 
     @Before
@@ -120,6 +122,11 @@ class WorkoutExecutionScreenTest {
                     Exercise(id = exerciseBId, name = "", muscleGroup = "", equipmentType = ""),
                 )
             }
+            if (exerciseCId != -1L) {
+                exerciseRepository.delete(
+                    Exercise(id = exerciseCId, name = "", muscleGroup = "", equipmentType = ""),
+                )
+            }
         }
     }
 
@@ -179,6 +186,320 @@ class WorkoutExecutionScreenTest {
         composeTestRule.waitForIdle()
 
         waitUntilTextIsDisplayed("Série 1 de 2")
+    }
+
+    @Test
+    fun skipExercise_advancesWithoutCreatingSet() {
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 1 de 2")
+        composeTestRule.onNodeWithTag("skip_exercise_button").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Pular exercício?")
+        composeTestRule.onNodeWithTag("confirm_skip_button").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Crucifixo Execução")
+        waitUntilTextIsDisplayed("Série 1 de 1")
+        composeTestRule.onNodeWithTag("session_exercises_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("session_exercise_status_Supino Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("resume_exercise_Supino Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithText("0/2 séries").assertIsDisplayed()
+        val snapshot = runBlocking {
+            workoutSessionRepository.observeSessionExercises(sessionId).first()
+        }
+        val supino = snapshot.first { it.exerciseName == "Supino Execução" }
+        org.junit.Assert.assertEquals(
+            com.gymtrack.domain.model.WorkoutSessionExerciseStatus.SKIPPED,
+            supino.status,
+        )
+        val sets = runBlocking { workoutSessionRepository.observeSets(supino.id).first() }
+        org.junit.Assert.assertTrue(sets.isEmpty())
+    }
+
+    @Test
+    fun skipPartialExercise_keepsCompletedSets_andResumeContinues() {
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 1 de 2")
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 2 de 2")
+        composeTestRule.onNodeWithTag("skip_exercise_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("confirm_skip_button").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Crucifixo Execução")
+        composeTestRule.onNodeWithTag("session_exercises_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("1/2 séries").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("resume_exercise_Supino Execução").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Supino Execução")
+        waitUntilTextIsDisplayed("Série 2 de 2")
+        val snapshot = runBlocking {
+            workoutSessionRepository.observeSessionExercises(sessionId).first()
+                .first { it.exerciseName == "Supino Execução" }
+        }
+        org.junit.Assert.assertEquals(
+            com.gymtrack.domain.model.WorkoutSessionExerciseStatus.IN_PROGRESS,
+            snapshot.status,
+        )
+        val sets = runBlocking { workoutSessionRepository.observeSets(snapshot.id).first() }
+        org.junit.Assert.assertEquals(1, sets.size)
+    }
+
+    @Test
+    fun selectingLaterPendingExercise_makesItCurrent_preservesDraft_andHidesCompletedAction() {
+        startThreeExerciseSession()
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Supino Execução")
+        waitUntilTextIsDisplayed("Série 1 de 2")
+
+        composeTestRule.onNodeWithTag("reps_field").performTextReplacement("12")
+        composeTestRule.onNodeWithTag("weight_field").performTextReplacement("77")
+
+        composeTestRule.onNodeWithTag("session_exercises_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("resume_exercise_Rosca Execução").performClick()
+        composeTestRule.waitForIdle()
+
+        waitUntilTextIsDisplayed("Rosca Execução")
+        waitUntilTextIsDisplayed("Série 1 de 3")
+        val afterSelect = runBlocking {
+            workoutSessionRepository.observeSessionExercises(sessionId).first()
+        }
+        org.junit.Assert.assertEquals(
+            com.gymtrack.domain.model.WorkoutSessionExerciseStatus.IN_PROGRESS,
+            afterSelect.first { it.exerciseName == "Rosca Execução" }.status,
+        )
+        org.junit.Assert.assertEquals(
+            com.gymtrack.domain.model.WorkoutSessionExerciseStatus.PENDING,
+            afterSelect.first { it.exerciseName == "Supino Execução" }.status,
+        )
+        org.junit.Assert.assertTrue(
+            runBlocking {
+                workoutSessionRepository.observeSets(
+                    afterSelect.first { it.exerciseName == "Rosca Execução" }.id,
+                ).first().isEmpty()
+            },
+        )
+
+        composeTestRule.onNodeWithTag("session_exercises_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("resume_exercise_Supino Execução").performClick()
+        composeTestRule.waitForIdle()
+
+        waitUntilTextIsDisplayed("Supino Execução")
+        waitUntilTextIsDisplayed("Série 1 de 2")
+        composeTestRule.onNodeWithTag("reps_field").assertTextContains("12")
+        composeTestRule.onNodeWithTag("weight_field").assertTextContains("77")
+
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 2 de 2")
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Crucifixo Execução")
+
+        composeTestRule.onNodeWithTag("session_exercises_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("session_exercise_status_Supino Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("resume_exercise_Supino Execução").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("resume_exercise_Rosca Execução").assertIsDisplayed()
+    }
+
+    @Test
+    fun openingScreen_usesPersistedInProgressFromRoom() {
+        startThreeExerciseSession()
+        runBlocking {
+            val exercises = workoutSessionRepository.observeSessionExercises(sessionId).first()
+            val rosca = exercises.first { it.exerciseName == "Rosca Execução" }
+            workoutSessionRepository.resumeSessionExercise(rosca.id)
+        }
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Rosca Execução")
+        waitUntilTextIsDisplayed("Série 1 de 3")
+        val snapshot = runBlocking {
+            workoutSessionRepository.observeSessionExercises(sessionId).first()
+        }
+        org.junit.Assert.assertEquals(
+            com.gymtrack.domain.model.WorkoutSessionExerciseStatus.IN_PROGRESS,
+            snapshot.first { it.exerciseName == "Rosca Execução" }.status,
+        )
+        org.junit.Assert.assertEquals(
+            com.gymtrack.domain.model.WorkoutSessionExerciseStatus.PENDING,
+            snapshot.first { it.exerciseName == "Supino Execução" }.status,
+        )
+        org.junit.Assert.assertEquals(
+            com.gymtrack.domain.model.WorkoutSessionExerciseStatus.PENDING,
+            snapshot.first { it.exerciseName == "Crucifixo Execução" }.status,
+        )
+    }
+
+    @Test
+    fun skipLastIncompleteExercise_showsPendingPanelWithoutCrash() {
+        startThreeExerciseSession()
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Supino Execução")
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 2 de 2")
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Crucifixo Execução")
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Rosca Execução")
+        waitUntilTextIsDisplayed("Série 1 de 3")
+        composeTestRule.onNodeWithTag("skip_exercise_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("confirm_skip_button").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("session_exercises_list").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("session_exercise_status_Rosca Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("resume_exercise_Rosca Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("finish_workout_button").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("skip_exercise_button").assertDoesNotExist()
+        val snapshot = runBlocking {
+            workoutSessionRepository.observeSessionExercises(sessionId).first()
+        }
+        val rosca = snapshot.first { it.exerciseName == "Rosca Execução" }
+        org.junit.Assert.assertEquals(
+            com.gymtrack.domain.model.WorkoutSessionExerciseStatus.SKIPPED,
+            rosca.status,
+        )
+        val sets = runBlocking { workoutSessionRepository.observeSets(rosca.id).first() }
+        org.junit.Assert.assertTrue(sets.isEmpty())
+    }
+
+    @Test
+    fun skipAllExercises_showsListWithoutCurrentAndKeepsFinish() {
+        startThreeExerciseSession()
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Supino Execução")
+        composeTestRule.onNodeWithTag("skip_exercise_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("confirm_skip_button").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Crucifixo Execução")
+        composeTestRule.onNodeWithTag("skip_exercise_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("confirm_skip_button").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Rosca Execução")
+        composeTestRule.onNodeWithTag("skip_exercise_button").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("confirm_skip_button").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("session_exercises_list").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("resume_exercise_Supino Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("resume_exercise_Crucifixo Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("resume_exercise_Rosca Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("session_exercise_status_Supino Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("session_exercise_status_Crucifixo Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("session_exercise_status_Rosca Execução").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("finish_workout_button").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("skip_exercise_button").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("complete_set_button").assertDoesNotExist()
+        val snapshot = runBlocking {
+            workoutSessionRepository.observeSessionExercises(sessionId).first()
+        }
+        snapshot.forEach { exercise ->
+            org.junit.Assert.assertEquals(
+                com.gymtrack.domain.model.WorkoutSessionExerciseStatus.SKIPPED,
+                exercise.status,
+            )
+            val sets = runBlocking { workoutSessionRepository.observeSets(exercise.id).first() }
+            org.junit.Assert.assertTrue(sets.isEmpty())
+        }
+    }
+
+    @Test
+    fun screen_showsRepetitionRangeTarget() {
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 1 de 2")
+        composeTestRule.onNodeWithTag("reps_target").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Meta: 8–12 reps").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Meta: 8–8 reps").assertDoesNotExist()
+    }
+
+    @Test
+    fun screen_showsSingleValueTargetWhenMinEqualsMax() {
+        startFreshSessionWithReps(minRepetitions = 8, maxRepetitions = 8)
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 1 de 2")
+        composeTestRule.onNodeWithText("Meta: 8 reps").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Meta: 8–8 reps").assertDoesNotExist()
+    }
+
+    @Test
+    fun completingSet_withRepsOutsideRange_keepsPlannedTarget() {
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Meta: 8–12 reps")
+        composeTestRule.onNodeWithTag("reps_field").performTextReplacement("6")
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 2 de 2")
+        composeTestRule.onNodeWithText("Meta: 8–12 reps").assertIsDisplayed()
+        val snapshot = runBlocking {
+            workoutSessionRepository.observeSessionExercises(sessionId).first()[0]
+        }
+        org.junit.Assert.assertEquals(8, snapshot.minRepetitions)
+        org.junit.Assert.assertEquals(12, snapshot.maxRepetitions)
+        val performed = runBlocking {
+            workoutSessionRepository.observeSets(snapshot.id).first().single()
+        }
+        org.junit.Assert.assertEquals(6, performed.reps)
+    }
+
+    @Test
+    fun completingSet_withRepsInsideRange_persistsPerformedValue() {
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Meta: 8–12 reps")
+        composeTestRule.onNodeWithTag("reps_field").performTextReplacement("10")
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 2 de 2")
+        val snapshot = runBlocking {
+            workoutSessionRepository.observeSessionExercises(sessionId).first()[0]
+        }
+        val performed = runBlocking {
+            workoutSessionRepository.observeSets(snapshot.id).first().single()
+        }
+        org.junit.Assert.assertEquals(10, performed.reps)
+        org.junit.Assert.assertEquals(8, snapshot.minRepetitions)
+        org.junit.Assert.assertEquals(12, snapshot.maxRepetitions)
+    }
+
+    @Test
+    fun completingSet_withRepsAboveRange_persistsPerformedValue() {
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Meta: 8–12 reps")
+        composeTestRule.onNodeWithTag("reps_field").performTextReplacement("15")
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 2 de 2")
+        val snapshot = runBlocking {
+            workoutSessionRepository.observeSessionExercises(sessionId).first()[0]
+        }
+        val performed = runBlocking {
+            workoutSessionRepository.observeSets(snapshot.id).first().single()
+        }
+        org.junit.Assert.assertEquals(15, performed.reps)
+        org.junit.Assert.assertEquals(8, snapshot.minRepetitions)
+        org.junit.Assert.assertEquals(12, snapshot.maxRepetitions)
     }
 
     @Test
@@ -275,6 +596,44 @@ class WorkoutExecutionScreenTest {
         org.junit.Assert.assertNotNull(session)
         org.junit.Assert.assertEquals(sessionId, session!!.id)
         org.junit.Assert.assertEquals("Treino Execução", session.workoutName)
+    }
+
+    private fun startThreeExerciseSession() {
+        runBlocking {
+            workoutSessionRepository.observeInProgress().first()?.let { active ->
+                workoutSessionRepository.finishSession(active.id)
+            }
+            exerciseCId = exerciseRepository.save(
+                Exercise(name = "Rosca Execução", muscleGroup = "Braços", equipmentType = "Halteres"),
+            )
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = workoutId,
+                    exerciseId = exerciseCId,
+                    position = 2,
+                    sets = 3,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 10.0,
+                    restSeconds = 0,
+                ),
+            )
+            sessionId = (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
+        }
+    }
+
+    private fun startFreshSessionWithReps(minRepetitions: Int, maxRepetitions: Int) {
+        runBlocking {
+            workoutSessionRepository.observeInProgress().first()?.let { active ->
+                workoutSessionRepository.finishSession(active.id)
+            }
+            workoutRepository.getExercises(workoutId).first().forEach { exercise ->
+                workoutRepository.updateExercise(
+                    exercise.copy(minRepetitions = minRepetitions, maxRepetitions = maxRepetitions),
+                )
+            }
+            sessionId = (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
+        }
     }
 
     private fun startFreshSessionWithRest(restSeconds: Int) {
@@ -521,8 +880,9 @@ class WorkoutExecutionScreenTest {
         composeTestRule.onNodeWithTag("finish_workout_button").performClick()
         composeTestRule.waitForIdle()
         waitUntilTextIsDisplayed("Finalizar treino?")
-        composeTestRule.onNodeWithText("O treino será encerrado. Você poderá ver o resumo do que foi realizado.")
+        composeTestRule.onNodeWithText("Existem exercícios pendentes. Deseja finalizar mesmo assim?")
             .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Continuar treino").assertIsDisplayed()
     }
 
     @Test

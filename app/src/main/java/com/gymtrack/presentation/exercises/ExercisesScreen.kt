@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -56,7 +58,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
+import com.gymtrack.domain.model.EQUIPMENT_TYPES
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.MUSCLE_GROUPS
 import com.gymtrack.presentation.theme.GymTrackTheme
 
 @Composable
@@ -98,7 +108,7 @@ fun ExercisesScreen(
     onExerciseClick: (Exercise) -> Unit,
     onExerciseStatsClick: (String) -> Unit,
     onDeleteClick: (Exercise) -> Unit,
-    onSaveExercise: (name: String, muscleGroup: String, equipmentType: String) -> Unit,
+    onSaveExercise: (name: String, muscleGroup: String, equipmentType: String, secondaryMuscles: List<String>) -> Unit,
     onDismissDialog: () -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
@@ -266,10 +276,17 @@ private fun ExerciseItem(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (exercise.muscleGroup.isNotBlank() || exercise.equipmentType.isNotBlank()) {
-                    val subtitle = listOf(exercise.muscleGroup, exercise.equipmentType)
-                        .filter { it.isNotBlank() }
-                        .joinToString(" · ")
+                if (exercise.muscleGroup.isNotBlank() ||
+                    exercise.equipmentType.isNotBlank() ||
+                    exercise.secondaryMuscles.isNotEmpty()
+                ) {
+                    val subtitle = buildList {
+                        if (exercise.muscleGroup.isNotBlank()) add(exercise.muscleGroup)
+                        if (exercise.secondaryMuscles.isNotEmpty()) {
+                            add(exercise.secondaryMuscles.joinToString(", "))
+                        }
+                        if (exercise.equipmentType.isNotBlank()) add(exercise.equipmentType)
+                    }.joinToString(" · ")
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
@@ -345,16 +362,39 @@ private fun EmptyExercisesContent(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AddEditExerciseDialog(
     exercise: Exercise?,
-    onSave: (name: String, muscleGroup: String, equipmentType: String) -> Unit,
+    onSave: (name: String, muscleGroup: String, equipmentType: String, secondaryMuscles: List<String>) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var name by remember(exercise) { mutableStateOf(exercise?.name ?: "") }
     var muscleGroup by remember(exercise) { mutableStateOf(exercise?.muscleGroup ?: "") }
     var equipmentType by remember(exercise) { mutableStateOf(exercise?.equipmentType ?: "") }
+    var secondaryMuscles by remember(exercise) {
+        mutableStateOf(exercise?.secondaryMuscles.orEmpty().filter { it != exercise?.muscleGroup })
+    }
     var nameError by remember { mutableStateOf(false) }
+    var muscleError by remember { mutableStateOf(false) }
+    var equipmentError by remember { mutableStateOf(false) }
+    var primaryExpanded by remember { mutableStateOf(false) }
+    var equipmentExpanded by remember { mutableStateOf(false) }
+
+    val primaryOptions = remember(muscleGroup) {
+        if (muscleGroup.isNotBlank() && muscleGroup !in MUSCLE_GROUPS) {
+            listOf(muscleGroup) + MUSCLE_GROUPS
+        } else {
+            MUSCLE_GROUPS
+        }
+    }
+    val equipmentOptions = remember(equipmentType) {
+        if (equipmentType.isNotBlank() && equipmentType !in EQUIPMENT_TYPES) {
+            listOf(equipmentType) + EQUIPMENT_TYPES
+        } else {
+            EQUIPMENT_TYPES
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -368,7 +408,10 @@ private fun AddEditExerciseDialog(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = {
@@ -383,31 +426,133 @@ private fun AddEditExerciseDialog(
                         null
                     },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("exercise_name_field"),
                 )
-                OutlinedTextField(
-                    value = muscleGroup,
-                    onValueChange = { muscleGroup = it },
-                    label = { Text(stringResource(R.string.exercise_muscle_group)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
+                ExposedDropdownMenuBox(
+                    expanded = primaryExpanded,
+                    onExpandedChange = { primaryExpanded = it },
+                ) {
+                    OutlinedTextField(
+                        value = muscleGroup,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.exercise_muscle_group)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(primaryExpanded) },
+                        isError = muscleError,
+                        supportingText = if (muscleError) {
+                            { Text(stringResource(R.string.field_required)) }
+                        } else {
+                            null
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                            .testTag("primary_muscle_field"),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = primaryExpanded,
+                        onDismissRequest = { primaryExpanded = false },
+                    ) {
+                        primaryOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    muscleGroup = option
+                                    secondaryMuscles = secondaryMuscles.filter { it != option }
+                                    muscleError = false
+                                    primaryExpanded = false
+                                },
+                                modifier = Modifier.testTag("primary_muscle_option_$option"),
+                            )
+                        }
+                    }
+                }
+                Text(
+                    text = stringResource(R.string.exercise_secondary_muscles),
+                    style = MaterialTheme.typography.labelLarge,
                 )
-                OutlinedTextField(
-                    value = equipmentType,
-                    onValueChange = { equipmentType = it },
-                    label = { Text(stringResource(R.string.exercise_equipment_type)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.testTag("secondary_muscles"),
+                ) {
+                    MUSCLE_GROUPS.filter { it != muscleGroup }.forEach { option ->
+                        FilterChip(
+                            selected = option in secondaryMuscles,
+                            onClick = {
+                                secondaryMuscles = if (option in secondaryMuscles) {
+                                    secondaryMuscles - option
+                                } else {
+                                    secondaryMuscles + option
+                                }
+                            },
+                            label = { Text(option) },
+                            modifier = Modifier.testTag("secondary_muscle_$option"),
+                        )
+                    }
+                }
+                ExposedDropdownMenuBox(
+                    expanded = equipmentExpanded,
+                    onExpandedChange = { equipmentExpanded = it },
+                ) {
+                    OutlinedTextField(
+                        value = if (equipmentType == "Outro") {
+                            stringResource(R.string.exercise_equipment_other)
+                        } else {
+                            equipmentType
+                        },
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.exercise_equipment_type)) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(equipmentExpanded) },
+                        isError = equipmentError,
+                        supportingText = if (equipmentError) {
+                            { Text(stringResource(R.string.field_required)) }
+                        } else {
+                            null
+                        },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                            .testTag("equipment_field"),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = equipmentExpanded,
+                        onDismissRequest = { equipmentExpanded = false },
+                    ) {
+                        equipmentOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = if (option == "Outro") {
+                                            stringResource(R.string.exercise_equipment_other)
+                                        } else {
+                                            option
+                                        },
+                                    )
+                                },
+                                onClick = {
+                                    equipmentType = option
+                                    equipmentError = false
+                                    equipmentExpanded = false
+                                },
+                                modifier = Modifier.testTag("equipment_option_$option"),
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (name.isBlank()) {
-                        nameError = true
-                    } else {
-                        onSave(name, muscleGroup, equipmentType)
+                    nameError = name.isBlank()
+                    muscleError = muscleGroup.isBlank()
+                    equipmentError = equipmentType.isBlank()
+                    if (!nameError && !muscleError && !equipmentError) {
+                        onSave(name, muscleGroup, equipmentType, secondaryMuscles)
                     }
                 },
             ) {
@@ -467,7 +612,7 @@ private fun ExercisesContentLoadingPreview() {
             onExerciseClick = {},
             onExerciseStatsClick = {},
             onDeleteClick = {},
-            onSaveExercise = { _, _, _ -> },
+            onSaveExercise = { _, _, _, _ -> },
             onDismissDialog = {},
             onConfirmDelete = {},
             onDismissDelete = {},
@@ -489,7 +634,7 @@ private fun ExercisesContentEmptyPreview() {
             onExerciseClick = {},
             onExerciseStatsClick = {},
             onDeleteClick = {},
-            onSaveExercise = { _, _, _ -> },
+            onSaveExercise = { _, _, _, _ -> },
             onDismissDialog = {},
             onConfirmDelete = {},
             onDismissDelete = {},
@@ -518,7 +663,7 @@ private fun ExercisesContentListPreview() {
             onExerciseClick = {},
             onExerciseStatsClick = {},
             onDeleteClick = {},
-            onSaveExercise = { _, _, _ -> },
+            onSaveExercise = { _, _, _, _ -> },
             onDismissDialog = {},
             onConfirmDelete = {},
             onDismissDelete = {},

@@ -16,7 +16,10 @@ import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
+import com.gymtrack.domain.model.deserializeSecondaryMuscles
 import com.gymtrack.domain.model.elapsedMillis
+import com.gymtrack.domain.model.parseWorkoutSessionExerciseStatus
+import com.gymtrack.domain.model.serializeSecondaryMuscles
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
@@ -90,6 +93,7 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
                         plannedWeight = we.weight,
                         restSeconds = we.restSeconds,
                         notes = we.notes,
+                        secondaryMuscles = serializeSecondaryMuscles(exercise.secondaryMuscles),
                     )
                 }
                 sessionExerciseDao.insertAll(snapshots)
@@ -136,7 +140,7 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
         reps: Int,
         weight: Double,
     ): Long = withContext(Dispatchers.IO) {
-        setDao.insert(
+        val rowId = setDao.insert(
             WorkoutSetEntity(
                 sessionExerciseId = sessionExerciseId,
                 setIndex = setIndex,
@@ -145,6 +149,39 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
                 completedAtMillis = timeProvider.nowMillis(),
             ),
         )
+        syncExerciseCompletionStatus(sessionExerciseId)
+        rowId
+    }
+
+    override suspend fun skipSessionExercise(sessionExerciseId: Long) {
+        withContext(Dispatchers.IO) {
+            val entity = sessionExerciseDao.getByIdOnce(sessionExerciseId)
+                ?: throw IllegalArgumentException("Session exercise not found: $sessionExerciseId")
+            val completed = setDao.countBySessionExerciseId(sessionExerciseId)
+            if (completed >= entity.plannedSets) return@withContext
+            sessionExerciseDao.updateStatus(
+                sessionExerciseId,
+                WorkoutSessionExerciseEntity.STATUS_SKIPPED,
+            )
+        }
+    }
+
+    override suspend fun resumeSessionExercise(sessionExerciseId: Long) {
+        withContext(Dispatchers.IO) {
+            val entity = sessionExerciseDao.getByIdOnce(sessionExerciseId)
+                ?: throw IllegalArgumentException("Session exercise not found: $sessionExerciseId")
+            val completed = setDao.countBySessionExerciseId(sessionExerciseId)
+            if (completed >= entity.plannedSets) return@withContext
+            sessionExerciseDao.clearInProgress(
+                entity.sessionId,
+                WorkoutSessionExerciseEntity.STATUS_PENDING,
+                WorkoutSessionExerciseEntity.STATUS_IN_PROGRESS,
+            )
+            sessionExerciseDao.updateStatus(
+                sessionExerciseId,
+                WorkoutSessionExerciseEntity.STATUS_IN_PROGRESS,
+            )
+        }
     }
 
     override suspend fun startRest(
@@ -215,6 +252,19 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    private fun syncExerciseCompletionStatus(sessionExerciseId: Long) {
+        val entity = sessionExerciseDao.getByIdOnce(sessionExerciseId) ?: return
+        val completed = setDao.countBySessionExerciseId(sessionExerciseId)
+        if (completed >= entity.plannedSets &&
+            entity.status != WorkoutSessionExerciseEntity.STATUS_COMPLETED
+        ) {
+            sessionExerciseDao.updateStatus(
+                sessionExerciseId,
+                WorkoutSessionExerciseEntity.STATUS_COMPLETED,
+            )
+        }
+    }
 }
 
 private fun WorkoutSessionEntity.toDomain() = WorkoutSession(
@@ -245,6 +295,8 @@ private fun WorkoutSessionExerciseEntity.toDomain() = WorkoutSessionExercise(
     plannedWeight = plannedWeight,
     restSeconds = restSeconds,
     notes = notes,
+    secondaryMuscles = deserializeSecondaryMuscles(secondaryMuscles),
+    status = parseWorkoutSessionExerciseStatus(status),
 )
 
 private fun WorkoutSetEntity.toDomain() = WorkoutSet(

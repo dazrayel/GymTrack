@@ -54,4 +54,7 @@ interface WorkoutSetDao {
      */
     @Insert
     fun insert(set: WorkoutSetEntity): Long
+
+    @Query("SELECT COUNT(*) FROM workout_sets WHERE sessionExerciseId = :sessionExerciseId")
+    fun countBySessionExerciseId(sessionExerciseId: Long): Int
 }
