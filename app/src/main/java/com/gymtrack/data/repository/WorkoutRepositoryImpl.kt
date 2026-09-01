@@ -31,7 +31,7 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     override suspend fun update(workout: Workout) {
-        withContext(Dispatchers.IO) { workoutDao.insert(workout.toEntity()) }
+        withContext(Dispatchers.IO) { workoutDao.update(workout.toEntity()) }
     }
 
     override suspend fun delete(workout: Workout) {

@@ -203,6 +203,20 @@ class WorkoutViewModelTest {
     }
 
     @Test
+    fun saveWorkout_editExisting_doesNotRemoveExercises() = runTest(testDispatcher) {
+        fakeRepository.emit(listOf(Workout(1, "Push Day", "Chest")))
+        advanceUntilIdle()
+
+        val original = viewModel.uiState.value.workouts.first()
+        viewModel.showEditDialog(original)
+        viewModel.saveWorkout("Push Day Updated", "Chest")
+        advanceUntilIdle()
+
+        assertEquals(0, fakeRepository.removeExerciseCalls)
+        assertEquals(0, fakeRepository.removeExerciseByIdCalls)
+    }
+
+    @Test
     fun saveWorkout_editExisting_preservesId() = runTest(testDispatcher) {
         fakeRepository.emit(listOf(Workout(42, "Pull Day", "Back")))
         advanceUntilIdle()
@@ -398,6 +412,8 @@ private class FakeWorkoutRepository : WorkoutRepository {
     var shouldThrowOnSave = false
     var shouldThrowOnUpdate = false
     var shouldThrowOnDelete = false
+    var removeExerciseCalls = 0
+    var removeExerciseByIdCalls = 0
 
     // Mirrors real DAO behavior: ORDER BY name ASC
     fun emit(workouts: List<Workout>) {
@@ -438,7 +454,11 @@ private class FakeWorkoutRepository : WorkoutRepository {
     override fun getExercises(workoutId: Long): Flow<List<WorkoutExercise>> = emptyFlow()
     override suspend fun addExercise(workoutExercise: WorkoutExercise): Long = 0L
     override suspend fun updateExercise(workoutExercise: WorkoutExercise) = Unit
-    override suspend fun removeExercise(workoutExercise: WorkoutExercise) = Unit
-    override suspend fun removeExerciseById(id: Long) = Unit
+    override suspend fun removeExercise(workoutExercise: WorkoutExercise) {
+        removeExerciseCalls++
+    }
+    override suspend fun removeExerciseById(id: Long) {
+        removeExerciseByIdCalls++
+    }
     override suspend fun updateExercisePositions(positions: Map<Long, Int>) = Unit
 }

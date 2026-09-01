@@ -674,8 +674,23 @@ class WorkoutExecutionScreenTest {
 
         composeTestRule.onNodeWithTag("rest_timer").assertIsDisplayed()
         composeTestRule.onNodeWithTag("rest_progress").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("pause_rest_button").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("skip_rest_button").assertIsDisplayed()
         composeTestRule.onNodeWithText("Pausar").assertIsDisplayed()
         composeTestRule.onNodeWithText("Pular").assertIsDisplayed()
+    }
+
+    @Test
+    fun restScreen_doesNotShowWorkingSetControls() {
+        startFreshSessionWithRest(restSeconds = 90)
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Série 1 de 2")
+        composeTestRule.onNodeWithText("Concluir série").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Descanso")
+
+        composeTestRule.onNodeWithText("Concluir série").assertDoesNotExist()
     }
 
     @Test
@@ -686,6 +701,9 @@ class WorkoutExecutionScreenTest {
 
         composeTestRule.onNodeWithTag("rest_progress").assertDoesNotExist()
         composeTestRule.onNodeWithTag("rest_timer").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("pause_rest_button").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("skip_rest_button").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("resume_rest_button").assertDoesNotExist()
         composeTestRule.onNodeWithText("Descanso").assertDoesNotExist()
     }
 

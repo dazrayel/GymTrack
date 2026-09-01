@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -187,6 +188,84 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Iniciar treino").assertIsEnabled()
+    }
+
+    @Test
+    fun editWorkoutName_keepsAssociatedExercises() {
+        val curlId = runBlocking {
+            exerciseRepository.save(
+                Exercise(name = "Rosca Teste", muscleGroup = "Bíceps", equipmentType = "Halter"),
+            )
+        }
+        val squatId = runBlocking {
+            exerciseRepository.save(
+                Exercise(name = "Agachamento Teste", muscleGroup = "Quadríceps", equipmentType = "Barra"),
+            )
+        }
+        extraExerciseIds += curlId
+        extraExerciseIds += squatId
+        runBlocking {
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = workoutId,
+                    exerciseId = exerciseId,
+                    position = 0,
+                    sets = 3,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 40.0,
+                    restSeconds = 60,
+                ),
+            )
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = workoutId,
+                    exerciseId = curlId,
+                    position = 1,
+                    sets = 3,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 12.0,
+                    restSeconds = 60,
+                ),
+            )
+            workoutRepository.addExercise(
+                WorkoutExercise(
+                    workoutId = workoutId,
+                    exerciseId = squatId,
+                    position = 2,
+                    sets = 3,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 80.0,
+                    restSeconds = 90,
+                ),
+            )
+        }
+
+        setScreen()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Supino Teste")
+        composeTestRule.onNodeWithText("Rosca Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Agachamento Teste").assertIsDisplayed()
+
+        composeTestRule.onNodeWithContentDescription("Editar treino").performClick()
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Editar treino")
+        composeTestRule.onAllNodes(hasSetTextAction())[0]
+            .performTextReplacement("Treino Renomeado")
+        composeTestRule.onNodeWithText("Salvar").performClick()
+        composeTestRule.waitForIdle()
+
+        waitUntilTextIsDisplayed("Treino Renomeado")
+        composeTestRule.onNodeWithText("Supino Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Rosca Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Agachamento Teste").assertIsDisplayed()
+
+        val remaining = runBlocking { workoutRepository.getExercises(workoutId).first() }
+        assertEquals(3, remaining.size)
+        assertEquals(listOf(0, 1, 2), remaining.map { it.position })
+        assertEquals(listOf(exerciseId, curlId, squatId), remaining.map { it.exerciseId })
     }
 
     @Test

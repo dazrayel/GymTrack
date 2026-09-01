@@ -5,7 +5,9 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.data.local.dao.WorkoutDao
+import com.gymtrack.data.local.entity.ExerciseEntity
 import com.gymtrack.data.local.entity.WorkoutEntity
+import com.gymtrack.data.local.entity.WorkoutExerciseEntity
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.flow.first
@@ -206,8 +208,35 @@ class WorkoutDaoTest {
         val id = dao.insert(WorkoutEntity(name = "Push Day", description = ""))
         assertEquals("Push Day", dao.getAll().first()[0].name)
 
-        dao.insert(WorkoutEntity(id = id, name = "Push Day Advanced", description = ""))
+        dao.update(WorkoutEntity(id = id, name = "Push Day Advanced", description = ""))
 
         assertEquals("Push Day Advanced", dao.getAll().first()[0].name)
+    }
+
+    @Test
+    fun update_doesNotCascadeDeleteWorkoutExercises() = runBlocking {
+        val workoutId = dao.insert(WorkoutEntity(name = "Push Day", description = ""))
+        val catalogId = db.exerciseDao().insert(
+            ExerciseEntity(name = "Supino", muscleGroup = "Chest", equipmentType = "Barbell"),
+        )
+        db.workoutExerciseDao().insert(
+            WorkoutExerciseEntity(
+                workoutId = workoutId,
+                exerciseId = catalogId,
+                position = 0,
+                sets = 3,
+                minRepetitions = 8,
+                maxRepetitions = 12,
+                weight = 60.0,
+                restSeconds = 90,
+            ),
+        )
+
+        dao.update(WorkoutEntity(id = workoutId, name = "Push Day v2", description = "Updated"))
+
+        val remaining = db.workoutExerciseDao().getByWorkoutId(workoutId).first()
+        assertEquals(1, remaining.size)
+        assertEquals(catalogId, remaining[0].exerciseId)
+        assertEquals("Push Day v2", dao.getById(workoutId).first()!!.name)
     }
 }

@@ -396,4 +396,123 @@ class WorkoutRepositoryImplTest {
         assertEquals(0, result[0].position)
         assertEquals(3, result[0].sets)
     }
+
+    // ─── Edit workout must preserve exercise associations ─────────────────────
+
+    @Test
+    fun update_nameOnly_keepsExistingExercises() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Peito", description = ""))
+        val catalogIds = insertCatalogExercises("Supino", "Rosca", "Agachamento")
+        attachInOrder(workoutId, catalogIds)
+
+        repository.update(Workout(id = workoutId, name = "Peito v2", description = ""))
+
+        assertEquals(
+            listOf("Supino", "Rosca", "Agachamento"),
+            catalogNamesInWorkoutOrder(workoutId),
+        )
+    }
+
+    @Test
+    fun addExercise_duringEdit_appendsWithoutDroppingExisting() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Peito", description = ""))
+        val initial = insertCatalogExercises("Supino", "Rosca")
+        attachInOrder(workoutId, initial)
+        repository.update(Workout(id = workoutId, name = "Peito editado", description = ""))
+
+        val squatId = db.exerciseDao().insert(
+            ExerciseEntity(name = "Agachamento", muscleGroup = "Legs", equipmentType = "Barbell"),
+        )
+        repository.addExercise(
+            WorkoutExercise(
+                workoutId = workoutId,
+                exerciseId = squatId,
+                position = 2,
+                sets = 3,
+                minRepetitions = 8,
+                maxRepetitions = 12,
+                weight = 0.0,
+                restSeconds = 60,
+            ),
+        )
+
+        assertEquals(
+            listOf("Supino", "Rosca", "Agachamento"),
+            catalogNamesInWorkoutOrder(workoutId),
+        )
+    }
+
+    @Test
+    fun removeExercise_duringEdit_removesOnlyThatExercise() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Peito", description = ""))
+        val catalogIds = insertCatalogExercises("Supino", "Rosca", "Agachamento")
+        val linkIds = attachInOrder(workoutId, catalogIds)
+        repository.update(Workout(id = workoutId, name = "Peito editado", description = ""))
+
+        repository.removeExerciseById(linkIds[1])
+
+        assertEquals(
+            listOf("Supino", "Agachamento"),
+            catalogNamesInWorkoutOrder(workoutId),
+        )
+    }
+
+    @Test
+    fun update_nameOnly_preservesExerciseOrder() = runBlocking {
+        val workoutId = repository.save(Workout(name = "ABC", description = ""))
+        val catalogIds = insertCatalogExercises("A", "B", "C")
+        attachInOrder(workoutId, catalogIds)
+
+        repository.update(Workout(id = workoutId, name = "ABC v2", description = "Notas"))
+
+        assertEquals(listOf("A", "B", "C"), catalogNamesInWorkoutOrder(workoutId))
+        assertEquals(listOf(0, 1, 2), repository.getExercises(workoutId).first().map { it.position })
+    }
+
+    @Test
+    fun update_nameOnly_preservesExercisesWhenReloadedFromNewRepository() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Peito", description = ""))
+        val catalogIds = insertCatalogExercises("Supino", "Rosca", "Agachamento")
+        attachInOrder(workoutId, catalogIds)
+
+        repository.update(Workout(id = workoutId, name = "Peito salvo", description = "Desc"))
+
+        val reopened = WorkoutRepositoryImpl(db.workoutDao(), db.workoutExerciseDao())
+        assertEquals("Peito salvo", reopened.getById(workoutId).first()!!.name)
+        assertEquals(
+            listOf("Supino", "Rosca", "Agachamento"),
+            catalogNamesInWorkoutOrder(workoutId, reopened),
+        )
+    }
+
+    private suspend fun insertCatalogExercises(vararg names: String): List<Long> =
+        names.map { name ->
+            db.exerciseDao().insert(
+                ExerciseEntity(name = name, muscleGroup = "Test", equipmentType = "None"),
+            )
+        }
+
+    private suspend fun attachInOrder(workoutId: Long, catalogIds: List<Long>): List<Long> =
+        catalogIds.mapIndexed { index, catalogId ->
+            repository.addExercise(
+                WorkoutExercise(
+                    workoutId = workoutId,
+                    exerciseId = catalogId,
+                    position = index,
+                    sets = 3,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 0.0,
+                    restSeconds = 60,
+                ),
+            )
+        }
+
+    private suspend fun catalogNamesInWorkoutOrder(
+        workoutId: Long,
+        repo: WorkoutRepositoryImpl = repository,
+    ): List<String> =
+        repo.getExercises(workoutId).first().map { we ->
+            db.exerciseDao().getById(we.exerciseId).first()!!.name
+        }
 }

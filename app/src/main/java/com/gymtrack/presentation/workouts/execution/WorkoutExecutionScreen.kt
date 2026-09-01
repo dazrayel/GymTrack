@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -696,8 +698,7 @@ private fun RestContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (exerciseName.isNotBlank()) {
@@ -715,12 +716,16 @@ private fun RestContent(
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(16.dp))
         BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
-            val diameter = min(maxWidth * 0.72f, 280.dp).coerceAtLeast(168.dp)
+            val diameter = min(
+                min(maxWidth * 0.72f, 280.dp),
+                maxHeight * 0.92f,
+            ).coerceAtLeast(min(120.dp, maxHeight).coerceAtLeast(48.dp))
             val stroke = (diameter * 0.08f).coerceIn(8.dp, 14.dp)
             Box(
                 modifier = Modifier.size(diameter),
@@ -748,34 +753,51 @@ private fun RestContent(
                 )
             }
         }
-        Spacer(Modifier.height(24.dp))
-        if (isPaused) {
-            Button(
-                onClick = onResumeRest,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("resume_rest_button"),
-            ) {
-                Text(stringResource(R.string.resume_rest))
-            }
-        } else {
-            Button(
-                onClick = onPauseRest,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("pause_rest_button"),
-            ) {
-                Text(stringResource(R.string.pause_rest))
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-        OutlinedButton(
-            onClick = onSkipRest,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("skip_rest_button"),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(R.string.skip_rest))
+            val restActionModifier = Modifier
+                .weight(1f)
+                .heightIn(min = 48.dp)
+                .defaultMinSize(minHeight = 48.dp)
+            if (isPaused) {
+                Button(
+                    onClick = onResumeRest,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = restActionModifier.testTag("resume_rest_button"),
+                ) {
+                    Text(
+                        text = stringResource(R.string.resume_rest),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            } else {
+                Button(
+                    onClick = onPauseRest,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = restActionModifier.testTag("pause_rest_button"),
+                ) {
+                    Text(
+                        text = stringResource(R.string.pause_rest),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            OutlinedButton(
+                onClick = onSkipRest,
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                modifier = restActionModifier.testTag("skip_rest_button"),
+            ) {
+                Text(
+                    text = stringResource(R.string.skip_rest),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

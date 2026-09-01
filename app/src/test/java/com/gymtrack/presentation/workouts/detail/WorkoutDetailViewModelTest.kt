@@ -510,6 +510,20 @@ class WorkoutDetailViewModelTest {
     }
 
     @Test
+    fun saveWorkout_doesNotRemoveExistingExercises() = runTest(testDispatcher) {
+        fakeWorkoutRepo.emitWorkout(workout)
+        emitThreeExercises()
+        advanceUntilIdle()
+
+        viewModel.saveWorkout("Treino B", "Costas")
+        advanceUntilIdle()
+
+        assertTrue(fakeWorkoutRepo.removedExerciseIds.isEmpty())
+        assertEquals(3, viewModel.uiState.value.exercises.size)
+        assertEquals(listOf(1L, 2L, 3L), viewModel.uiState.value.exercises.map { it.id })
+    }
+
+    @Test
     fun saveWorkout_trimsFields() = runTest(testDispatcher) {
         fakeWorkoutRepo.emitWorkout(workout)
 
