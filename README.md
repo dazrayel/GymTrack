@@ -16,13 +16,17 @@ A interface está em português. O projeto está em desenvolvimento (versão do 
 
 ### Catálogo e treinos
 
-- Cadastro, edição, exclusão e busca de exercícios
+- Cadastro, edição, exclusão e busca de exercícios (catálogo: campo **Buscar exercícios**)
 - Grupo muscular **primário** obrigatório, escolhido de um catálogo fechado
 - Músculos **secundários** (`0..N`), do mesmo catálogo, sem duplicar e sem coincidir com o primário
 - Tipo de equipamento em catálogo, incluindo **Outro**
 - Criação, edição e exclusão de treinos
 - Inclusão de exercícios no treino com séries planejadas, faixa de repetições (`minRepetitions` / `maxRepetitions`), carga planejada, descanso e notas
+- No detalhe do treino, **Adicionar exercício** abre o seletor **Selecionar exercício**, com busca local por **nome** (case-insensitive, imediata; placeholder **Buscar exercício**; limpar com **Limpar pesquisa**)
+- Busca vazia (ou só espaços) mostra o catálogo completo na ordem atual; sem correspondência aparece **Nenhum exercício encontrado** (distinto de biblioteca vazia)
+- Exercícios já no treino continuam no seletor e continuam selecionáveis; a escolha segue para **Configurar exercício**
 - Reordenação de exercícios no treino
+- Campos de texto livre (nome e descrição do treino, nome do exercício, observações) pedem capitalização de frases no teclado; buscas e campos numéricos não
 
 ### Execução da sessão
 
@@ -137,11 +141,12 @@ O projeto tem testes **JVM** (`app/src/test`) e **instrumentados** (`app/src/and
 
 - Regras de domínio (catálogo, meta de reps, resolução do exercício atual)
 - ViewModels (execução, resumo, exercícios, home, histórico, estatísticas, detalhe do treino)
+- Filtro local do seletor de exercícios (`ExercisePickerFilterTest`)
 - Repositories (exercícios, sessões, treinos)
 - Room e migrations (incluindo 6→7 e 7→8)
-- UI Compose (execução, catálogo, resumo, histórico, entre outras)
+- UI Compose (execução, catálogo, resumo, histórico, detalhe do treino / picker, entre outras)
 
-A suíte instrumentada usa Hilt (`HiltTestRunner`) e um emulador/dispositivo.
+A suíte instrumentada usa Hilt (`HiltTestRunner`) e um emulador/dispositivo. Testes do picker com busca foram **compilados**; a execução instrumentada depende de dispositivo disponível.
 
 ## 📂 Estrutura do projeto
 

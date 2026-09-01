@@ -157,6 +157,7 @@
 
     <!-- Exercise picker -->
     <string name="pick_exercise_title">Selecionar exercício</string>
+    <string name="pick_exercise_search">Buscar exercício</string>
     <string name="pick_exercise_empty">Nenhum exercício disponível na biblioteca</string>
     <string name="pick_exercise_empty_hint">Cadastre um exercício para adicioná-lo ao treino</string>
     <string name="go_to_exercises">Ir para exercícios</string>

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +21,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Delete
@@ -55,6 +58,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -504,6 +508,12 @@ private fun EmptyExercisesContent(
 // Exercise picker dialog
 // ──────────────────────────────────────────────────────────────────────────────
 
+internal fun filterExercisesByName(exercises: List<Exercise>, query: String): List<Exercise> {
+    val trimmed = query.trim()
+    if (trimmed.isEmpty()) return exercises
+    return exercises.filter { it.name.contains(trimmed, ignoreCase = true) }
+}
+
 @Composable
 private fun ExercisePickerDialog(
     exercises: List<Exercise>,
@@ -511,48 +521,106 @@ private fun ExercisePickerDialog(
     onDismiss: () -> Unit,
     onNavigateToExercises: () -> Unit,
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredExercises = remember(exercises, searchQuery) {
+        filterExercisesByName(exercises, searchQuery)
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.pick_exercise_title)) },
         text = {
-            if (exercises.isEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = stringResource(R.string.pick_exercise_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text(
-                        text = stringResource(R.string.pick_exercise_empty_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    items(exercises, key = { it.id }) { exercise ->
-                        Card(
-                            onClick = { onSelect(exercise) },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                            ),
-                        ) {
-                            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                                Text(
-                                    text = exercise.name,
-                                    style = MaterialTheme.typography.bodyLarge,
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("picker_exercise_search"),
+                    placeholder = { Text(stringResource(R.string.pick_exercise_search)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = null,
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Clear,
+                                    contentDescription = stringResource(R.string.clear_search),
                                 )
-                                val meta = buildList {
-                                    if (exercise.muscleGroup.isNotBlank()) add(exercise.muscleGroup)
-                                    if (exercise.equipmentType.isNotBlank()) add(exercise.equipmentType)
-                                }.joinToString(" • ")
-                                if (meta.isNotBlank()) {
-                                    Text(
-                                        text = meta,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                    )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                    ),
+                    shape = RoundedCornerShape(50),
+                )
+                Spacer(Modifier.height(12.dp))
+                when {
+                    exercises.isEmpty() && searchQuery.isBlank() -> {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = stringResource(R.string.pick_exercise_empty),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Text(
+                                text = stringResource(R.string.pick_exercise_empty_hint),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                    filteredExercises.isEmpty() -> {
+                        Text(
+                            text = stringResource(R.string.empty_exercises_search),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.testTag("picker_exercise_search_empty"),
+                        )
+                    }
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.heightIn(max = 280.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            items(filteredExercises, key = { it.id }) { exercise ->
+                                Card(
+                                    onClick = { onSelect(exercise) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surface,
+                                    ),
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(
+                                            horizontal = 12.dp,
+                                            vertical = 10.dp,
+                                        ),
+                                    ) {
+                                        Text(
+                                            text = exercise.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                        )
+                                        val meta = buildList {
+                                            if (exercise.muscleGroup.isNotBlank()) {
+                                                add(exercise.muscleGroup)
+                                            }
+                                            if (exercise.equipmentType.isNotBlank()) {
+                                                add(exercise.equipmentType)
+                                            }
+                                        }.joinToString(" • ")
+                                        if (meta.isNotBlank()) {
+                                            Text(
+                                                text = meta,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(
+                                                    alpha = 0.6f,
+                                                ),
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -696,6 +764,9 @@ private fun ExerciseConfigurationDialog(
                     label = { Text(stringResource(R.string.notes_label)) },
                     singleLine = false,
                     maxLines = 3,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -866,6 +937,9 @@ private fun EditWorkoutDialog(
                         null
                     },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
@@ -874,6 +948,9 @@ private fun EditWorkoutDialog(
                     label = { Text(stringResource(R.string.workout_description)) },
                     singleLine = false,
                     maxLines = 3,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

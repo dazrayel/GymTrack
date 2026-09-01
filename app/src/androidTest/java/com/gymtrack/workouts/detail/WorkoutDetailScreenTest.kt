@@ -13,8 +13,10 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -366,6 +368,7 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Selecionar exercício").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("picker_exercise_search").assertIsDisplayed()
         composeTestRule.onNodeWithTag("go_to_exercises").assertIsDisplayed()
         composeTestRule.onNodeWithText("Ir para exercícios").assertIsDisplayed()
     }
@@ -446,6 +449,131 @@ class WorkoutDetailScreenTest {
         composeTestRule.onNodeWithTag("go_to_exercises").performClick()
         composeTestRule.waitUntil(5_000) { navigatedToExercises }
         composeTestRule.onNodeWithText("Selecionar exercício").assertIsNotDisplayed()
+    }
+
+    @Test
+    fun picker_emptySearch_showsAllCatalogExercises() {
+        seedPickerCatalog()
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("picker_exercise_search").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Supino Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Rosca Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Agachamento Teste").assertIsDisplayed()
+    }
+
+    @Test
+    fun picker_search_filtersByName() {
+        seedPickerCatalog()
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("picker_exercise_search").performTextInput("Rosca")
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Rosca Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Supino Teste").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Agachamento Teste").assertDoesNotExist()
+    }
+
+    @Test
+    fun picker_search_isCaseInsensitive() {
+        seedPickerCatalog()
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("picker_exercise_search").performTextInput("supino")
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Supino Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Rosca Teste").assertDoesNotExist()
+    }
+
+    @Test
+    fun picker_search_noResults_showsEmptyState() {
+        seedPickerCatalog()
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("picker_exercise_search").performTextInput("xyz")
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("picker_exercise_search_empty").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Nenhum exercício encontrado").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Supino Teste").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Nenhum exercício disponível na biblioteca")
+            .assertDoesNotExist()
+    }
+
+    @Test
+    fun picker_search_clear_restoresFullList() {
+        seedPickerCatalog()
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("picker_exercise_search").performTextInput("Rosca")
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Supino Teste").assertDoesNotExist()
+
+        composeTestRule.onNodeWithContentDescription("Limpar pesquisa").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Supino Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Rosca Teste").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Agachamento Teste").assertIsDisplayed()
+    }
+
+    @Test
+    fun picker_search_thenSelect_opensConfigurationDialog() {
+        seedPickerCatalog()
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("picker_exercise_search").performTextInput("Agacha")
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Agachamento Teste").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Agachamento Teste").assertIsDisplayed()
+    }
+
+    @Test
+    fun picker_alreadyAddedExercise_remainsSelectable() {
+        addDefaultListedExercise(position = 0)
+        setScreen()
+        composeTestRule.waitForIdle()
+
+        waitUntilTextIsDisplayed("Supino Teste")
+        composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("picker_exercise_search").assertIsDisplayed()
+        val pickerEntries = composeTestRule.onAllNodesWithText("Supino Teste")
+        assertTrue(pickerEntries.fetchSemanticsNodes().size >= 2)
+        pickerEntries.onLast().performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -702,6 +830,21 @@ class WorkoutDetailScreenTest {
                     maxRepetitions = 12,
                     weight = 40.0,
                     restSeconds = 60,
+                ),
+            )
+        }
+    }
+
+    private fun seedPickerCatalog() {
+        runBlocking {
+            extraExerciseIds += exerciseRepository.save(
+                Exercise(name = "Rosca Teste", muscleGroup = "Bíceps", equipmentType = "Halter"),
+            )
+            extraExerciseIds += exerciseRepository.save(
+                Exercise(
+                    name = "Agachamento Teste",
+                    muscleGroup = "Quadríceps",
+                    equipmentType = "Barra",
                 ),
             )
         }

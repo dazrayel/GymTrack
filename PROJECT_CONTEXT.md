@@ -138,6 +138,8 @@ Detalhe do catálogo, músculos secundários, `status` por exercício da sessão
 
 Exclusão de sessões `COMPLETED` no histórico: ver **Exclusão de sessões do histórico**. Sem migration; Room permanece na versão 8.
 
+Busca local no seletor de exercícios do detalhe do treino e capitalização de frases nos campos de texto livre: ver **Busca no seletor de exercícios** e **Capitalização de campos de texto**. Sem alteração de Room, migration ou ViewModel para essas UX.
+
 ### Backend
 
 Ainda não existe backend.
@@ -1634,6 +1636,7 @@ Treinos
 ├── editar
 ├── excluir
 ├── configurar exercícios
+├── adicionar exercício (picker com busca local por nome)
 ├── configurar séries
 ├── configurar repetições
 ├── configurar descanso
@@ -1696,6 +1699,43 @@ Testes (sem inventar totais):
 * JVM: `HistoryViewModelTest` — `confirmDelete_removesOnlySelectedSession`, `dismissDeleteConfirmation_doesNotDelete`, `confirmDelete_lastSession_leavesEmptyList`, `confirmDelete_withoutSelection_doesNothing`.
 * UI: `HistoryScreenTest` — `list_showsDeleteAction`, `deleteDialog_cancelKeepsItem_confirmRemovesSession`.
 * Repository/Room: `WorkoutSessionRepositoryImplTest` — `deleteCompletedSession_removesOnlyThatSessionAndDependents` (CASCADE, outra sessão e catálogo intactos), `deleteCompletedSession_doesNotDeleteInProgressSession`.
+
+---
+
+## Busca no seletor de exercícios
+
+UX no detalhe do treino (`WorkoutDetailScreen` / `ExercisePickerDialog`). **Não** altera Room, migration, entidades, repositories nem `WorkoutDetailViewModel`. O texto da busca **não** é persistido.
+
+* **Adicionar exercício** abre **Selecionar exercício**.
+* Campo Material 3 no topo (`picker_exercise_search`): ícone de busca (decorativo), placeholder `pick_exercise_search` (**Buscar exercício**), limpar com `clear_search` (**Limpar pesquisa**) quando há texto.
+* Filtro **local** sobre a lista já carregada (`availableExercises` / `exerciseRepository.getAll()`), função `filterExercisesByName`.
+* Pesquisa só pelo **nome**; `contains` **case-insensitive**; imediata ao digitar.
+* Query vazia ou só espaços: catálogo completo, **mesma ordem**.
+* Sem correspondência: `empty_exercises_search` (**Nenhum exercício encontrado**), `picker_exercise_search_empty` — distinto de biblioteca vazia (`pick_exercise_empty` / `pick_exercise_empty_hint`).
+* Exercícios já associados ao treino **continuam** na lista e **continuam selecionáveis**.
+* Seleção continua a abrir **Configurar exercício** (fluxo de add/remove inalterado).
+* Capitalização do teclado neste campo: `KeyboardCapitalization.None` (não usa `Sentences`).
+
+A busca do **catálogo** (`ExercisesScreen`, `exercise_search`, debounce/`ExerciseViewModel`) é outro fluxo e permanece.
+
+### Testes
+
+* JVM: `ExercisePickerFilterTest` — lista completa, substring, case-insensitive, sem resultados, ordem.
+* Instrumentados em `WorkoutDetailScreenTest`: busca vazia, filtro, case-insensitive, empty, limpar, selecionar após busca, exercício já no treino continua selecionável; testes anteriores do picker (biblioteca vazia, **Ir para exercícios**, etc.) mantidos.
+
+Validação: `:app:testDebugUnitTest`, `:app:compileDebugKotlin`, `:app:assembleDebug`, `:app:compileDebugAndroidTestKotlin`. Instrumentados do picker **compilados**; **não executados** por ausência de dispositivo/emulador.
+
+---
+
+## Capitalização de campos de texto
+
+Teclado: `KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)` em texto livre. Sem helper global. Sem testes específicos de `KeyboardOptions` (não está estável na árvore de semantics). Instrumentados existentes que digitam nesses campos continuam válidos.
+
+**Com `Sentences`:** nome e descrição do treino (`WorkoutsScreen` criar/editar; `EditWorkoutDialog` no detalhe); nome do exercício (`AddEditExerciseDialog` no catálogo); observações (`ExerciseConfigurationDialog`).
+
+**Sem capitalização automática (`None` ou só `keyboardType` numérico):** buscas (`exercise_search`, `picker_exercise_search`); `NumberField` (séries, reps, descanso, carga); reps/carga na execução; dropdowns `readOnly` (músculo, equipamento). Não há campos de e-mail, login ou senha.
+
+Arquivos: `WorkoutsScreen.kt`, `ExercisesScreen.kt`, `WorkoutDetailScreen.kt`. Sem Room, ViewModel, filtro de busca ou regra de negócio.
 
 ---
 
@@ -1784,6 +1824,8 @@ Testes acrescentados em `15c03f8` / ordem livre: ver a seção **Catálogo, stat
 
 Exclusão do histórico: `HistoryViewModelTest` (confirmação, cancelamento, última sessão), `HistoryScreenTest` (diálogo cancelar/confirmar), `WorkoutSessionRepositoryImplTest` (CASCADE e proteção de `IN_PROGRESS`).
 
+Busca no picker: `ExercisePickerFilterTest`; instrumentados em `WorkoutDetailScreenTest` (compilados; execução depende de emulador/dispositivo).
+
 ---
 
 # 12. Regras de Git
@@ -1815,7 +1857,7 @@ Branch: feature/next-step
 HEAD:
 2083881 feat: allow deleting completed sessions from history
 
-Working tree: documentação (`README.md` / `PROJECT_CONTEXT.md`) pode estar à frente do último commit de código.
+Working tree: pode incluir documentação e UX (busca no picker, capitalização de texto livre) ainda não commitadas.
 
 Últimos commits relevantes:
 2083881 — exclusão de sessões COMPLETED no histórico (CASCADE existente; sem migration)
@@ -1828,7 +1870,7 @@ d74fcc1 — correção de teste pós-8.7
 7f33ed3 — picker vazio → Exercícios
 
 8.S–8.7 e Fases 9–11: histórico das fases (já auditadas).
-Pós-MVP nesta branch: catálogo fechado + secundários, status de exercício, skip, ordem livre, exclusão no histórico.
+Pós-MVP nesta branch: catálogo fechado + secundários, status de exercício, skip, ordem livre, exclusão no histórico, busca local no picker do detalhe, capitalização de frases em texto livre.
 Não documentar lacunas (ex. ausência de transação em resumeSessionExercise) como features feitas.
 ```
 
@@ -1876,7 +1918,8 @@ Fase 11 — Backend                   AUDITADA — ESCOPO INSUFICIENTEMENTE DEFI
    ↓
 feature/next-step (implementado; não é Fase 12 numerada):
    catálogo / secundários / Room 7–8 / status / skip / ordem livre / drafts /
-   exclusão de sessões COMPLETED no histórico
+   exclusão de sessões COMPLETED no histórico /
+   busca local no picker de exercícios / capitalização de texto livre
 ```
 
 Não avançar para uma etapa posterior sem concluir e auditar a anterior.
@@ -1929,6 +1972,6 @@ Room    — versão 8 (migrations até 7→8; sem 8→9)
 
 Auditoria exploratória do MVP (pós-Fase 11): **CONCLUÍDA** — nenhum problema real; não é fase nova; sem Bloco A.
 
-Trabalho posterior na mesma branch: catálogo de músculos/equipamentos, secundários N:N, status de exercício, skip, “Fazer agora”, drafts, exclusão de sessões concluídas no histórico. `README.md` é portfólio público (ficheiro separado).
+Trabalho posterior na mesma branch: catálogo de músculos/equipamentos, secundários N:N, status de exercício, skip, “Fazer agora”, drafts, exclusão de sessões concluídas no histórico, busca local no seletor de exercícios do detalhe do treino, capitalização de frases nos campos de texto livre. `README.md` é portfólio público (ficheiro separado).
 
 Fases 10 e 11 não são backlog de implementação.
