@@ -253,7 +253,6 @@ private fun WorkoutExecutionContent(
                                     blockLabel = blockExecutionLabel(
                                         exercise = exercise,
                                         exercises = uiState.exercises,
-                                        currentRound = uiState.currentSetIndex + 1,
                                     ),
                                     exerciseName = exercise.exerciseName,
                                     muscleGroup = exercise.muscleGroup,
@@ -860,7 +859,6 @@ private fun formatRestClock(millis: Long): String {
 private fun blockExecutionLabel(
     exercise: WorkoutSessionExercise,
     exercises: List<WorkoutSessionExercise>,
-    currentRound: Int,
 ): String? {
     if (exercise.blockType == WorkoutBlockType.SINGLE) return null
     val typeLabel = when (exercise.blockType) {
@@ -876,5 +874,5 @@ private fun blockExecutionLabel(
     val ordinal = sameTypeOrdered.indexOfFirst { it.first == exercise.blockPosition }.let {
         if (it >= 0) it + 1 else exercise.blockPosition + 1
     }
-    return "$typeLabel $ordinal · ROUND $currentRound/${exercise.plannedSets}"
+    return "$typeLabel $ordinal"
 }

@@ -1,5 +1,6 @@
 package com.gymtrack.presentation.workouts.detail
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Edit
@@ -248,10 +250,12 @@ private fun WorkoutDetailContent(
         )
     }
     uiState.exerciseToConfigure?.let { detail ->
+        val configureBlock = uiState.configureBlock
         ExerciseConfigurationDialog(
             detail = detail,
             initialRounds = uiState.configureRounds,
             initialRestSeconds = uiState.configureRestSeconds,
+            showBlockFields = configureBlock == null || configureBlock.type == WorkoutBlockType.SINGLE,
             onConfirm = onSaveExerciseConfiguration,
             onDismiss = onDismissExerciseConfiguration,
         )
@@ -376,26 +380,20 @@ private fun BlockBuilderDialog(
             Text(if (type == WorkoutBlockType.BI_SET) stringResource(R.string.add_bi_set) else stringResource(R.string.add_tri_set))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 slots.forEachIndexed { index, exercise ->
-                    Text(stringResource(R.string.block_slot_label, index + 1))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = exercise?.name ?: stringResource(R.string.block_slot_select),
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        TextButton(onClick = { onPickSlot(index) }) { Text(stringResource(R.string.block_slot_select)) }
-                        if (exercise != null) {
-                            IconButton(onClick = { onClearSlot(index) }) { Icon(Icons.Filled.Clear, contentDescription = null) }
-                        }
-                    }
+                    BlockExerciseSlot(
+                        slotNumber = index + 1,
+                        exercise = exercise,
+                        onPick = { onPickSlot(index) },
+                        onClear = { onClearSlot(index) },
+                    )
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = rounds,
                         onValueChange = { rounds = it },
-                        label = { Text(stringResource(R.string.block_rounds_label)) },
+                        label = { Text(stringResource(R.string.sets_label)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
@@ -403,7 +401,7 @@ private fun BlockBuilderDialog(
                     OutlinedTextField(
                         value = rest,
                         onValueChange = { rest = it },
-                        label = { Text(stringResource(R.string.rest_seconds_display)) },
+                        label = { Text(stringResource(R.string.rest_seconds_label)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
@@ -420,6 +418,102 @@ private fun BlockBuilderDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BlockExerciseSlot(
+    slotNumber: Int,
+    exercise: Exercise?,
+    onPick: () -> Unit,
+    onClear: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.block_slot_label, slotNumber),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        if (exercise == null) {
+            Card(
+                onClick = onPick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("block_slot_empty_$slotNumber"),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.block_slot_select),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        } else {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("block_slot_filled_$slotNumber"),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable(onClick = onPick)
+                            .padding(vertical = 6.dp),
+                    ) {
+                        Text(
+                            text = exercise.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (exercise.muscleGroup.isNotBlank()) {
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = exercise.muscleGroup,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = onClear,
+                        modifier = Modifier.testTag("block_slot_clear_$slotNumber"),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -637,6 +731,7 @@ private fun ExerciseConfigurationDialog(
     detail: WorkoutExerciseDetail,
     initialRounds: Int,
     initialRestSeconds: Int,
+    showBlockFields: Boolean,
     onConfirm: (sets: Int, minReps: Int, maxReps: Int, weight: Double, restSeconds: Int, notes: String) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -670,33 +765,35 @@ private fun ExerciseConfigurationDialog(
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    NumberField(
-                        value = sets,
-                        onValueChange = {
-                            sets = it
-                            setsError = null
-                        },
-                        label = stringResource(R.string.sets_label),
-                        isError = setsError != null,
-                        errorMessage = setsError?.let { stringResource(it) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("sets_field"),
-                    )
-                    NumberField(
-                        value = restSeconds,
-                        onValueChange = {
-                            restSeconds = it
-                            restSecondsError = null
-                        },
-                        label = stringResource(R.string.rest_seconds_label),
-                        isError = restSecondsError != null,
-                        errorMessage = restSecondsError?.let { stringResource(it) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("rest_seconds_field"),
-                    )
+                if (showBlockFields) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NumberField(
+                            value = sets,
+                            onValueChange = {
+                                sets = it
+                                setsError = null
+                            },
+                            label = stringResource(R.string.sets_label),
+                            isError = setsError != null,
+                            errorMessage = setsError?.let { stringResource(it) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("sets_field"),
+                        )
+                        NumberField(
+                            value = restSeconds,
+                            onValueChange = {
+                                restSeconds = it
+                                restSecondsError = null
+                            },
+                            label = stringResource(R.string.rest_seconds_label),
+                            isError = restSecondsError != null,
+                            errorMessage = restSecondsError?.let { stringResource(it) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("rest_seconds_field"),
+                        )
+                    }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     NumberField(
@@ -741,33 +838,45 @@ private fun ExerciseConfigurationDialog(
                         .fillMaxWidth()
                         .testTag("weight_field"),
                 )
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text(stringResource(R.string.notes_label)) },
-                    singleLine = false,
-                    maxLines = 3,
-                    keyboardOptions = KeyboardOptions(
-                        capitalization = KeyboardCapitalization.Sentences,
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                if (showBlockFields) {
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = { Text(stringResource(R.string.notes_label)) },
+                        singleLine = false,
+                        maxLines = 3,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    setsError = integerFieldError(sets, minValue = 1, belowMinRes = R.string.validation_sets_min)
+                    if (showBlockFields) {
+                        setsError = integerFieldError(sets, minValue = 1, belowMinRes = R.string.validation_sets_min)
+                        restSecondsError = integerFieldError(restSeconds, minValue = 0, belowMinRes = R.string.validation_rest_min)
+                    }
                     minRepsError = integerFieldError(minReps, minValue = 1, belowMinRes = R.string.validation_min_reps_min)
                     maxRepsError = integerFieldError(maxReps, minValue = 1, belowMinRes = R.string.validation_max_reps_min)
                     weightError = doubleFieldError(weight)
-                    restSecondsError = integerFieldError(restSeconds, minValue = 0, belowMinRes = R.string.validation_rest_min)
 
-                    val setsValue = parseRequiredIntAtLeast(sets, minValue = 1)
+                    val setsValue = if (showBlockFields) {
+                        parseRequiredIntAtLeast(sets, minValue = 1)
+                    } else {
+                        initialRounds.coerceAtLeast(1)
+                    }
                     val minValue = parseRequiredIntAtLeast(minReps, minValue = 1)
                     val maxValue = parseRequiredIntAtLeast(maxReps, minValue = 1)
                     val weightValue = parseRequiredNonNegativeDouble(weight)
-                    val restValue = parseRequiredIntAtLeast(restSeconds, minValue = 0)
+                    val restValue = if (showBlockFields) {
+                        parseRequiredIntAtLeast(restSeconds, minValue = 0)
+                    } else {
+                        initialRestSeconds.coerceAtLeast(0)
+                    }
 
                     val rangeInvalid = minValue != null && maxValue != null && maxValue < minValue
                     if (rangeInvalid) {

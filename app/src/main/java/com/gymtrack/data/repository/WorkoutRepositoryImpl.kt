@@ -68,7 +68,18 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateBlock(block: WorkoutBlock) {
-        withContext(Dispatchers.IO) { workoutBlockDao.insert(block.toEntity()) }
+        withContext(Dispatchers.IO) {
+            // Use UPDATE instead of INSERT REPLACE: REPLACE deletes the row first and
+            // CASCADE would wipe every WorkoutExercise linked to the block.
+            workoutBlockDao.update(
+                id = block.id,
+                workoutId = block.workoutId,
+                position = block.position,
+                type = block.type.name,
+                rounds = block.rounds,
+                restSeconds = block.restSeconds,
+            )
+        }
     }
 
     override suspend fun updateBlockExercise(exercise: WorkoutExercise) {

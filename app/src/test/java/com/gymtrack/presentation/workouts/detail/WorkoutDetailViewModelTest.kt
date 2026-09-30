@@ -129,6 +129,62 @@ class WorkoutDetailViewModelTest {
     }
 
     @Test
+    fun saveExerciseConfiguration_inBiSet_updatesExerciseWithoutTouchingBlockRounds() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        val block = WorkoutBlock(
+            id = 5,
+            workoutId = 1,
+            position = 0,
+            type = WorkoutBlockType.BI_SET,
+            rounds = 3,
+            restSeconds = 60,
+        )
+        val weA = WorkoutExercise(
+            id = 11,
+            blockId = 5,
+            exerciseId = 1,
+            positionInBlock = 0,
+            minRepetitions = 8,
+            maxRepetitions = 12,
+            weight = 20.0,
+        )
+        val weB = WorkoutExercise(
+            id = 12,
+            blockId = 5,
+            exerciseId = 2,
+            positionInBlock = 1,
+            minRepetitions = 10,
+            maxRepetitions = 12,
+            weight = 15.0,
+        )
+        exerciseRepo.emit(
+            listOf(
+                Exercise(1, "Rosca", "Bíceps", "Barra"),
+                Exercise(2, "Tríceps", "Tríceps", "Corda"),
+            ),
+        )
+        workoutRepo.emitBlocks(listOf(block))
+        workoutRepo.emitExercises(listOf(weA, weB))
+        advanceUntilIdle()
+
+        val detail = viewModel.uiState.value.blocks.single()
+        viewModel.showEditExercise(detail, detail.items[0])
+        viewModel.saveExerciseConfiguration(9, 6, 10, 30.0, 120, "ignored-for-block")
+        advanceUntilIdle()
+
+        assertEquals(1, workoutRepo.updatedExercises.size)
+        val updated = workoutRepo.updatedExercises.single()
+        assertEquals(11L, updated.id)
+        assertEquals(5L, updated.blockId)
+        assertEquals(0, updated.positionInBlock)
+        assertEquals(6, updated.minRepetitions)
+        assertEquals(10, updated.maxRepetitions)
+        assertEquals(30.0, updated.weight, 0.0)
+        assertTrue(workoutRepo.updatedBlocks.isEmpty())
+        assertEquals(2, workoutRepo.exercisesFlowValue().size)
+    }
+
+    @Test
     fun confirmDelete_removesBlock() = runTest(testDispatcher) {
         advanceUntilIdle()
         val block = WorkoutBlock(id = 9, workoutId = 1, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60)
@@ -152,10 +208,13 @@ private class FakeWorkoutRepository : WorkoutRepository {
     private val exercisesFlow = MutableStateFlow<List<WorkoutExercise>>(emptyList())
     val addedBlocks = mutableListOf<Pair<WorkoutBlock, List<WorkoutExercise>>>()
     val removedBlockIds = mutableListOf<Long>()
+    val updatedExercises = mutableListOf<WorkoutExercise>()
+    val updatedBlocks = mutableListOf<WorkoutBlock>()
 
     fun emitWorkout(workout: Workout?) { workoutFlow.value = workout }
     fun emitBlocks(blocks: List<WorkoutBlock>) { blocksFlow.value = blocks }
     fun emitExercises(exercises: List<WorkoutExercise>) { exercisesFlow.value = exercises }
+    fun exercisesFlowValue(): List<WorkoutExercise> = exercisesFlow.value
 
     override fun getAll() = flowOf(emptyList<Workout>())
     override fun getById(id: Long) = workoutFlow
@@ -171,8 +230,14 @@ private class FakeWorkoutRepository : WorkoutRepository {
         exercisesFlow.value = exercisesFlow.value + exercises.mapIndexed { i, e -> e.copy(id = i + 1L, blockId = id) }
         return id
     }
-    override suspend fun updateBlock(block: WorkoutBlock) {}
-    override suspend fun updateBlockExercise(exercise: WorkoutExercise) {}
+    override suspend fun updateBlock(block: WorkoutBlock) {
+        updatedBlocks += block
+        blocksFlow.value = blocksFlow.value.map { if (it.id == block.id) block else it }
+    }
+    override suspend fun updateBlockExercise(exercise: WorkoutExercise) {
+        updatedExercises += exercise
+        exercisesFlow.value = exercisesFlow.value.map { if (it.id == exercise.id) exercise else it }
+    }
     override suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long) {}
     override suspend fun removeBlock(blockId: Long) { removedBlockIds += blockId }
     override suspend fun updateBlockPositions(positions: Map<Long, Int>) {}

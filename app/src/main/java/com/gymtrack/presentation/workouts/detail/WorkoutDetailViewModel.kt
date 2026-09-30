@@ -282,16 +282,11 @@ class WorkoutDetailViewModel @Inject constructor(
                     )
                     workoutRepository.addBlock(block, listOf(updated))
                 } else {
+                    // Preserve blockId / positionInBlock — only update exercise fields.
                     workoutRepository.updateBlockExercise(updated)
+                    // Séries/descanso belong to the block; only SINGLE edits them here.
+                    // BI/TRI keep shared block rounds/rest unchanged when configuring a slot.
                     if (existingBlock.type == WorkoutBlockType.SINGLE) {
-                        workoutRepository.updateBlock(
-                            existingBlock.copy(
-                                rounds = sets.coerceAtLeast(1),
-                                restSeconds = restSeconds.coerceAtLeast(0),
-                            ),
-                        )
-                    } else {
-                        // Multi-exercise block: rounds/rest stay shared on the block.
                         workoutRepository.updateBlock(
                             existingBlock.copy(
                                 rounds = sets.coerceAtLeast(1),

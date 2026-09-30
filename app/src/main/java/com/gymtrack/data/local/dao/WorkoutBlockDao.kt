@@ -23,6 +23,26 @@ interface WorkoutBlockDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(block: WorkoutBlockEntity): Long
 
+    @Query(
+        """
+        UPDATE workout_blocks
+        SET workoutId = :workoutId,
+            position = :position,
+            type = :type,
+            rounds = :rounds,
+            restSeconds = :restSeconds
+        WHERE id = :id
+        """,
+    )
+    fun update(
+        id: Long,
+        workoutId: Long,
+        position: Int,
+        type: String,
+        rounds: Int,
+        restSeconds: Int,
+    ): Int
+
     @Query("UPDATE workout_blocks SET position = :position WHERE id = :id")
     fun updatePosition(id: Long, position: Int): Int
 
