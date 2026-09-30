@@ -2,10 +2,12 @@ package com.gymtrack.presentation.exercises
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gymtrack.domain.exercise.CatalogDemoOptionsSource
 import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.sanitizedSecondaryMuscles
 import com.gymtrack.domain.repository.ExerciseRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,12 +18,14 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ExerciseViewModel @Inject constructor(
     private val repository: ExerciseRepository,
+    private val catalogDemoOptionsSource: CatalogDemoOptionsSource,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExerciseUiState())
@@ -59,7 +63,27 @@ class ExerciseViewModel @Inject constructor(
     }
 
     fun dismissDialog() {
-        _uiState.update { it.copy(showAddEditDialog = false, exerciseToEdit = null) }
+        _uiState.update {
+            it.copy(
+                showAddEditDialog = false,
+                exerciseToEdit = null,
+                showDemoPicker = false,
+                catalogDemoOptions = emptyList(),
+            )
+        }
+    }
+
+    fun openDemoPicker() {
+        viewModelScope.launch {
+            val options = withContext(Dispatchers.IO) {
+                catalogDemoOptionsSource.optionsWithAvailableMedia()
+            }
+            _uiState.update { it.copy(showDemoPicker = true, catalogDemoOptions = options) }
+        }
+    }
+
+    fun dismissDemoPicker() {
+        _uiState.update { it.copy(showDemoPicker = false) }
     }
 
     fun saveExercise(
@@ -67,16 +91,24 @@ class ExerciseViewModel @Inject constructor(
         muscleGroup: String,
         equipmentType: String,
         secondaryMuscles: List<String> = emptyList(),
+        mediaExternalSource: String? = null,
+        mediaExternalId: String? = null,
     ) {
         if (name.isBlank() || muscleGroup.isBlank() || equipmentType.isBlank()) return
         val toEdit = _uiState.value.exerciseToEdit
         val sanitized = sanitizedSecondaryMuscles(muscleGroup.trim(), secondaryMuscles)
+        val mediaSource = mediaExternalSource?.trim()?.takeIf { it.isNotEmpty() }
+        val mediaId = mediaExternalId?.trim()?.takeIf { it.isNotEmpty() }
+        val linkedMediaSource = if (mediaSource != null && mediaId != null) mediaSource else null
+        val linkedMediaId = if (mediaSource != null && mediaId != null) mediaId else null
         val exercise = if (toEdit != null) {
             toEdit.copy(
                 name = name.trim(),
                 muscleGroup = muscleGroup.trim(),
                 equipmentType = equipmentType.trim(),
                 secondaryMuscles = sanitized,
+                mediaExternalSource = linkedMediaSource,
+                mediaExternalId = linkedMediaId,
             )
         } else {
             Exercise(
@@ -84,12 +116,20 @@ class ExerciseViewModel @Inject constructor(
                 muscleGroup = muscleGroup.trim(),
                 equipmentType = equipmentType.trim(),
                 secondaryMuscles = sanitized,
+                mediaExternalSource = linkedMediaSource,
+                mediaExternalId = linkedMediaId,
             )
         }
         viewModelScope.launch {
             try {
                 repository.save(exercise)
-                _uiState.update { it.copy(showAddEditDialog = false, exerciseToEdit = null) }
+                _uiState.update {
+                    it.copy(
+                        showAddEditDialog = false,
+                        exerciseToEdit = null,
+                        showDemoPicker = false,
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
             }
@@ -111,7 +151,13 @@ class ExerciseViewModel @Inject constructor(
                 repository.delete(exercise)
                 _uiState.update { it.copy(showDeleteConfirmation = false, exerciseToDelete = null) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(showDeleteConfirmation = false, exerciseToDelete = null, error = e.message) }
+                _uiState.update {
+                    it.copy(
+                        showDeleteConfirmation = false,
+                        exerciseToDelete = null,
+                        error = e.message,
+                    )
+                }
             }
         }
     }

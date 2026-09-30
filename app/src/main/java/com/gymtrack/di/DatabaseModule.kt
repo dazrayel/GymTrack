@@ -10,9 +10,11 @@ import com.gymtrack.data.local.dao.WorkoutExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSessionDao
 import com.gymtrack.data.local.dao.WorkoutSessionExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSetDao
+import com.gymtrack.data.catalog.CatalogDemoOptionsProvider
 import com.gymtrack.data.repository.ExerciseRepositoryImpl
 import com.gymtrack.data.repository.WorkoutRepositoryImpl
 import com.gymtrack.data.repository.WorkoutSessionRepositoryImpl
+import com.gymtrack.domain.exercise.CatalogDemoOptionsSource
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
@@ -48,6 +50,7 @@ object DatabaseModule {
                 GymTrackDatabase.MIGRATION_6_7,
                 GymTrackDatabase.MIGRATION_7_8,
                 GymTrackDatabase.MIGRATION_8_9,
+                GymTrackDatabase.MIGRATION_9_10,
             )
             .build()
     }
@@ -55,6 +58,12 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideTimeProvider(): TimeProvider = SystemTimeProvider()
+
+    @Provides
+    @Singleton
+    fun provideCatalogDemoOptionsSource(
+        provider: CatalogDemoOptionsProvider,
+    ): CatalogDemoOptionsSource = provider
 
     @Provides
     fun provideExerciseDao(database: GymTrackDatabase): ExerciseDao {

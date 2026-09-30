@@ -29,7 +29,7 @@ import com.gymtrack.data.local.entity.WorkoutSetEntity
         WorkoutSessionExerciseEntity::class,
         WorkoutSetEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
 abstract class GymTrackDatabase : RoomDatabase() {
@@ -340,6 +340,13 @@ abstract class GymTrackDatabase : RoomDatabase() {
                         "`index_exercises_externalSource_externalId` " +
                         "ON `exercises` (`externalSource`, `externalId`)",
                 )
+            }
+        }
+
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `exercises` ADD COLUMN `mediaExternalSource` TEXT")
+                db.execSQL("ALTER TABLE `exercises` ADD COLUMN `mediaExternalId` TEXT")
             }
         }
     }

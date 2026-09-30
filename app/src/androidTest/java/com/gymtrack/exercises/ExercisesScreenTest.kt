@@ -59,8 +59,10 @@ class ExercisesScreenTest {
                     onExerciseClick = onExerciseClick,
                     onExerciseStatsClick = onExerciseStatsClick,
                     onDeleteClick = onDeleteClick,
-                    onSaveExercise = { _, _, _, _ -> },
+                    onSaveExercise = { _, _, _, _, _, _ -> },
                     onDismissDialog = {},
+                    onOpenDemoPicker = {},
+                    onDismissDemoPicker = {},
                     onConfirmDelete = {},
                     onDismissDelete = {},
                     onErrorShown = {},
@@ -88,7 +90,7 @@ class ExercisesScreenTest {
         composeTestRule.onNodeWithTag("exercise_card_Supino reto").assertIsDisplayed()
         composeTestRule.onNodeWithText("Supino reto").assertIsDisplayed()
         composeTestRule.onNodeWithTag("exercise_view_performance_Supino reto").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Ver desempenho").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Ver desempenho").assertIsDisplayed()
     }
 
     @Test
@@ -188,8 +190,10 @@ class ExercisesScreenTest {
                     },
                     onExerciseStatsClick = { statsName = it },
                     onDeleteClick = {},
-                    onSaveExercise = { _, _, _, _ -> },
+                    onSaveExercise = { _, _, _, _, _, _ -> },
                     onDismissDialog = {},
+                    onOpenDemoPicker = {},
+                    onDismissDemoPicker = {},
                     onConfirmDelete = {},
                     onDismissDelete = {},
                     onErrorShown = {},
@@ -250,8 +254,10 @@ class ExercisesScreenTest {
                         deleted = it
                         uiState = uiState.copy(showDeleteConfirmation = true, exerciseToDelete = it)
                     },
-                    onSaveExercise = { _, _, _, _ -> },
+                    onSaveExercise = { _, _, _, _, _, _ -> },
                     onDismissDialog = {},
+                    onOpenDemoPicker = {},
+                    onDismissDemoPicker = {},
                     onConfirmDelete = {},
                     onDismissDelete = {},
                     onErrorShown = {},
@@ -280,10 +286,12 @@ class ExercisesScreenTest {
                     onExerciseClick = {},
                     onExerciseStatsClick = {},
                     onDeleteClick = {},
-                    onSaveExercise = { name, muscle, equipment, secondaries ->
+                    onSaveExercise = { name, muscle, equipment, secondaries, _, _ ->
                         saved = Quadruple(name, muscle, equipment, secondaries)
                     },
                     onDismissDialog = {},
+                    onOpenDemoPicker = {},
+                    onDismissDemoPicker = {},
                     onConfirmDelete = {},
                     onDismissDelete = {},
                     onErrorShown = {},
@@ -317,13 +325,15 @@ class ExercisesScreenTest {
                     onExerciseClick = {},
                     onExerciseStatsClick = {},
                     onDeleteClick = {},
-                    onSaveExercise = { name, muscle, equipment, secondaries ->
+                    onSaveExercise = { name, muscle, equipment, secondaries, _, _ ->
                         savedName = name
                         savedMuscle = muscle
                         savedEquipment = equipment
                         savedSecondaries = secondaries
                     },
                     onDismissDialog = {},
+                    onOpenDemoPicker = {},
+                    onDismissDemoPicker = {},
                     onConfirmDelete = {},
                     onDismissDelete = {},
                     onErrorShown = {},
@@ -361,11 +371,13 @@ class ExercisesScreenTest {
                     onExerciseClick = {},
                     onExerciseStatsClick = {},
                     onDeleteClick = {},
-                    onSaveExercise = { _, muscle, _, secondaries ->
+                    onSaveExercise = { _, muscle, _, secondaries, _, _ ->
                         savedMuscle = muscle
                         savedSecondaries = secondaries
                     },
                     onDismissDialog = {},
+                    onOpenDemoPicker = {},
+                    onDismissDemoPicker = {},
                     onConfirmDelete = {},
                     onDismissDelete = {},
                     onErrorShown = {},

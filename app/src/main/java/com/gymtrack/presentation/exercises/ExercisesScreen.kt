@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -66,6 +67,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
+import com.gymtrack.domain.exercise.CatalogDemoOption
 import com.gymtrack.domain.model.EQUIPMENT_TYPES
 import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.MUSCLE_GROUPS
@@ -92,6 +94,8 @@ fun ExercisesScreen(
         onDeleteClick = viewModel::showDeleteConfirmation,
         onSaveExercise = viewModel::saveExercise,
         onDismissDialog = viewModel::dismissDialog,
+        onOpenDemoPicker = viewModel::openDemoPicker,
+        onDismissDemoPicker = viewModel::dismissDemoPicker,
         onConfirmDelete = viewModel::confirmDelete,
         onDismissDelete = viewModel::dismissDeleteConfirmation,
         onErrorShown = viewModel::clearError,
@@ -110,8 +114,17 @@ fun ExercisesScreen(
     onExerciseClick: (Exercise) -> Unit,
     onExerciseStatsClick: (String) -> Unit,
     onDeleteClick: (Exercise) -> Unit,
-    onSaveExercise: (name: String, muscleGroup: String, equipmentType: String, secondaryMuscles: List<String>) -> Unit,
+    onSaveExercise: (
+        name: String,
+        muscleGroup: String,
+        equipmentType: String,
+        secondaryMuscles: List<String>,
+        mediaExternalSource: String?,
+        mediaExternalId: String?,
+    ) -> Unit,
     onDismissDialog: () -> Unit,
+    onOpenDemoPicker: () -> Unit,
+    onDismissDemoPicker: () -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
     onErrorShown: () -> Unit,
@@ -235,8 +248,12 @@ fun ExercisesScreen(
     if (uiState.showAddEditDialog) {
         AddEditExerciseDialog(
             exercise = uiState.exerciseToEdit,
+            showDemoPicker = uiState.showDemoPicker,
+            catalogDemoOptions = uiState.catalogDemoOptions,
             onSave = onSaveExercise,
             onDismiss = onDismissDialog,
+            onOpenDemoPicker = onOpenDemoPicker,
+            onDismissDemoPicker = onDismissDemoPicker,
         )
     }
 
@@ -302,11 +319,16 @@ private fun ExerciseItem(
                     )
                 }
             }
-            TextButton(
+            IconButton(
                 onClick = onStatsClick,
                 modifier = Modifier.testTag("exercise_view_performance_${exercise.name}"),
             ) {
-                Text(text = stringResource(R.string.exercise_view_performance))
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = stringResource(R.string.exercise_view_performance),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
             }
             IconButton(
                 onClick = onDeleteClick,
@@ -371,8 +393,19 @@ private fun EmptyExercisesContent(
 @Composable
 private fun AddEditExerciseDialog(
     exercise: Exercise?,
-    onSave: (name: String, muscleGroup: String, equipmentType: String, secondaryMuscles: List<String>) -> Unit,
+    showDemoPicker: Boolean,
+    catalogDemoOptions: List<CatalogDemoOption>,
+    onSave: (
+        name: String,
+        muscleGroup: String,
+        equipmentType: String,
+        secondaryMuscles: List<String>,
+        mediaExternalSource: String?,
+        mediaExternalId: String?,
+    ) -> Unit,
     onDismiss: () -> Unit,
+    onOpenDemoPicker: () -> Unit,
+    onDismissDemoPicker: () -> Unit,
 ) {
     var name by remember(exercise) { mutableStateOf(exercise?.name ?: "") }
     var muscleGroup by remember(exercise) { mutableStateOf(exercise?.muscleGroup ?: "") }
@@ -380,11 +413,29 @@ private fun AddEditExerciseDialog(
     var secondaryMuscles by remember(exercise) {
         mutableStateOf(exercise?.secondaryMuscles.orEmpty().filter { it != exercise?.muscleGroup })
     }
+    var mediaExternalSource by remember(exercise) {
+        mutableStateOf(exercise?.mediaExternalSource)
+    }
+    var mediaExternalId by remember(exercise) {
+        mutableStateOf(exercise?.mediaExternalId)
+    }
+    var selectedDemoLabel by remember(exercise) { mutableStateOf<String?>(null) }
     var nameError by remember { mutableStateOf(false) }
     var muscleError by remember { mutableStateOf(false) }
     var equipmentError by remember { mutableStateOf(false) }
     var primaryExpanded by remember { mutableStateOf(false) }
     var equipmentExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(mediaExternalId, catalogDemoOptions) {
+        val id = mediaExternalId
+        if (id.isNullOrBlank()) {
+            selectedDemoLabel = null
+            return@LaunchedEffect
+        }
+        selectedDemoLabel = catalogDemoOptions.firstOrNull { it.mediaExternalId == id }?.displayName
+            ?: selectedDemoLabel
+            ?: id
+    }
 
     val primaryOptions = remember(muscleGroup) {
         if (muscleGroup.isNotBlank() && muscleGroup !in MUSCLE_GROUPS) {
@@ -399,6 +450,12 @@ private fun AddEditExerciseDialog(
         } else {
             EQUIPMENT_TYPES
         }
+    }
+    val hasSelectedMedia = !mediaExternalSource.isNullOrBlank() && !mediaExternalId.isNullOrBlank()
+    val demoButtonLabel = if (hasSelectedMedia || exercise?.hasCatalogIdentity == true) {
+        stringResource(R.string.change_demonstration)
+    } else {
+        stringResource(R.string.add_demonstration)
     }
 
     AlertDialog(
@@ -417,9 +474,23 @@ private fun AddEditExerciseDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.verticalScroll(rememberScrollState()),
             ) {
-                if (exercise != null) {
+                val previewExercise = when {
+                    hasSelectedMedia -> Exercise(
+                        id = exercise?.id ?: 0,
+                        name = name.ifBlank { exercise?.name.orEmpty() },
+                        muscleGroup = muscleGroup.ifBlank { exercise?.muscleGroup.orEmpty() },
+                        equipmentType = equipmentType.ifBlank { exercise?.equipmentType.orEmpty() },
+                        mediaExternalSource = mediaExternalSource,
+                        mediaExternalId = mediaExternalId,
+                        externalSource = exercise?.externalSource,
+                        externalId = exercise?.externalId,
+                    )
+                    exercise != null -> exercise
+                    else -> null
+                }
+                if (previewExercise != null) {
                     ExerciseAnimation(
-                        exercise = exercise,
+                        exercise = previewExercise,
                         modifier = Modifier.testTag("exercise_edit_animation"),
                     )
                 }
@@ -557,6 +628,38 @@ private fun AddEditExerciseDialog(
                         }
                     }
                 }
+                if (hasSelectedMedia) {
+                    selectedDemoLabel?.takeIf { it.isNotBlank() }?.let { label ->
+                        Text(
+                            text = stringResource(R.string.selected_demonstration_label, label),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("selected_demonstration_label"),
+                        )
+                    }
+                }
+                TextButton(
+                    onClick = onOpenDemoPicker,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("exercise_demo_picker_button"),
+                ) {
+                    Text(demoButtonLabel)
+                }
+                if (hasSelectedMedia) {
+                    TextButton(
+                        onClick = {
+                            mediaExternalSource = null
+                            mediaExternalId = null
+                            selectedDemoLabel = null
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("exercise_demo_remove_button"),
+                    ) {
+                        Text(stringResource(R.string.remove_demonstration))
+                    }
+                }
             }
         },
         confirmButton = {
@@ -566,7 +669,14 @@ private fun AddEditExerciseDialog(
                     muscleError = muscleGroup.isBlank()
                     equipmentError = equipmentType.isBlank()
                     if (!nameError && !muscleError && !equipmentError) {
-                        onSave(name, muscleGroup, equipmentType, secondaryMuscles)
+                        onSave(
+                            name,
+                            muscleGroup,
+                            equipmentType,
+                            secondaryMuscles,
+                            mediaExternalSource,
+                            mediaExternalId,
+                        )
                     }
                 },
             ) {
@@ -579,6 +689,19 @@ private fun AddEditExerciseDialog(
             }
         },
     )
+
+    if (showDemoPicker) {
+        CatalogDemoPickerDialog(
+            options = catalogDemoOptions,
+            onConfirm = { option ->
+                mediaExternalSource = option.mediaExternalSource
+                mediaExternalId = option.mediaExternalId
+                selectedDemoLabel = option.displayName
+                onDismissDemoPicker()
+            },
+            onDismiss = onDismissDemoPicker,
+        )
+    }
 }
 
 @Composable
@@ -626,8 +749,10 @@ private fun ExercisesContentLoadingPreview() {
             onExerciseClick = {},
             onExerciseStatsClick = {},
             onDeleteClick = {},
-            onSaveExercise = { _, _, _, _ -> },
+            onSaveExercise = { _, _, _, _, _, _ -> },
             onDismissDialog = {},
+            onOpenDemoPicker = {},
+            onDismissDemoPicker = {},
             onConfirmDelete = {},
             onDismissDelete = {},
             onErrorShown = {},
@@ -648,8 +773,10 @@ private fun ExercisesContentEmptyPreview() {
             onExerciseClick = {},
             onExerciseStatsClick = {},
             onDeleteClick = {},
-            onSaveExercise = { _, _, _, _ -> },
+            onSaveExercise = { _, _, _, _, _, _ -> },
             onDismissDialog = {},
+            onOpenDemoPicker = {},
+            onDismissDemoPicker = {},
             onConfirmDelete = {},
             onDismissDelete = {},
             onErrorShown = {},
@@ -677,8 +804,10 @@ private fun ExercisesContentListPreview() {
             onExerciseClick = {},
             onExerciseStatsClick = {},
             onDeleteClick = {},
-            onSaveExercise = { _, _, _, _ -> },
+            onSaveExercise = { _, _, _, _, _, _ -> },
             onDismissDialog = {},
+            onOpenDemoPicker = {},
+            onDismissDemoPicker = {},
             onConfirmDelete = {},
             onDismissDelete = {},
             onErrorShown = {},

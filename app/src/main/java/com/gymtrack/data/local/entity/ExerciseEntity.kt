@@ -20,4 +20,6 @@ data class ExerciseEntity(
     val equipmentType: String,
     val externalSource: String? = null,
     val externalId: String? = null,
+    val mediaExternalSource: String? = null,
+    val mediaExternalId: String? = null,
 )

@@ -1,6 +1,8 @@
 package com.gymtrack.presentation.exercises
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.gymtrack.domain.exercise.CatalogDemoOptionsSource
+import com.gymtrack.domain.exercise.ExerciseMediaConstants
 import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.repository.ExerciseRepository
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +42,10 @@ class ExerciseViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         fakeRepository = FakeExerciseRepository()
-        viewModel = ExerciseViewModel(fakeRepository)
+        viewModel = ExerciseViewModel(
+            fakeRepository,
+            CatalogDemoOptionsSource { emptyList() },
+        )
     }
 
     @After
@@ -207,6 +212,60 @@ class ExerciseViewModelTest {
         assertEquals("free-exercise-db", edited.externalSource)
         assertEquals("3_4_Sit-Up", edited.externalId)
         assertEquals(7L, edited.id)
+    }
+
+    @Test
+    fun saveExercise_manualWithSelectedMedia_keepsExternalIdentityNull() = runTest(testDispatcher) {
+        advanceUntilIdle()
+
+        viewModel.saveExercise(
+            name = "Meu supino",
+            muscleGroup = "Peitoral",
+            equipmentType = "Barra",
+            mediaExternalSource = ExerciseMediaConstants.FREE_EXERCISE_DB_SOURCE,
+            mediaExternalId = "Barbell_Bench_Press",
+        )
+        advanceUntilIdle()
+
+        val saved = viewModel.uiState.value.exercises.single()
+        assertNull(saved.externalSource)
+        assertNull(saved.externalId)
+        assertEquals(ExerciseMediaConstants.FREE_EXERCISE_DB_SOURCE, saved.mediaExternalSource)
+        assertEquals("Barbell_Bench_Press", saved.mediaExternalId)
+    }
+
+    @Test
+    fun saveExercise_removeSelectedMedia_clearsMediaFields() = runTest(testDispatcher) {
+        fakeRepository.emit(
+            listOf(
+                Exercise(
+                    id = 3,
+                    name = "Meu exercício",
+                    muscleGroup = "Peitoral",
+                    equipmentType = "Barra",
+                    mediaExternalSource = ExerciseMediaConstants.FREE_EXERCISE_DB_SOURCE,
+                    mediaExternalId = "Barbell_Squat",
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        val original = viewModel.uiState.value.exercises.first()
+        viewModel.showEditDialog(original)
+        viewModel.saveExercise(
+            name = original.name,
+            muscleGroup = original.muscleGroup,
+            equipmentType = original.equipmentType,
+            mediaExternalSource = null,
+            mediaExternalId = null,
+        )
+        advanceUntilIdle()
+
+        val edited = viewModel.uiState.value.exercises.single()
+        assertNull(edited.mediaExternalSource)
+        assertNull(edited.mediaExternalId)
+        assertNull(edited.externalSource)
+        assertNull(edited.externalId)
     }
 
     @Test

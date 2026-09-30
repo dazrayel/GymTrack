@@ -312,6 +312,75 @@ class ExerciseMigrationTest {
         set.close()
     }
 
+    @Test
+    fun migration9To10_schemaValidates() {
+        helper.createDatabase(TEST_DB_9_10, 9).use { /* empty v9 */ }
+
+        helper.runMigrationsAndValidate(
+            TEST_DB_9_10,
+            10,
+            true,
+            GymTrackDatabase.MIGRATION_9_10,
+        )
+    }
+
+    @Test
+    fun migration9To10_preservesExistingExercisesAndLeavesMediaNull() {
+        helper.createDatabase(TEST_DB_9_10, 9).use { v9 ->
+            v9.execSQL(
+                "INSERT INTO exercises (id, name, muscleGroup, equipmentType, externalSource, externalId) " +
+                    "VALUES (10, 'Supino', 'Peitoral', 'Barra', NULL, NULL)",
+            )
+            v9.execSQL(
+                "INSERT INTO exercises (id, name, muscleGroup, equipmentType, externalSource, externalId) " +
+                    "VALUES (11, 'Sit-Up', 'Abdômen', 'Peso corporal', 'free-exercise-db', '3_4_Sit-Up')",
+            )
+            v9.execSQL(
+                "INSERT INTO exercise_secondary_muscles (exerciseId, muscle) VALUES (10, 'Ombros')",
+            )
+        }
+
+        val v10 = helper.runMigrationsAndValidate(
+            TEST_DB_9_10,
+            10,
+            true,
+            GymTrackDatabase.MIGRATION_9_10,
+        )
+
+        val manual = v10.query(
+            "SELECT id, name, muscleGroup, equipmentType, externalSource, externalId, " +
+                "mediaExternalSource, mediaExternalId FROM exercises WHERE id = 10",
+        )
+        assertEquals(1, manual.count)
+        manual.moveToFirst()
+        assertEquals(10L, manual.getLong(0))
+        assertEquals("Supino", manual.getString(1))
+        assertEquals("Peitoral", manual.getString(2))
+        assertEquals("Barra", manual.getString(3))
+        assertTrue("externalSource should stay NULL", manual.isNull(4))
+        assertTrue("externalId should stay NULL", manual.isNull(5))
+        assertTrue("mediaExternalSource should be NULL", manual.isNull(6))
+        assertTrue("mediaExternalId should be NULL", manual.isNull(7))
+        manual.close()
+
+        val imported = v10.query(
+            "SELECT externalSource, externalId, mediaExternalSource, mediaExternalId " +
+                "FROM exercises WHERE id = 11",
+        )
+        imported.moveToFirst()
+        assertEquals("free-exercise-db", imported.getString(0))
+        assertEquals("3_4_Sit-Up", imported.getString(1))
+        assertTrue("imported mediaExternalSource should be NULL", imported.isNull(2))
+        assertTrue("imported mediaExternalId should be NULL", imported.isNull(3))
+        imported.close()
+
+        val secondary = v10.query(
+            "SELECT muscle FROM exercise_secondary_muscles WHERE exerciseId = 10",
+        )
+        assertEquals(1, secondary.count)
+        secondary.close()
+    }
+
     private fun assertTrue(message: String, value: Boolean) {
         org.junit.Assert.assertTrue(message, value)
     }
@@ -320,5 +389,6 @@ class ExerciseMigrationTest {
         private const val TEST_DB = "exercise-migration-test"
         private const val TEST_DB_6_7 = "exercise-migration-6-7"
         private const val TEST_DB_8_9 = "exercise-migration-8-9"
+        private const val TEST_DB_9_10 = "exercise-migration-9-10"
     }
 }
