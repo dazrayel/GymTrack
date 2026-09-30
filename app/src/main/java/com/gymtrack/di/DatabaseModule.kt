@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.gymtrack.data.local.GymTrackDatabase
 import com.gymtrack.data.local.dao.ExerciseDao
 import com.gymtrack.data.local.dao.ExerciseSecondaryMuscleDao
+import com.gymtrack.data.local.dao.WorkoutBlockDao
 import com.gymtrack.data.local.dao.WorkoutDao
 import com.gymtrack.data.local.dao.WorkoutExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSessionDao
@@ -51,6 +52,7 @@ object DatabaseModule {
                 GymTrackDatabase.MIGRATION_7_8,
                 GymTrackDatabase.MIGRATION_8_9,
                 GymTrackDatabase.MIGRATION_9_10,
+                GymTrackDatabase.MIGRATION_10_11,
             )
             .build()
     }
@@ -91,6 +93,11 @@ object DatabaseModule {
     }
 
     @Provides
+    fun provideWorkoutBlockDao(database: GymTrackDatabase): WorkoutBlockDao {
+        return database.workoutBlockDao()
+    }
+
+    @Provides
     fun provideWorkoutExerciseDao(database: GymTrackDatabase): WorkoutExerciseDao {
         return database.workoutExerciseDao()
     }
@@ -98,10 +105,12 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideWorkoutRepository(
+        database: GymTrackDatabase,
         workoutDao: WorkoutDao,
+        workoutBlockDao: WorkoutBlockDao,
         workoutExerciseDao: WorkoutExerciseDao,
     ): WorkoutRepository {
-        return WorkoutRepositoryImpl(workoutDao, workoutExerciseDao)
+        return WorkoutRepositoryImpl(database, workoutDao, workoutBlockDao, workoutExerciseDao)
     }
 
     @Provides

@@ -73,6 +73,8 @@ class WorkoutExecutionViewModelTest {
         maxRepetitions = 12,
         plannedWeight = 60.0,
         restSeconds = 0,
+        blockPosition = 0,
+        positionInBlock = 0,
     )
 
     private val exerciseB = WorkoutSessionExercise(
@@ -89,6 +91,8 @@ class WorkoutExecutionViewModelTest {
         plannedWeight = 14.5,
         restSeconds = 0,
         notes = "Controle a descida",
+        blockPosition = 1,
+        positionInBlock = 0,
     )
 
     private val exerciseC = WorkoutSessionExercise(
@@ -104,6 +108,8 @@ class WorkoutExecutionViewModelTest {
         maxRepetitions = 12,
         plannedWeight = 20.0,
         restSeconds = 0,
+        blockPosition = 2,
+        positionInBlock = 0,
     )
 
     @Before

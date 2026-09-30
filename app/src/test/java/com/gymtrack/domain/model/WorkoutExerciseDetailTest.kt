@@ -14,14 +14,12 @@ class WorkoutExerciseDetailTest {
 
     private val workoutExercise = WorkoutExercise(
         id = 1L,
-        workoutId = 100L,
+        blockId = 5L,
         exerciseId = 10L,
-        position = 0,
-        sets = 4,
+        positionInBlock = 0,
         minRepetitions = 8,
         maxRepetitions = 12,
         weight = 60.0,
-        restSeconds = 90,
         notes = "Controle na descida",
     )
 
@@ -30,12 +28,11 @@ class WorkoutExerciseDetailTest {
         val detail = WorkoutExerciseDetail(workoutExercise, exercise)
 
         assertEquals(1L, detail.id)
-        assertEquals(0, detail.position)
-        assertEquals(4, detail.sets)
+        assertEquals(5L, detail.blockId)
+        assertEquals(0, detail.positionInBlock)
         assertEquals(8, detail.minRepetitions)
         assertEquals(12, detail.maxRepetitions)
         assertEquals(60.0, detail.weight, 0.001)
-        assertEquals(90, detail.restSeconds)
         assertEquals("Controle na descida", detail.notes)
     }
 
@@ -58,9 +55,9 @@ class WorkoutExerciseDetailTest {
     @Test
     fun detail_copy_updatesWorkoutExercise() {
         val detail = WorkoutExerciseDetail(workoutExercise, exercise)
-        val updated = detail.copy(workoutExercise = workoutExercise.copy(sets = 5))
+        val updated = detail.copy(workoutExercise = workoutExercise.copy(weight = 80.0))
 
-        assertEquals(5, updated.sets)
-        assertEquals(4, detail.sets)
+        assertEquals(80.0, updated.weight, 0.001)
+        assertEquals(60.0, detail.weight, 0.001)
     }
 }

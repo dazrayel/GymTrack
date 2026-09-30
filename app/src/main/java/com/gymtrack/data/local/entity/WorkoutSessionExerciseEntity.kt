@@ -43,6 +43,9 @@ data class WorkoutSessionExerciseEntity(
     val notes: String = "",
     val secondaryMuscles: String = "",
     val status: String = STATUS_PENDING,
+    val blockType: String = "SINGLE",
+    val blockPosition: Int = 0,
+    val positionInBlock: Int = 0,
 ) {
     companion object {
         const val STATUS_PENDING = "PENDING"

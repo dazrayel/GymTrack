@@ -12,6 +12,7 @@ import com.gymtrack.domain.model.WorkoutSet
 import com.gymtrack.domain.model.areAllSessionExercisesComplete
 import com.gymtrack.domain.model.elapsedMillis
 import com.gymtrack.domain.model.resolveCurrentExerciseIndex
+import com.gymtrack.domain.model.shouldRestAfterCompletingSet
 import com.gymtrack.domain.model.workoutProgress
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
@@ -335,7 +336,29 @@ class WorkoutExecutionViewModel @Inject constructor(
                 } else {
                     draftStore.clear(sessionId, exercise.id)
                 }
-                if (exercise.restSeconds > 0) {
+                val latestSets = state.setsByExerciseId.toMutableMap()
+                val existing = latestSets[exercise.id].orEmpty().toMutableList()
+                // Optimistic local count for rest decision; DB already persisted the set.
+                while (existing.size < completedSetsAfter) {
+                    existing.add(
+                        com.gymtrack.domain.model.WorkoutSet(
+                            sessionExerciseId = exercise.id,
+                            setIndex = existing.size,
+                            reps = reps,
+                            weight = weight,
+                            completedAtMillis = 0L,
+                        ),
+                    )
+                }
+                latestSets[exercise.id] = existing
+                if (
+                    shouldRestAfterCompletingSet(
+                        completedExercise = exercise,
+                        completedSetCountAfter = completedSetsAfter,
+                        exercises = state.exercises,
+                        setsByExerciseId = latestSets,
+                    )
+                ) {
                     workoutSessionRepository.startRest(
                         sessionId = sessionId,
                         sessionExerciseId = exercise.id,

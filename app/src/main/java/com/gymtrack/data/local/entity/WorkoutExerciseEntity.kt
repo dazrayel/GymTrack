@@ -9,9 +9,9 @@ import androidx.room.PrimaryKey
     tableName = "workout_exercises",
     foreignKeys = [
         ForeignKey(
-            entity = WorkoutEntity::class,
+            entity = WorkoutBlockEntity::class,
             parentColumns = ["id"],
-            childColumns = ["workoutId"],
+            childColumns = ["blockId"],
             onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
@@ -22,20 +22,18 @@ import androidx.room.PrimaryKey
         ),
     ],
     indices = [
-        Index("workoutId"),
+        Index("blockId"),
         Index("exerciseId"),
     ],
 )
 data class WorkoutExerciseEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val workoutId: Long,
+    val blockId: Long,
     val exerciseId: Long,
-    val position: Int,
-    val sets: Int,
+    val positionInBlock: Int,
     val minRepetitions: Int,
     val maxRepetitions: Int,
     val weight: Double,
-    val restSeconds: Int,
     val notes: String = "",
 )

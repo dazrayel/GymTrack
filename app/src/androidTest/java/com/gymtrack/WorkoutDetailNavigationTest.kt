@@ -15,6 +15,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutBlock
+import com.gymtrack.domain.model.WorkoutBlockType
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
@@ -68,17 +70,9 @@ class WorkoutDetailNavigationTest {
             exerciseId = exerciseRepository.save(
                 Exercise(name = "Supino Nav", muscleGroup = "Peito", equipmentType = "Barra"),
             )
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = exerciseId,
-                    position = 0,
-                    sets = 3,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 40.0,
-                    restSeconds = 60,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 40.0, notes = "")),
             )
         }
     }
@@ -209,17 +203,9 @@ class WorkoutDetailNavigationTest {
             extraWorkoutId = workoutRepository.save(
                 Workout(name = activeName, description = ""),
             )
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = extraWorkoutId,
-                    exerciseId = exerciseId,
-                    position = 0,
-                    sets = 1,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 10.0,
-                    restSeconds = 0,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = extraWorkoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 10.0, notes = "")),
             )
             (workoutSessionRepository.startSession(extraWorkoutId) as StartSessionResult.Created).sessionId
         }

@@ -28,6 +28,8 @@ import com.gymtrack.TestActivity
 import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutBlock
+import com.gymtrack.domain.model.WorkoutBlockType
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
@@ -207,41 +209,17 @@ class WorkoutDetailScreenTest {
         extraExerciseIds += curlId
         extraExerciseIds += squatId
         runBlocking {
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = exerciseId,
-                    position = 0,
-                    sets = 3,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 40.0,
-                    restSeconds = 60,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 40.0, notes = "")),
             )
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = curlId,
-                    position = 1,
-                    sets = 3,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 12.0,
-                    restSeconds = 60,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = curlId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 12.0, notes = "")),
             )
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = squatId,
-                    position = 2,
-                    sets = 3,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 80.0,
-                    restSeconds = 90,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = squatId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 80.0, notes = "")),
             )
         }
 
@@ -266,7 +244,7 @@ class WorkoutDetailScreenTest {
 
         val remaining = runBlocking { workoutRepository.getExercises(workoutId).first() }
         assertEquals(3, remaining.size)
-        assertEquals(listOf(0, 1, 2), remaining.map { it.position })
+        assertEquals(listOf(0, 1, 2), remaining.map { it.positionInBlock })
         assertEquals(listOf(exerciseId, curlId, squatId), remaining.map { it.exerciseId })
     }
 
@@ -275,17 +253,9 @@ class WorkoutDetailScreenTest {
         val activeName = "Treino Ativo"
         val activeSessionId = runBlocking {
             extraWorkoutId = workoutRepository.save(Workout(name = activeName, description = ""))
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = extraWorkoutId,
-                    exerciseId = exerciseId,
-                    position = 0,
-                    sets = 1,
-                    minRepetitions = 1,
-                    maxRepetitions = 1,
-                    weight = 1.0,
-                    restSeconds = 0,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = extraWorkoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 1, maxRepetitions = 1, weight = 1.0, notes = "")),
             )
             (workoutSessionRepository.startSession(extraWorkoutId) as StartSessionResult.Created).sessionId
         }
@@ -324,17 +294,9 @@ class WorkoutDetailScreenTest {
         val activeName = "Treino Ativo"
         val activeSessionId = runBlocking {
             extraWorkoutId = workoutRepository.save(Workout(name = activeName, description = ""))
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = extraWorkoutId,
-                    exerciseId = exerciseId,
-                    position = 0,
-                    sets = 1,
-                    minRepetitions = 1,
-                    maxRepetitions = 1,
-                    weight = 1.0,
-                    restSeconds = 0,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = extraWorkoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 1, maxRepetitions = 1, weight = 1.0, notes = "")),
             )
             (workoutSessionRepository.startSession(extraWorkoutId) as StartSessionResult.Created).sessionId
         }
@@ -631,17 +593,9 @@ class WorkoutDetailScreenTest {
     @Test
     fun editExercise_opensEditDialog() {
         runBlocking {
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = exerciseId,
-                    position = 0,
-                    sets = 3,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 40.0,
-                    restSeconds = 60,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 40.0, notes = "")),
             )
         }
 
@@ -663,17 +617,9 @@ class WorkoutDetailScreenTest {
     @Test
     fun cancelDeleteConfirmation_exerciseRemainsInList() {
         runBlocking {
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = exerciseId,
-                    position = 0,
-                    sets = 3,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 40.0,
-                    restSeconds = 60,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 40.0, notes = "")),
             )
         }
 
@@ -813,34 +759,18 @@ class WorkoutDetailScreenTest {
                 Exercise(name = name, muscleGroup = "Teste", equipmentType = "Barra"),
             )
             extraExerciseIds += id
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = id,
-                    position = position,
-                    sets = 3,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 40.0,
-                    restSeconds = 60,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = id, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 40.0, notes = "")),
             )
         }
     }
 
     private fun addDefaultListedExercise(position: Int) {
         runBlocking {
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = exerciseId,
-                    position = position,
-                    sets = 3,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 40.0,
-                    restSeconds = 60,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 40.0, notes = "")),
             )
         }
     }

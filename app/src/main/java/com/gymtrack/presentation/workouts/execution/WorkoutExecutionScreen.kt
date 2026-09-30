@@ -63,6 +63,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.WorkoutBlockType
+import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.formatRepetitionTarget
 import com.gymtrack.domain.time.formatElapsedMillis
 import com.gymtrack.presentation.exercises.ExerciseAnimation
@@ -248,12 +250,19 @@ private fun WorkoutExecutionContent(
                             } else {
                                 ActiveSetContent(
                                     workoutName = uiState.session?.workoutName.orEmpty(),
+                                    blockLabel = blockExecutionLabel(
+                                        exercise = exercise,
+                                        exercises = uiState.exercises,
+                                        currentRound = uiState.currentSetIndex + 1,
+                                    ),
                                     exerciseName = exercise.exerciseName,
                                     muscleGroup = exercise.muscleGroup,
                                     notes = exercise.notes,
                                     mediaExercise = uiState.mediaExercise,
                                     currentSetNumber = uiState.currentSetIndex + 1,
                                     plannedSets = exercise.plannedSets,
+                                    slotIndex = exercise.positionInBlock + 1,
+                                    slotCount = uiState.exercises.count { it.blockPosition == exercise.blockPosition },
                                     minRepetitions = exercise.minRepetitions,
                                     maxRepetitions = exercise.maxRepetitions,
                                     repsInput = uiState.repsInput,
@@ -467,12 +476,15 @@ private fun CompletedWorkoutContent(
 @Composable
 private fun ActiveSetContent(
     workoutName: String,
+    blockLabel: String?,
     exerciseName: String,
     muscleGroup: String,
     notes: String,
     mediaExercise: Exercise?,
     currentSetNumber: Int,
     plannedSets: Int,
+    slotIndex: Int,
+    slotCount: Int,
     minRepetitions: Int,
     maxRepetitions: Int,
     repsInput: String,
@@ -499,6 +511,21 @@ private fun ActiveSetContent(
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             )
+        }
+        if (!blockLabel.isNullOrBlank()) {
+            Text(
+                text = blockLabel,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.testTag("execution_block_label"),
+            )
+            if (slotCount > 1) {
+                Text(
+                    text = stringResource(R.string.execution_block_slot, slotIndex, slotCount),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                )
+            }
         }
         Text(
             text = exerciseName,
@@ -828,4 +855,26 @@ private fun formatRestClock(millis: Long): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return "%02d:%02d".format(minutes, seconds)
+}
+
+private fun blockExecutionLabel(
+    exercise: WorkoutSessionExercise,
+    exercises: List<WorkoutSessionExercise>,
+    currentRound: Int,
+): String? {
+    if (exercise.blockType == WorkoutBlockType.SINGLE) return null
+    val typeLabel = when (exercise.blockType) {
+        WorkoutBlockType.BI_SET -> "BI-SET"
+        WorkoutBlockType.TRI_SET -> "TRI-SET"
+        WorkoutBlockType.SINGLE -> return null
+    }
+    val sameTypeOrdered = exercises
+        .map { it.blockPosition to it.blockType }
+        .distinct()
+        .filter { it.second == exercise.blockType }
+        .sortedBy { it.first }
+    val ordinal = sameTypeOrdered.indexOfFirst { it.first == exercise.blockPosition }.let {
+        if (it >= 0) it + 1 else exercise.blockPosition + 1
+    }
+    return "$typeLabel $ordinal · ROUND $currentRound/${exercise.plannedSets}"
 }

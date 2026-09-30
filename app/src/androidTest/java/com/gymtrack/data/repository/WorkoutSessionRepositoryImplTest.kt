@@ -8,6 +8,8 @@ import com.gymtrack.data.local.GymTrackDatabase
 import com.gymtrack.data.local.entity.ExerciseEntity
 import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutBlock
+import com.gymtrack.domain.model.WorkoutBlockType
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.data.local.entity.WorkoutSessionEntity
@@ -51,7 +53,12 @@ class WorkoutSessionRepositoryImplTest {
         db = Room.inMemoryDatabaseBuilder(context, GymTrackDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        workoutRepository = WorkoutRepositoryImpl(db.workoutDao(), db.workoutExerciseDao())
+        workoutRepository = WorkoutRepositoryImpl(
+            db,
+            db.workoutDao(),
+            db.workoutBlockDao(),
+            db.workoutExerciseDao(),
+        )
         exerciseRepository = ExerciseRepositoryImpl(
             db,
             db.exerciseDao(),
@@ -75,31 +82,13 @@ class WorkoutSessionRepositoryImplTest {
                 ExerciseEntity(name = "Squat", muscleGroup = "Legs", equipmentType = "Barbell"),
             )
             workoutId = workoutRepository.save(Workout(name = "Push Day", description = "Chest focus"))
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = exerciseId,
-                    position = 0,
-                    sets = 3,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 60.0,
-                    restSeconds = 90,
-                    notes = "pause",
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 60.0, notes = "pause")),
             )
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = squatId,
-                    position = 1,
-                    sets = 4,
-                    minRepetitions = 6,
-                    maxRepetitions = 10,
-                    weight = 80.0,
-                    restSeconds = 120,
-                    notes = "",
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = squatId, positionInBlock = 0, minRepetitions = 6, maxRepetitions = 10, weight = 80.0, notes = "")),
             )
         }
     }
@@ -229,18 +218,10 @@ class WorkoutSessionRepositoryImplTest {
         val curlId = db.exerciseDao().insert(
             ExerciseEntity(name = "Curl", muscleGroup = "Arms", equipmentType = "Dumbbell"),
         )
-        workoutRepository.addExercise(
-            WorkoutExercise(
-                workoutId = workoutId,
-                exerciseId = curlId,
-                position = 2,
-                sets = 3,
-                minRepetitions = 8,
-                maxRepetitions = 12,
-                weight = 10.0,
-                restSeconds = 0,
-            ),
-        )
+        workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = curlId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 10.0, notes = "")),
+            )
         val sessionId = repository.startSession(workoutId).requireSessionId()
         val exercises = repository.observeSessionExercises(sessionId).first()
         val curl = exercises[2]
@@ -268,18 +249,10 @@ class WorkoutSessionRepositoryImplTest {
         val curlId = db.exerciseDao().insert(
             ExerciseEntity(name = "Finish Curl", muscleGroup = "Arms", equipmentType = "Dumbbell"),
         )
-        workoutRepository.addExercise(
-            WorkoutExercise(
-                workoutId = workoutId,
-                exerciseId = curlId,
-                position = 2,
-                sets = 3,
-                minRepetitions = 8,
-                maxRepetitions = 12,
-                weight = 10.0,
-                restSeconds = 0,
-            ),
-        )
+        workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = curlId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 10.0, notes = "")),
+            )
         val sessionId = repository.startSession(workoutId).requireSessionId()
         val exercises = repository.observeSessionExercises(sessionId).first()
         val bench = exercises[0]
@@ -361,18 +334,10 @@ class WorkoutSessionRepositoryImplTest {
         assertTrue(created is StartSessionResult.Created)
         val sessionA = (created as StartSessionResult.Created).sessionId
         val otherWorkout = workoutRepository.save(Workout(name = "Other", description = ""))
-        workoutRepository.addExercise(
-            WorkoutExercise(
-                workoutId = otherWorkout,
-                exerciseId = exerciseId,
-                position = 0,
-                sets = 1,
-                minRepetitions = 1,
-                maxRepetitions = 1,
-                weight = 1.0,
-                restSeconds = 0,
-            ),
-        )
+        workoutRepository.addBlock(
+                WorkoutBlock(workoutId = otherWorkout, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 1, maxRepetitions = 1, weight = 1.0, notes = "")),
+            )
         val blocked = repository.startSession(otherWorkout)
         assertTrue(blocked is StartSessionResult.BlockedOtherWorkout)
         blocked as StartSessionResult.BlockedOtherWorkout
@@ -391,18 +356,10 @@ class WorkoutSessionRepositoryImplTest {
             "UPDATE workout_sessions SET workoutId = NULL WHERE id = ${created.sessionId}",
         )
         val otherWorkout = workoutRepository.save(Workout(name = "Other", description = ""))
-        workoutRepository.addExercise(
-            WorkoutExercise(
-                workoutId = otherWorkout,
-                exerciseId = exerciseId,
-                position = 0,
-                sets = 1,
-                minRepetitions = 1,
-                maxRepetitions = 1,
-                weight = 1.0,
-                restSeconds = 0,
-            ),
-        )
+        workoutRepository.addBlock(
+                WorkoutBlock(workoutId = otherWorkout, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 1, maxRepetitions = 1, weight = 1.0, notes = "")),
+            )
         val blocked = repository.startSession(otherWorkout)
         assertTrue(blocked is StartSessionResult.BlockedOtherWorkout)
         blocked as StartSessionResult.BlockedOtherWorkout
@@ -504,7 +461,9 @@ class WorkoutSessionRepositoryImplTest {
     fun startSession_snapshotUnchangedWhenTemplateIsEdited() = runBlocking {
         val sessionId = repository.startSession(workoutId).requireSessionId()
         val we = workoutRepository.getExercises(workoutId).first()[0]
-        workoutRepository.updateExercise(we.copy(sets = 99, notes = "changed", weight = 1.0))
+        val block = workoutRepository.getBlocks(workoutId).first().first { it.id == we.blockId }
+        workoutRepository.updateBlock(block.copy(rounds = 99))
+        workoutRepository.updateExercise(we.copy(notes = "changed", weight = 1.0))
 
         val session = repository.getSession(sessionId)!!
         assertEquals("Push Day", session.workoutName)
@@ -513,7 +472,7 @@ class WorkoutSessionRepositoryImplTest {
         assertEquals(3, snapshot.plannedSets)
         assertEquals("pause", snapshot.notes)
         assertEquals(60.0, snapshot.plannedWeight, 0.001)
-        assertEquals(99, workoutRepository.getExercises(workoutId).first().first { it.id == we.id }.sets)
+        assertEquals(99, workoutRepository.getBlocks(workoutId).first().first { it.id == we.blockId }.rounds)
     }
 
     @Test
@@ -543,18 +502,10 @@ class WorkoutSessionRepositoryImplTest {
         repository.finishSession(sessionA)
 
         val otherWorkout = workoutRepository.save(Workout(name = "Other", description = ""))
-        workoutRepository.addExercise(
-            WorkoutExercise(
-                workoutId = otherWorkout,
-                exerciseId = squatId,
-                position = 0,
-                sets = 2,
-                minRepetitions = 5,
-                maxRepetitions = 5,
-                weight = 40.0,
-                restSeconds = 30,
-            ),
-        )
+        workoutRepository.addBlock(
+                WorkoutBlock(workoutId = otherWorkout, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = squatId, positionInBlock = 0, minRepetitions = 5, maxRepetitions = 5, weight = 40.0, notes = "")),
+            )
         val sessionB = repository.startSession(otherWorkout).requireSessionId()
         val exerciseB = repository.observeSessionExercises(sessionB).first()[0].id
         repository.completeSet(exerciseB, setIndex = 0, reps = 5, weight = 40.0)
@@ -692,18 +643,10 @@ class WorkoutSessionRepositoryImplTest {
         repository.finishSession(sessionA)
 
         val otherWorkout = workoutRepository.save(Workout(name = "Other", description = ""))
-        workoutRepository.addExercise(
-            WorkoutExercise(
-                workoutId = otherWorkout,
-                exerciseId = squatId,
-                position = 0,
-                sets = 2,
-                minRepetitions = 5,
-                maxRepetitions = 5,
-                weight = 40.0,
-                restSeconds = 30,
-            ),
-        )
+        workoutRepository.addBlock(
+                WorkoutBlock(workoutId = otherWorkout, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = squatId, positionInBlock = 0, minRepetitions = 5, maxRepetitions = 5, weight = 40.0, notes = "")),
+            )
         val sessionB = repository.startSession(otherWorkout).requireSessionId()
         repository.finishSession(sessionB)
 
@@ -761,18 +704,10 @@ class WorkoutSessionRepositoryImplTest {
         repository.finishSession(firstId)
 
         val otherWorkout = workoutRepository.save(Workout(name = "Other", description = ""))
-        workoutRepository.addExercise(
-            WorkoutExercise(
-                workoutId = otherWorkout,
-                exerciseId = squatId,
-                position = 0,
-                sets = 1,
-                minRepetitions = 5,
-                maxRepetitions = 5,
-                weight = 40.0,
-                restSeconds = 0,
-            ),
-        )
+        workoutRepository.addBlock(
+                WorkoutBlock(workoutId = otherWorkout, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = squatId, positionInBlock = 0, minRepetitions = 5, maxRepetitions = 5, weight = 40.0, notes = "")),
+            )
         val secondId = repository.startSession(otherWorkout).requireSessionId()
         repository.finishSession(secondId)
 
@@ -824,18 +759,10 @@ class WorkoutSessionRepositoryImplTest {
         repository.finishSession(firstId)
 
         val otherWorkout = workoutRepository.save(Workout(name = "Pull", description = ""))
-        workoutRepository.addExercise(
-            WorkoutExercise(
-                workoutId = otherWorkout,
-                exerciseId = squatId,
-                position = 0,
-                sets = 2,
-                minRepetitions = 5,
-                maxRepetitions = 5,
-                weight = 40.0,
-                restSeconds = 0,
-            ),
-        )
+        workoutRepository.addBlock(
+                WorkoutBlock(workoutId = otherWorkout, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = squatId, positionInBlock = 0, minRepetitions = 5, maxRepetitions = 5, weight = 40.0, notes = "")),
+            )
         val secondId = repository.startSession(otherWorkout).requireSessionId()
         val secondExercise = repository.observeSessionExercises(secondId).first()[0].id
         repository.completeSet(secondExercise, setIndex = 0, reps = 5, weight = 40.0)

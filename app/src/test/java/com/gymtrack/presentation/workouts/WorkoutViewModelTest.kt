@@ -2,8 +2,10 @@ package com.gymtrack.presentation.workouts
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutBlock
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.WorkoutRepository
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -451,7 +453,14 @@ private class FakeWorkoutRepository : WorkoutRepository {
 
     // WorkoutExercise operations — not used by WorkoutViewModel at this stage
 
-    override fun getExercises(workoutId: Long): Flow<List<WorkoutExercise>> = emptyFlow()
+    override fun getBlocks(workoutId: Long) = emptyFlow<List<WorkoutBlock>>()
+    override fun getExercisesForWorkout(workoutId: Long) = emptyFlow<List<WorkoutExercise>>()
+    override suspend fun addBlock(block: WorkoutBlock, exercises: List<WorkoutExercise>): Long = 0L
+    override suspend fun updateBlock(block: WorkoutBlock) = Unit
+    override suspend fun updateBlockExercise(exercise: WorkoutExercise) = Unit
+    override suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long) = Unit
+    override suspend fun removeBlock(blockId: Long) = Unit
+    override suspend fun updateBlockPositions(positions: Map<Long, Int>) = Unit
     override suspend fun addExercise(workoutExercise: WorkoutExercise): Long = 0L
     override suspend fun updateExercise(workoutExercise: WorkoutExercise) = Unit
     override suspend fun removeExercise(workoutExercise: WorkoutExercise) {

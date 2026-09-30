@@ -69,9 +69,8 @@ class WorkoutDomainModelTest {
     @Test
     fun workoutExercise_defaultId_isZero() {
         val we = WorkoutExercise(
-            workoutId = 1, exerciseId = 1, position = 0,
-            sets = 3, minRepetitions = 8, maxRepetitions = 12,
-            weight = 60.0, restSeconds = 90,
+            blockId = 1, exerciseId = 1, positionInBlock = 0,
+            minRepetitions = 8, maxRepetitions = 12, weight = 60.0,
         )
         assertEquals(0L, we.id)
     }
@@ -79,9 +78,8 @@ class WorkoutDomainModelTest {
     @Test
     fun workoutExercise_defaultNotes_isEmpty() {
         val we = WorkoutExercise(
-            workoutId = 1, exerciseId = 1, position = 0,
-            sets = 3, minRepetitions = 8, maxRepetitions = 12,
-            weight = 60.0, restSeconds = 90,
+            blockId = 1, exerciseId = 1, positionInBlock = 0,
+            minRepetitions = 8, maxRepetitions = 12, weight = 60.0,
         )
         assertEquals("", we.notes)
     }
@@ -90,53 +88,45 @@ class WorkoutDomainModelTest {
     fun workoutExercise_allFieldsAreStoredCorrectly() {
         val we = WorkoutExercise(
             id = 5,
-            workoutId = 10,
+            blockId = 10,
             exerciseId = 20,
-            position = 2,
-            sets = 4,
+            positionInBlock = 2,
             minRepetitions = 6,
             maxRepetitions = 10,
             weight = 100.5,
-            restSeconds = 120,
             notes = "Última série até a falha",
         )
         assertEquals(5L, we.id)
-        assertEquals(10L, we.workoutId)
+        assertEquals(10L, we.blockId)
         assertEquals(20L, we.exerciseId)
-        assertEquals(2, we.position)
-        assertEquals(4, we.sets)
+        assertEquals(2, we.positionInBlock)
         assertEquals(6, we.minRepetitions)
         assertEquals(10, we.maxRepetitions)
         assertEquals(100.5, we.weight, 0.001)
-        assertEquals(120, we.restSeconds)
         assertEquals("Última série até a falha", we.notes)
     }
 
     @Test
-    fun workoutExercise_copy_changesOnlyPosition() {
+    fun workoutExercise_copy_changesOnlyPositionInBlock() {
         val original = WorkoutExercise(
-            id = 1, workoutId = 1, exerciseId = 1, position = 0,
-            sets = 3, minRepetitions = 8, maxRepetitions = 12,
-            weight = 60.0, restSeconds = 90,
+            id = 1, blockId = 1, exerciseId = 1, positionInBlock = 0,
+            minRepetitions = 8, maxRepetitions = 12, weight = 60.0,
         )
-        val moved = original.copy(position = 3)
+        val moved = original.copy(positionInBlock = 3)
         assertEquals(1L, moved.id)
-        assertEquals(3, moved.position)
-        assertEquals(original.sets, moved.sets)
+        assertEquals(3, moved.positionInBlock)
         assertEquals(original.weight, moved.weight, 0.001)
     }
 
     @Test
     fun workoutExercises_withSameData_areEqual() {
         val a = WorkoutExercise(
-            id = 1, workoutId = 2, exerciseId = 3, position = 0,
-            sets = 3, minRepetitions = 8, maxRepetitions = 12,
-            weight = 50.0, restSeconds = 60,
+            id = 1, blockId = 2, exerciseId = 3, positionInBlock = 0,
+            minRepetitions = 8, maxRepetitions = 12, weight = 50.0,
         )
         val b = WorkoutExercise(
-            id = 1, workoutId = 2, exerciseId = 3, position = 0,
-            sets = 3, minRepetitions = 8, maxRepetitions = 12,
-            weight = 50.0, restSeconds = 60,
+            id = 1, blockId = 2, exerciseId = 3, positionInBlock = 0,
+            minRepetitions = 8, maxRepetitions = 12, weight = 50.0,
         )
         assertEquals(a, b)
     }
@@ -144,9 +134,8 @@ class WorkoutDomainModelTest {
     @Test
     fun workoutExercise_minAndMaxRepetitions_areIndependent() {
         val we = WorkoutExercise(
-            workoutId = 1, exerciseId = 1, position = 0,
-            sets = 3, minRepetitions = 8, maxRepetitions = 12,
-            weight = 0.0, restSeconds = 60,
+            blockId = 1, exerciseId = 1, positionInBlock = 0,
+            minRepetitions = 8, maxRepetitions = 12, weight = 0.0,
         )
         assertEquals(8, we.minRepetitions)
         assertEquals(12, we.maxRepetitions)

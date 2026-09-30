@@ -219,17 +219,17 @@ class WorkoutDaoTest {
         val catalogId = db.exerciseDao().insert(
             ExerciseEntity(name = "Supino", muscleGroup = "Chest", equipmentType = "Barbell"),
         )
-        db.workoutExerciseDao().insert(
-            WorkoutExerciseEntity(
+        val blockId = db.workoutBlockDao().insert(
+            com.gymtrack.data.local.entity.WorkoutBlockEntity(
                 workoutId = workoutId,
-                exerciseId = catalogId,
                 position = 0,
-                sets = 3,
-                minRepetitions = 8,
-                maxRepetitions = 12,
-                weight = 60.0,
-                restSeconds = 90,
+                type = "SINGLE",
+                rounds = 3,
+                restSeconds = 60,
             ),
+        )
+        db.workoutExerciseDao().insert(
+            WorkoutExerciseEntity(id = 0, blockId = blockId, exerciseId = catalogId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 60.0),
         )
 
         dao.update(WorkoutEntity(id = workoutId, name = "Push Day v2", description = "Updated"))

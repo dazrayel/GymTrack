@@ -202,6 +202,108 @@ class WorkoutMigrationTest {
         assertTrue("IDs should be distinct and auto-incremented", id2 > id1)
     }
 
+    @Test
+    fun migration10To11_createsSingleBlocksForExistingExercises() {
+        helper.createDatabase(TEST_DB, 10).use { v10 ->
+            // Insert a workout.
+            v10.execSQL("INSERT INTO workouts (name, description) VALUES ('Push Day', '')")
+            // Insert an exercise catalogue entry.
+            v10.execSQL(
+                "INSERT INTO exercises (name, muscleGroup, equipmentType) " +
+                    "VALUES ('Supino', 'Peitoral', 'Barra')",
+            )
+            val workoutId = v10.query("SELECT id FROM workouts LIMIT 1").use {
+                it.moveToFirst(); it.getLong(0)
+            }
+            val exerciseId = v10.query("SELECT id FROM exercises LIMIT 1").use {
+                it.moveToFirst(); it.getLong(0)
+            }
+            // Insert two exercises into the old schema.
+            v10.execSQL(
+                "INSERT INTO workout_exercises " +
+                    "(workoutId, exerciseId, position, sets, minRepetitions, maxRepetitions, weight, restSeconds, notes) " +
+                    "VALUES ($workoutId, $exerciseId, 0, 3, 8, 12, 60.0, 90, 'note1')",
+            )
+            v10.execSQL(
+                "INSERT INTO workout_exercises " +
+                    "(workoutId, exerciseId, position, sets, minRepetitions, maxRepetitions, weight, restSeconds, notes) " +
+                    "VALUES ($workoutId, $exerciseId, 1, 4, 6, 10, 80.0, 120, 'note2')",
+            )
+        }
+
+        val v11 = helper.runMigrationsAndValidate(
+            TEST_DB,
+            11,
+            true,
+            GymTrackDatabase.MIGRATION_10_11,
+        )
+
+        // Verify two SINGLE blocks were created.
+        val blockCursor = v11.query("SELECT * FROM workout_blocks ORDER BY position ASC")
+        assertEquals(2, blockCursor.count)
+
+        blockCursor.moveToFirst()
+        val type0 = blockCursor.getString(blockCursor.getColumnIndex("type"))
+        val rounds0 = blockCursor.getInt(blockCursor.getColumnIndex("rounds"))
+        val rest0 = blockCursor.getInt(blockCursor.getColumnIndex("restSeconds"))
+        assertEquals("SINGLE", type0)
+        assertEquals(3, rounds0)
+        assertEquals(90, rest0)
+
+        blockCursor.moveToNext()
+        val rounds1 = blockCursor.getInt(blockCursor.getColumnIndex("rounds"))
+        assertEquals(4, rounds1)
+        blockCursor.close()
+
+        // Verify exercises reference their blocks and have positionInBlock = 0.
+        val exCursor = v11.query(
+            "SELECT we.positionInBlock, wb.type FROM workout_exercises AS we " +
+                "INNER JOIN workout_blocks AS wb ON we.blockId = wb.id",
+        )
+        assertEquals(2, exCursor.count)
+        while (exCursor.moveToNext()) {
+            assertEquals(0, exCursor.getInt(exCursor.getColumnIndex("positionInBlock")))
+            assertEquals("SINGLE", exCursor.getString(exCursor.getColumnIndex("type")))
+        }
+        exCursor.close()
+    }
+
+    @Test
+    fun migration10To11_addsBlockColumnsToSessionExercises() {
+        helper.createDatabase(TEST_DB, 10).use { v10 ->
+            // Insert minimal session exercise data.
+            v10.execSQL(
+                "INSERT INTO workout_sessions " +
+                    "(workoutName, workoutDescription, startedAtMillis, status) " +
+                    "VALUES ('Push', '', 1000, 'IN_PROGRESS')",
+            )
+            val sessionId = v10.query("SELECT id FROM workout_sessions LIMIT 1").use {
+                it.moveToFirst(); it.getLong(0)
+            }
+            v10.execSQL(
+                "INSERT INTO workout_session_exercises " +
+                    "(sessionId, position, exerciseName, muscleGroup, equipmentType, " +
+                    "plannedSets, minRepetitions, maxRepetitions, plannedWeight, restSeconds, notes) " +
+                    "VALUES ($sessionId, 2, 'Supino', 'Peitoral', 'Barra', 3, 8, 12, 60.0, 90, '')",
+            )
+        }
+
+        val v11 = helper.runMigrationsAndValidate(
+            TEST_DB,
+            11,
+            true,
+            GymTrackDatabase.MIGRATION_10_11,
+        )
+
+        val cursor = v11.query("SELECT blockType, blockPosition, positionInBlock FROM workout_session_exercises")
+        assertEquals(1, cursor.count)
+        cursor.moveToFirst()
+        assertEquals("SINGLE", cursor.getString(cursor.getColumnIndex("blockType")))
+        assertEquals(2, cursor.getInt(cursor.getColumnIndex("blockPosition"))) // = old position
+        assertEquals(0, cursor.getInt(cursor.getColumnIndex("positionInBlock")))
+        cursor.close()
+    }
+
     private fun assertTrue(message: String, value: Boolean) {
         org.junit.Assert.assertTrue(message, value)
     }

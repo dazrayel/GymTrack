@@ -6,6 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.gymtrack.data.local.dao.ExerciseDao
 import com.gymtrack.data.local.dao.ExerciseSecondaryMuscleDao
+import com.gymtrack.data.local.dao.WorkoutBlockDao
 import com.gymtrack.data.local.dao.WorkoutDao
 import com.gymtrack.data.local.dao.WorkoutExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSessionDao
@@ -13,6 +14,7 @@ import com.gymtrack.data.local.dao.WorkoutSessionExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSetDao
 import com.gymtrack.data.local.entity.ExerciseEntity
 import com.gymtrack.data.local.entity.ExerciseSecondaryMuscleEntity
+import com.gymtrack.data.local.entity.WorkoutBlockEntity
 import com.gymtrack.data.local.entity.WorkoutEntity
 import com.gymtrack.data.local.entity.WorkoutExerciseEntity
 import com.gymtrack.data.local.entity.WorkoutSessionEntity
@@ -24,12 +26,13 @@ import com.gymtrack.data.local.entity.WorkoutSetEntity
         ExerciseEntity::class,
         ExerciseSecondaryMuscleEntity::class,
         WorkoutEntity::class,
+        WorkoutBlockEntity::class,
         WorkoutExerciseEntity::class,
         WorkoutSessionEntity::class,
         WorkoutSessionExerciseEntity::class,
         WorkoutSetEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
 abstract class GymTrackDatabase : RoomDatabase() {
@@ -37,6 +40,7 @@ abstract class GymTrackDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
     abstract fun exerciseSecondaryMuscleDao(): ExerciseSecondaryMuscleDao
     abstract fun workoutDao(): WorkoutDao
+    abstract fun workoutBlockDao(): WorkoutBlockDao
     abstract fun workoutExerciseDao(): WorkoutExerciseDao
     abstract fun workoutSessionDao(): WorkoutSessionDao
     abstract fun workoutSessionExerciseDao(): WorkoutSessionExerciseDao
@@ -347,6 +351,95 @@ abstract class GymTrackDatabase : RoomDatabase() {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `exercises` ADD COLUMN `mediaExternalSource` TEXT")
                 db.execSQL("ALTER TABLE `exercises` ADD COLUMN `mediaExternalId` TEXT")
+            }
+        }
+
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Create workout_blocks table.
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `workout_blocks` " +
+                        "(`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`workoutId` INTEGER NOT NULL, " +
+                        "`position` INTEGER NOT NULL, " +
+                        "`type` TEXT NOT NULL, " +
+                        "`rounds` INTEGER NOT NULL, " +
+                        "`restSeconds` INTEGER NOT NULL, " +
+                        "FOREIGN KEY(`workoutId`) REFERENCES `workouts`(`id`) " +
+                        "ON UPDATE NO ACTION ON DELETE CASCADE )",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_workout_blocks_workoutId` " +
+                        "ON `workout_blocks` (`workoutId`)",
+                )
+
+                // 2. For each existing workout_exercises row, insert a SINGLE block.
+                db.execSQL(
+                    "INSERT INTO `workout_blocks` (`workoutId`, `position`, `type`, `rounds`, `restSeconds`) " +
+                        "SELECT `workoutId`, `position`, 'SINGLE', `sets`, `restSeconds` " +
+                        "FROM `workout_exercises`",
+                )
+
+                // 3. Create new workout_exercises table with updated schema.
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `workout_exercises_new` " +
+                        "(`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`blockId` INTEGER NOT NULL, " +
+                        "`exerciseId` INTEGER NOT NULL, " +
+                        "`positionInBlock` INTEGER NOT NULL, " +
+                        "`minRepetitions` INTEGER NOT NULL, " +
+                        "`maxRepetitions` INTEGER NOT NULL, " +
+                        "`weight` REAL NOT NULL, " +
+                        "`notes` TEXT NOT NULL, " +
+                        "FOREIGN KEY(`blockId`) REFERENCES `workout_blocks`(`id`) " +
+                        "ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                        "FOREIGN KEY(`exerciseId`) REFERENCES `exercises`(`id`) " +
+                        "ON UPDATE NO ACTION ON DELETE CASCADE )",
+                )
+
+                // Copy exercises, linking each to its corresponding new SINGLE block.
+                // The block was inserted with the same workoutId + position, so we join on those.
+                db.execSQL(
+                    "INSERT INTO `workout_exercises_new` (`blockId`, `exerciseId`, `positionInBlock`, " +
+                        "`minRepetitions`, `maxRepetitions`, `weight`, `notes`) " +
+                        "SELECT wb.`id`, we.`exerciseId`, 0, " +
+                        "we.`minRepetitions`, we.`maxRepetitions`, we.`weight`, we.`notes` " +
+                        "FROM `workout_exercises` AS we " +
+                        "INNER JOIN `workout_blocks` AS wb " +
+                        "ON wb.`workoutId` = we.`workoutId` AND wb.`position` = we.`position`",
+                )
+
+                // 4. Replace old table.
+                db.execSQL("DROP TABLE `workout_exercises`")
+                db.execSQL("ALTER TABLE `workout_exercises_new` RENAME TO `workout_exercises`")
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_workout_exercises_blockId` " +
+                        "ON `workout_exercises` (`blockId`)",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_workout_exercises_exerciseId` " +
+                        "ON `workout_exercises` (`exerciseId`)",
+                )
+
+                // 5. Add block tracking columns to workout_session_exercises.
+                db.execSQL(
+                    "ALTER TABLE `workout_session_exercises` " +
+                        "ADD COLUMN `blockType` TEXT NOT NULL DEFAULT 'SINGLE'",
+                )
+                db.execSQL(
+                    "ALTER TABLE `workout_session_exercises` " +
+                        "ADD COLUMN `blockPosition` INTEGER NOT NULL DEFAULT 0",
+                )
+                db.execSQL(
+                    "ALTER TABLE `workout_session_exercises` " +
+                        "ADD COLUMN `positionInBlock` INTEGER NOT NULL DEFAULT 0",
+                )
+                db.execSQL(
+                    "UPDATE `workout_session_exercises` SET " +
+                        "`blockType` = 'SINGLE', " +
+                        "`blockPosition` = `position`, " +
+                        "`positionInBlock` = 0",
+                )
             }
         }
     }

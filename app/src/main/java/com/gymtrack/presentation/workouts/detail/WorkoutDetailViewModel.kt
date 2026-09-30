@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.StartSessionResult
+import com.gymtrack.domain.model.WorkoutBlock
+import com.gymtrack.domain.model.WorkoutBlockDetail
+import com.gymtrack.domain.model.WorkoutBlockType
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutExerciseDetail
 import com.gymtrack.domain.repository.ExerciseRepository
@@ -35,10 +38,6 @@ class WorkoutDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(WorkoutDetailUiState())
     val uiState: StateFlow<WorkoutDetailUiState> = _uiState.asStateFlow()
 
-    /**
-     * The full exercise catalogue, exposed as a separate StateFlow so the UI
-     * can drive the exercise picker without polluting WorkoutDetailUiState.
-     */
     val availableExercises: StateFlow<List<Exercise>> = exerciseRepository.getAll()
         .catch { e -> _uiState.update { it.copy(error = e.message) } }
         .stateIn(
@@ -49,12 +48,8 @@ class WorkoutDetailViewModel @Inject constructor(
 
     init {
         observeWorkout()
-        observeExercises()
+        observeBlocks()
     }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Observation
-    // ──────────────────────────────────────────────────────────────────────────
 
     private fun observeWorkout() {
         viewModelScope.launch {
@@ -68,90 +63,197 @@ class WorkoutDetailViewModel @Inject constructor(
         }
     }
 
-    private fun observeExercises() {
+    private fun observeBlocks() {
         viewModelScope.launch {
             combine(
-                workoutRepository.getExercises(workoutId),
+                workoutRepository.getBlocks(workoutId),
+                workoutRepository.getExercisesForWorkout(workoutId),
                 exerciseRepository.getAll(),
-            ) { workoutExercises, catalogue ->
+            ) { blocks, exercises, catalogue ->
                 val catalogueById = catalogue.associateBy { it.id }
-                workoutExercises
-                    .mapNotNull { we ->
-                        // If the referenced Exercise no longer exists in the catalogue
-                        // (e.g. deleted concurrently), skip rather than crash.
-                        val exercise = catalogueById[we.exerciseId] ?: return@mapNotNull null
-                        WorkoutExerciseDetail(workoutExercise = we, exercise = exercise)
-                    }
-                    .sortedBy { it.position }
+                val byBlock = exercises.groupBy { it.blockId }
+                blocks.sortedBy { it.position }.map { block ->
+                    val items = byBlock[block.id]
+                        .orEmpty()
+                        .sortedBy { it.positionInBlock }
+                        .mapNotNull { we ->
+                            val exercise = catalogueById[we.exerciseId] ?: return@mapNotNull null
+                            WorkoutExerciseDetail(we, exercise)
+                        }
+                    WorkoutBlockDetail(block = block, items = items)
+                }
             }
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
                 }
                 .collect { details ->
-                    _uiState.update { it.copy(exercises = details, isLoading = false) }
+                    _uiState.update { it.copy(blocks = details, isLoading = false) }
                 }
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Exercise picker
-    // ──────────────────────────────────────────────────────────────────────────
+    fun showAddTypeDialog() {
+        _uiState.update { it.copy(showAddTypeDialog = true) }
+    }
+
+    fun dismissAddTypeDialog() {
+        _uiState.update { it.copy(showAddTypeDialog = false) }
+    }
+
+    fun chooseAddType(type: WorkoutBlockType) {
+        when (type) {
+            WorkoutBlockType.SINGLE -> {
+                _uiState.update {
+                    it.copy(
+                        showAddTypeDialog = false,
+                        pendingBlockType = WorkoutBlockType.SINGLE,
+                        showExercisePicker = true,
+                        blockDraftSlotIndex = null,
+                        showBlockBuilder = false,
+                    )
+                }
+            }
+            WorkoutBlockType.BI_SET, WorkoutBlockType.TRI_SET -> {
+                val slots = List(type.requiredExerciseCount) { null as Exercise? }
+                _uiState.update {
+                    it.copy(
+                        showAddTypeDialog = false,
+                        pendingBlockType = type,
+                        blockDraftSlots = slots,
+                        showBlockBuilder = true,
+                        blockDraftSlotIndex = null,
+                    )
+                }
+            }
+        }
+    }
+
+    fun dismissBlockBuilder() {
+        _uiState.update {
+            it.copy(
+                showBlockBuilder = false,
+                pendingBlockType = null,
+                blockDraftSlots = emptyList(),
+                blockDraftSlotIndex = null,
+            )
+        }
+    }
+
+    fun pickSlot(index: Int) {
+        _uiState.update {
+            it.copy(blockDraftSlotIndex = index, showExercisePicker = true)
+        }
+    }
+
+    fun clearSlot(index: Int) {
+        _uiState.update { state ->
+            val slots = state.blockDraftSlots.toMutableList()
+            if (index in slots.indices) slots[index] = null
+            state.copy(blockDraftSlots = slots)
+        }
+    }
+
+    fun confirmBlockDraft(rounds: Int, restSeconds: Int) {
+        val type = _uiState.value.pendingBlockType ?: return
+        val slots = _uiState.value.blockDraftSlots
+        if (slots.any { it == null } || slots.size != type.requiredExerciseCount) return
+        val position = _uiState.value.blocks.size
+        val exercises = slots.mapIndexed { index, exercise ->
+            WorkoutExercise(
+                blockId = 0,
+                exerciseId = exercise!!.id,
+                positionInBlock = index,
+                minRepetitions = 8,
+                maxRepetitions = 12,
+                weight = 0.0,
+            )
+        }
+        val block = WorkoutBlock(
+            workoutId = workoutId,
+            position = position,
+            type = type,
+            rounds = rounds.coerceAtLeast(1),
+            restSeconds = restSeconds.coerceAtLeast(0),
+        )
+        viewModelScope.launch {
+            try {
+                workoutRepository.addBlock(block, exercises)
+                _uiState.update {
+                    it.copy(
+                        showBlockBuilder = false,
+                        pendingBlockType = null,
+                        blockDraftSlots = emptyList(),
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
 
     fun showExercisePicker() {
-        _uiState.update { it.copy(showExercisePicker = true) }
+        _uiState.update { it.copy(showExercisePicker = true, pendingBlockType = WorkoutBlockType.SINGLE) }
     }
 
     fun dismissExercisePicker() {
-        _uiState.update { it.copy(showExercisePicker = false) }
+        _uiState.update {
+            it.copy(showExercisePicker = false, blockDraftSlotIndex = null)
+        }
     }
 
-    /**
-     * Called when the user picks an exercise from the catalogue.
-     * Creates a new [WorkoutExerciseDetail] with sensible defaults and stores
-     * it in [WorkoutDetailUiState.exerciseToConfigure]. The picker is closed
-     * and the configuration screen/dialog should open.
-     *
-     * Nothing is persisted at this point.
-     */
     fun selectExercise(exercise: Exercise) {
-        val position = _uiState.value.exercises.size
+        val slotIndex = _uiState.value.blockDraftSlotIndex
+        if (slotIndex != null) {
+            _uiState.update { state ->
+                val slots = state.blockDraftSlots.toMutableList()
+                if (slotIndex in slots.indices) slots[slotIndex] = exercise
+                state.copy(
+                    blockDraftSlots = slots,
+                    showExercisePicker = false,
+                    blockDraftSlotIndex = null,
+                )
+            }
+            return
+        }
+
         val draft = WorkoutExercise(
             id = 0L,
-            workoutId = workoutId,
+            blockId = 0L,
             exerciseId = exercise.id,
-            position = position,
-            sets = 3,
+            positionInBlock = 0,
             minRepetitions = 8,
             maxRepetitions = 12,
             weight = 0.0,
-            restSeconds = 60,
             notes = "",
         )
         _uiState.update {
             it.copy(
                 showExercisePicker = false,
                 exerciseToConfigure = WorkoutExerciseDetail(draft, exercise),
+                configureBlock = null,
+                configureRounds = 3,
+                configureRestSeconds = 60,
             )
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Exercise configuration (add / edit)
-    // ──────────────────────────────────────────────────────────────────────────
-
-    fun showEditExercise(exercise: WorkoutExerciseDetail) {
-        _uiState.update { it.copy(exerciseToConfigure = exercise) }
+    fun showEditExercise(block: WorkoutBlockDetail, item: WorkoutExerciseDetail) {
+        _uiState.update {
+            it.copy(
+                exerciseToConfigure = item,
+                configureBlock = block.block,
+                configureRounds = block.rounds,
+                configureRestSeconds = block.restSeconds,
+            )
+        }
     }
 
     fun dismissExerciseConfiguration() {
-        _uiState.update { it.copy(exerciseToConfigure = null) }
+        _uiState.update {
+            it.copy(exerciseToConfigure = null, configureBlock = null)
+        }
     }
 
-    /**
-     * Persists the configured exercise.
-     * - id == 0L → new exercise, calls [WorkoutRepository.addExercise]
-     * - id != 0L → existing exercise, calls [WorkoutRepository.updateExercise]
-     */
     fun saveExerciseConfiguration(
         sets: Int,
         minRepetitions: Int,
@@ -162,82 +264,89 @@ class WorkoutDetailViewModel @Inject constructor(
     ) {
         val toConfigure = _uiState.value.exerciseToConfigure ?: return
         val updated = toConfigure.workoutExercise.copy(
-            sets = sets,
             minRepetitions = minRepetitions,
             maxRepetitions = maxRepetitions,
             weight = weight,
-            restSeconds = restSeconds,
             notes = notes.trim(),
         )
         viewModelScope.launch {
             try {
-                if (updated.id == 0L) {
-                    workoutRepository.addExercise(updated)
+                val existingBlock = _uiState.value.configureBlock
+                if (existingBlock == null || updated.blockId == 0L) {
+                    val block = WorkoutBlock(
+                        workoutId = workoutId,
+                        position = _uiState.value.blocks.size,
+                        type = WorkoutBlockType.SINGLE,
+                        rounds = sets.coerceAtLeast(1),
+                        restSeconds = restSeconds.coerceAtLeast(0),
+                    )
+                    workoutRepository.addBlock(block, listOf(updated))
                 } else {
-                    workoutRepository.updateExercise(updated)
+                    workoutRepository.updateBlockExercise(updated)
+                    if (existingBlock.type == WorkoutBlockType.SINGLE) {
+                        workoutRepository.updateBlock(
+                            existingBlock.copy(
+                                rounds = sets.coerceAtLeast(1),
+                                restSeconds = restSeconds.coerceAtLeast(0),
+                            ),
+                        )
+                    } else {
+                        // Multi-exercise block: rounds/rest stay shared on the block.
+                        workoutRepository.updateBlock(
+                            existingBlock.copy(
+                                rounds = sets.coerceAtLeast(1),
+                                restSeconds = restSeconds.coerceAtLeast(0),
+                            ),
+                        )
+                    }
                 }
-                _uiState.update { it.copy(exerciseToConfigure = null) }
+                _uiState.update {
+                    it.copy(exerciseToConfigure = null, configureBlock = null)
+                }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
             }
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Exercise deletion
-    // ──────────────────────────────────────────────────────────────────────────
-
-    fun showDeleteConfirmation(exercise: WorkoutExerciseDetail) {
-        _uiState.update { it.copy(showDeleteConfirmation = true, exerciseToDelete = exercise) }
+    fun showDeleteConfirmation(block: WorkoutBlockDetail) {
+        _uiState.update { it.copy(showDeleteConfirmation = true, blockToDelete = block) }
     }
 
     fun dismissDeleteConfirmation() {
-        _uiState.update { it.copy(showDeleteConfirmation = false, exerciseToDelete = null) }
+        _uiState.update { it.copy(showDeleteConfirmation = false, blockToDelete = null) }
     }
 
     fun confirmDelete() {
-        val exercise = _uiState.value.exerciseToDelete ?: return
+        val block = _uiState.value.blockToDelete ?: return
         viewModelScope.launch {
             try {
-                workoutRepository.removeExerciseById(exercise.id)
-                _uiState.update { it.copy(showDeleteConfirmation = false, exerciseToDelete = null) }
+                workoutRepository.removeBlock(block.id)
+                _uiState.update { it.copy(showDeleteConfirmation = false, blockToDelete = null) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(showDeleteConfirmation = false, exerciseToDelete = null, error = e.message) }
+                _uiState.update {
+                    it.copy(showDeleteConfirmation = false, blockToDelete = null, error = e.message)
+                }
             }
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Reorder
-    // ──────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Moves the exercise at [fromIndex] to [toIndex] and persists the new
-     * 0-based positions for the entire list. Invalid or no-op indices are ignored.
-     * The UI list is refreshed by the existing Room Flow — no optimistic update.
-     */
-    fun reorderExercises(fromIndex: Int, toIndex: Int) {
-        val current = _uiState.value.exercises
+    fun reorderBlocks(fromIndex: Int, toIndex: Int) {
+        val current = _uiState.value.blocks
         if (fromIndex == toIndex) return
         if (fromIndex !in current.indices || toIndex !in current.indices) return
-
         val reordered = current.toMutableList()
         val moved = reordered.removeAt(fromIndex)
         reordered.add(toIndex, moved)
-
         val positions = reordered.mapIndexed { index, detail -> detail.id to index }.toMap()
         viewModelScope.launch {
             try {
-                workoutRepository.updateExercisePositions(positions)
+                workoutRepository.updateBlockPositions(positions)
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
             }
         }
     }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Workout editing
-    // ──────────────────────────────────────────────────────────────────────────
 
     fun showEditWorkoutDialog() {
         _uiState.update { it.copy(showEditWorkoutDialog = true) }
@@ -253,24 +362,17 @@ class WorkoutDetailViewModel @Inject constructor(
                 when (val result = workoutSessionRepository.startSession(workoutId)) {
                     is StartSessionResult.Created -> {
                         _uiState.update {
-                            it.copy(
-                                sessionStartedEvent = result.sessionId,
-                                inProgressConflict = null,
-                            )
+                            it.copy(sessionStartedEvent = result.sessionId, inProgressConflict = null)
                         }
                     }
                     is StartSessionResult.Resumed -> {
                         _uiState.update {
-                            it.copy(
-                                sessionStartedEvent = result.sessionId,
-                                inProgressConflict = null,
-                            )
+                            it.copy(sessionStartedEvent = result.sessionId, inProgressConflict = null)
                         }
                     }
                     is StartSessionResult.BlockedOtherWorkout -> {
                         _uiState.update {
                             it.copy(
-                                sessionStartedEvent = null,
                                 inProgressConflict = InProgressConflictUiState(
                                     sessionId = result.sessionId,
                                     workoutName = result.workoutName,
@@ -288,10 +390,7 @@ class WorkoutDetailViewModel @Inject constructor(
     fun continueInProgressSession() {
         val conflict = _uiState.value.inProgressConflict ?: return
         _uiState.update {
-            it.copy(
-                inProgressConflict = null,
-                sessionStartedEvent = conflict.sessionId,
-            )
+            it.copy(sessionStartedEvent = conflict.sessionId, inProgressConflict = null)
         }
     }
 
@@ -305,21 +404,16 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun saveWorkout(name: String, description: String) {
         val workout = _uiState.value.workout ?: return
+        if (name.isBlank()) return
         viewModelScope.launch {
             try {
-                workoutRepository.update(
-                    workout.copy(name = name.trim(), description = description.trim()),
-                )
+                workoutRepository.update(workout.copy(name = name.trim(), description = description.trim()))
                 _uiState.update { it.copy(showEditWorkoutDialog = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message) }
             }
         }
     }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Error
-    // ──────────────────────────────────────────────────────────────────────────
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }

@@ -29,13 +29,13 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,23 +56,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
 import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.Workout
-import com.gymtrack.domain.model.WorkoutExercise
+import com.gymtrack.domain.model.WorkoutBlockDetail
+import com.gymtrack.domain.model.WorkoutBlockType
 import com.gymtrack.domain.model.WorkoutExerciseDetail
 import com.gymtrack.presentation.exercises.ExerciseAnimation
-import com.gymtrack.presentation.theme.GymTrackTheme
 
 @Composable
 fun WorkoutDetailScreen(
@@ -100,7 +97,13 @@ fun WorkoutDetailScreen(
         onShowEditWorkoutDialog = viewModel::showEditWorkoutDialog,
         onDismissEditWorkoutDialog = viewModel::dismissEditWorkoutDialog,
         onSaveWorkout = viewModel::saveWorkout,
-        onShowExercisePicker = viewModel::showExercisePicker,
+        onShowAddTypeDialog = viewModel::showAddTypeDialog,
+        onDismissAddTypeDialog = viewModel::dismissAddTypeDialog,
+        onChooseAddType = viewModel::chooseAddType,
+        onDismissBlockBuilder = viewModel::dismissBlockBuilder,
+        onPickSlot = viewModel::pickSlot,
+        onClearSlot = viewModel::clearSlot,
+        onConfirmBlockDraft = viewModel::confirmBlockDraft,
         onDismissExercisePicker = viewModel::dismissExercisePicker,
         onSelectExercise = viewModel::selectExercise,
         onNavigateToExercises = onNavigateToExercises,
@@ -110,8 +113,8 @@ fun WorkoutDetailScreen(
         onShowDeleteConfirmation = viewModel::showDeleteConfirmation,
         onDismissDeleteConfirmation = viewModel::dismissDeleteConfirmation,
         onConfirmDelete = viewModel::confirmDelete,
-        onMoveUp = { index -> viewModel.reorderExercises(index, index - 1) },
-        onMoveDown = { index -> viewModel.reorderExercises(index, index + 1) },
+        onMoveUp = { index -> viewModel.reorderBlocks(index, index - 1) },
+        onMoveDown = { index -> viewModel.reorderBlocks(index, index + 1) },
         onStartWorkout = viewModel::startWorkout,
         onContinueInProgressSession = viewModel::continueInProgressSession,
         onDismissInProgressConflict = viewModel::dismissInProgressConflict,
@@ -119,10 +122,6 @@ fun WorkoutDetailScreen(
         modifier = modifier,
     )
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Content
-// ──────────────────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -134,14 +133,20 @@ private fun WorkoutDetailContent(
     onShowEditWorkoutDialog: () -> Unit,
     onDismissEditWorkoutDialog: () -> Unit,
     onSaveWorkout: (name: String, description: String) -> Unit,
-    onShowExercisePicker: () -> Unit,
+    onShowAddTypeDialog: () -> Unit,
+    onDismissAddTypeDialog: () -> Unit,
+    onChooseAddType: (WorkoutBlockType) -> Unit,
+    onDismissBlockBuilder: () -> Unit,
+    onPickSlot: (Int) -> Unit,
+    onClearSlot: (Int) -> Unit,
+    onConfirmBlockDraft: (rounds: Int, restSeconds: Int) -> Unit,
     onDismissExercisePicker: () -> Unit,
     onSelectExercise: (Exercise) -> Unit,
     onNavigateToExercises: () -> Unit,
     onDismissExerciseConfiguration: () -> Unit,
     onSaveExerciseConfiguration: (sets: Int, minReps: Int, maxReps: Int, weight: Double, restSeconds: Int, notes: String) -> Unit,
-    onShowEditExercise: (WorkoutExerciseDetail) -> Unit,
-    onShowDeleteConfirmation: (WorkoutExerciseDetail) -> Unit,
+    onShowEditExercise: (WorkoutBlockDetail, WorkoutExerciseDetail) -> Unit,
+    onShowDeleteConfirmation: (WorkoutBlockDetail) -> Unit,
     onDismissDeleteConfirmation: () -> Unit,
     onConfirmDelete: () -> Unit,
     onMoveUp: (Int) -> Unit,
@@ -153,13 +158,11 @@ private fun WorkoutDetailContent(
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-
     LaunchedEffect(uiState.error) {
         val message = uiState.error ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(message = message)
         onErrorShown()
     }
-
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         modifier = modifier.padding(contentPadding),
@@ -168,110 +171,74 @@ private fun WorkoutDetailContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = uiState.workout?.name
-                            ?: stringResource(R.string.workout_detail_title),
+                        text = uiState.workout?.name ?: stringResource(R.string.workout_detail_title),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
-                    TextButton(
-                        onClick = onStartWorkout,
-                        enabled = uiState.exercises.isNotEmpty(),
-                    ) {
+                    TextButton(onClick = onStartWorkout, enabled = uiState.blocks.isNotEmpty()) {
                         Text(stringResource(R.string.start_workout))
                     }
                     IconButton(onClick = onShowEditWorkoutDialog) {
-                        Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = stringResource(R.string.edit_workout),
-                        )
+                        Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_workout))
                     }
                 },
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onShowExercisePicker,
-                containerColor = MaterialTheme.colorScheme.primary,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = stringResource(R.string.add_exercise_to_workout),
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                )
+            FloatingActionButton(onClick = onShowAddTypeDialog, containerColor = MaterialTheme.colorScheme.primary) {
+                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_exercise_to_workout), tint = MaterialTheme.colorScheme.onPrimary)
             }
         },
     ) { innerPadding ->
         when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            uiState.isLoading -> Box(Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+            uiState.blocks.isEmpty() -> EmptyExercisesContent(onAddClick = onShowAddTypeDialog, modifier = Modifier.padding(innerPadding))
+            else -> LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                uiState.workout?.description?.takeIf { it.isNotBlank() }?.let { desc ->
+                    item {
+                        Text(text = desc, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
-            }
-
-            uiState.exercises.isEmpty() -> {
-                EmptyExercisesContent(
-                    onAddClick = onShowExercisePicker,
-                    modifier = Modifier.padding(innerPadding),
-                )
-            }
-
-            else -> {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
-                        bottom = 88.dp,
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    uiState.workout?.description?.takeIf { it.isNotBlank() }?.let { desc ->
-                        item {
-                            Text(
-                                text = desc,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                modifier = Modifier.padding(bottom = 4.dp),
-                            )
-                            HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp))
-                        }
-                    }
-
-                    itemsIndexed(uiState.exercises, key = { _, detail -> detail.id }) { index, detail ->
-                        WorkoutExerciseItem(
-                            detail = detail,
-                            canMoveUp = index > 0,
-                            canMoveDown = index < uiState.exercises.lastIndex,
-                            onMoveUp = { onMoveUp(index) },
-                            onMoveDown = { onMoveDown(index) },
-                            onEditClick = { onShowEditExercise(detail) },
-                            onDeleteClick = { onShowDeleteConfirmation(detail) },
-                        )
-                    }
+                itemsIndexed(uiState.blocks, key = { _, b -> b.id }) { index, block ->
+                    WorkoutBlockCard(
+                        block = block,
+                        biSetIndex = uiState.blocks.filter { it.type == WorkoutBlockType.BI_SET }.indexOfFirst { it.id == block.id }.let { if (it >= 0) it + 1 else 0 },
+                        triSetIndex = uiState.blocks.filter { it.type == WorkoutBlockType.TRI_SET }.indexOfFirst { it.id == block.id }.let { if (it >= 0) it + 1 else 0 },
+                        canMoveUp = index > 0,
+                        canMoveDown = index < uiState.blocks.lastIndex,
+                        onMoveUp = { onMoveUp(index) },
+                        onMoveDown = { onMoveDown(index) },
+                        onEditItem = { item -> onShowEditExercise(block, item) },
+                        onDelete = { onShowDeleteConfirmation(block) },
+                    )
                 }
             }
         }
     }
-
-    // Exercise picker dialog
+    if (uiState.showAddTypeDialog) AddTypeDialog(onChoose = onChooseAddType, onDismiss = onDismissAddTypeDialog)
+    if (uiState.showBlockBuilder) {
+        BlockBuilderDialog(
+            type = uiState.pendingBlockType ?: WorkoutBlockType.BI_SET,
+            slots = uiState.blockDraftSlots,
+            onPickSlot = onPickSlot,
+            onClearSlot = onClearSlot,
+            onConfirm = onConfirmBlockDraft,
+            onDismiss = onDismissBlockBuilder,
+        )
+    }
     if (uiState.showExercisePicker) {
         ExercisePickerDialog(
             exercises = availableExercises,
@@ -280,176 +247,197 @@ private fun WorkoutDetailContent(
             onNavigateToExercises = onNavigateToExercises,
         )
     }
-
-    // Exercise configuration dialog (add or edit)
     uiState.exerciseToConfigure?.let { detail ->
         ExerciseConfigurationDialog(
             detail = detail,
+            initialRounds = uiState.configureRounds,
+            initialRestSeconds = uiState.configureRestSeconds,
             onConfirm = onSaveExerciseConfiguration,
             onDismiss = onDismissExerciseConfiguration,
         )
     }
-
-    // Delete exercise confirmation dialog
-    if (uiState.showDeleteConfirmation) {
-        uiState.exerciseToDelete?.let { detail ->
-            DeleteExerciseDialog(
-                detail = detail,
-                onConfirm = onConfirmDelete,
-                onDismiss = onDismissDeleteConfirmation,
-            )
-        }
+    if (uiState.showDeleteConfirmation) DeleteBlockDialog(onConfirm = onConfirmDelete, onDismiss = onDismissDeleteConfirmation)
+    if (uiState.showEditWorkoutDialog) {
+        uiState.workout?.let { EditWorkoutDialog(workout = it, onSave = onSaveWorkout, onDismiss = onDismissEditWorkoutDialog) }
     }
-
     uiState.inProgressConflict?.let { conflict ->
         AlertDialog(
             onDismissRequest = onDismissInProgressConflict,
             title = { Text(stringResource(R.string.in_progress_conflict_title)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.in_progress_conflict_message,
-                        conflict.workoutName,
-                    ),
-                )
-            },
+            text = { Text(stringResource(R.string.in_progress_conflict_message, conflict.workoutName)) },
             confirmButton = {
-                TextButton(onClick = onContinueInProgressSession) {
-                    Text(stringResource(R.string.continue_in_progress_workout))
-                }
+                TextButton(onClick = onContinueInProgressSession) { Text(stringResource(R.string.continue_in_progress_workout)) }
             },
             dismissButton = {
-                TextButton(onClick = onDismissInProgressConflict) {
-                    Text(stringResource(R.string.cancel))
-                }
+                TextButton(onClick = onDismissInProgressConflict) { Text(stringResource(R.string.cancel)) }
             },
         )
     }
-
-    // Edit workout dialog
-    if (uiState.showEditWorkoutDialog) {
-        uiState.workout?.let { workout ->
-            EditWorkoutDialog(
-                workout = workout,
-                onSave = onSaveWorkout,
-                onDismiss = onDismissEditWorkoutDialog,
-            )
-        }
-    }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Exercise list item
-// ──────────────────────────────────────────────────────────────────────────────
-
 @Composable
-private fun WorkoutExerciseItem(
-    detail: WorkoutExerciseDetail,
+private fun WorkoutBlockCard(
+    block: WorkoutBlockDetail,
+    biSetIndex: Int,
+    triSetIndex: Int,
     canMoveUp: Boolean,
     canMoveDown: Boolean,
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    onEditItem: (WorkoutExerciseDetail) -> Unit,
+    onDelete: () -> Unit,
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag("workout_block_card_${block.id}"),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header: reorder + name + actions
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column {
-                    val moveUpDescription = stringResource(
-                        R.string.move_exercise_up,
-                        detail.exercise.name,
-                    )
-                    val moveDownDescription = stringResource(
-                        R.string.move_exercise_down,
-                        detail.exercise.name,
-                    )
-                    IconButton(
-                        onClick = onMoveUp,
-                        enabled = canMoveUp,
-                        modifier = Modifier.semantics { contentDescription = moveUpDescription },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.KeyboardArrowUp,
-                            contentDescription = null,
-                        )
-                    }
-                    IconButton(
-                        onClick = onMoveDown,
-                        enabled = canMoveDown,
-                        modifier = Modifier.semantics { contentDescription = moveDownDescription },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.KeyboardArrowDown,
-                            contentDescription = null,
-                        )
-                    }
-                }
                 Column(modifier = Modifier.weight(1f)) {
+                    val title = when (block.type) {
+                        WorkoutBlockType.SINGLE -> block.items.firstOrNull()?.exercise?.name ?: stringResource(R.string.add_normal_exercise)
+                        WorkoutBlockType.BI_SET -> stringResource(R.string.bi_set_label, biSetIndex)
+                        WorkoutBlockType.TRI_SET -> stringResource(R.string.tri_set_label, triSetIndex)
+                    }
+                    Text(text = title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
-                        text = detail.exercise.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = "${block.rounds}× · ${block.restSeconds}s ${stringResource(R.string.rest_seconds_display)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
-                    val meta = buildList {
-                        if (detail.exercise.muscleGroup.isNotBlank()) add(detail.exercise.muscleGroup)
-                        if (detail.exercise.equipmentType.isNotBlank()) add(detail.exercise.equipmentType)
-                    }.joinToString(" • ")
-                    if (meta.isNotBlank()) {
+                }
+                IconButton(onClick = onMoveUp, enabled = canMoveUp) { Icon(Icons.Filled.KeyboardArrowUp, contentDescription = null) }
+                IconButton(onClick = onMoveDown, enabled = canMoveDown) { Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null) }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete_block), tint = MaterialTheme.colorScheme.error)
+                }
+            }
+            block.items.forEachIndexed { index, item ->
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        if (block.type != WorkoutBlockType.SINGLE) {
+                            Text(text = "${index + 1}. ${item.exercise.name}", style = MaterialTheme.typography.bodyLarge)
+                        }
                         Text(
-                            text = meta,
+                            text = "${item.minRepetitions}–${item.maxRepetitions} reps · ${formatWeight(item.weight)} kg",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.padding(top = 2.dp),
                         )
                     }
+                    IconButton(onClick = { onEditItem(item) }) {
+                        Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_exercise), tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
-                IconButton(onClick = onEditClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = stringResource(R.string.edit_exercise),
-                        tint = MaterialTheme.colorScheme.primary,
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddTypeDialog(onChoose: (WorkoutBlockType) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.add_to_workout_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { onChoose(WorkoutBlockType.SINGLE) }, modifier = Modifier.fillMaxWidth().testTag("add_type_single")) {
+                    Text(stringResource(R.string.add_normal_exercise))
+                }
+                Button(onClick = { onChoose(WorkoutBlockType.BI_SET) }, modifier = Modifier.fillMaxWidth().testTag("add_type_bi_set")) {
+                    Text(stringResource(R.string.add_bi_set))
+                }
+                Button(onClick = { onChoose(WorkoutBlockType.TRI_SET) }, modifier = Modifier.fillMaxWidth().testTag("add_type_tri_set")) {
+                    Text(stringResource(R.string.add_tri_set))
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+@Composable
+private fun BlockBuilderDialog(
+    type: WorkoutBlockType,
+    slots: List<Exercise?>,
+    onPickSlot: (Int) -> Unit,
+    onClearSlot: (Int) -> Unit,
+    onConfirm: (rounds: Int, restSeconds: Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var rounds by remember { mutableStateOf("3") }
+    var rest by remember { mutableStateOf("60") }
+    val ready = slots.size == type.requiredExerciseCount && slots.all { it != null }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(if (type == WorkoutBlockType.BI_SET) stringResource(R.string.add_bi_set) else stringResource(R.string.add_tri_set))
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                slots.forEachIndexed { index, exercise ->
+                    Text(stringResource(R.string.block_slot_label, index + 1))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = exercise?.name ?: stringResource(R.string.block_slot_select),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                        TextButton(onClick = { onPickSlot(index) }) { Text(stringResource(R.string.block_slot_select)) }
+                        if (exercise != null) {
+                            IconButton(onClick = { onClearSlot(index) }) { Icon(Icons.Filled.Clear, contentDescription = null) }
+                        }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = rounds,
+                        onValueChange = { rounds = it },
+                        label = { Text(stringResource(R.string.block_rounds_label)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
                     )
-                }
-                IconButton(onClick = onDeleteClick) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.remove_exercise_from_workout),
-                        tint = MaterialTheme.colorScheme.error,
+                    OutlinedTextField(
+                        value = rest,
+                        onValueChange = { rest = it },
+                        label = { Text(stringResource(R.string.rest_seconds_display)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = ready,
+                onClick = { onConfirm(rounds.toIntOrNull() ?: 3, rest.toIntOrNull() ?: 60) },
+                modifier = Modifier.testTag("block_builder_confirm"),
+            ) { Text(stringResource(R.string.block_builder_confirm)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
 
-            Spacer(Modifier.height(8.dp))
-
-            // Stats row
-            Text(
-                text = "${detail.sets}× • ${detail.minRepetitions}–${detail.maxRepetitions} reps • ${formatWeight(detail.weight)} kg",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = "${detail.restSeconds}s ${stringResource(R.string.rest_seconds_display)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                modifier = Modifier.padding(top = 2.dp),
-            )
-
-            if (detail.notes.isNotBlank()) {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = detail.notes,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(top = 2.dp),
-                )
-            }
+@Composable
+private fun EmptyExercisesContent(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(Icons.Outlined.FitnessCenter, contentDescription = null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f))
+        Spacer(Modifier.height(16.dp))
+        Text(stringResource(R.string.workout_detail_empty), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), textAlign = TextAlign.Center)
+        Spacer(Modifier.height(8.dp))
+        Text(stringResource(R.string.workout_detail_empty_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), textAlign = TextAlign.Center)
+        Spacer(Modifier.height(16.dp))
+        TextButton(onClick = onAddClick) {
+            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+            Text(stringResource(R.string.add_exercise_to_workout))
         }
     }
 }
@@ -457,57 +445,6 @@ private fun WorkoutExerciseItem(
 private fun formatWeight(weight: Double): String =
     if (weight == weight.toLong().toDouble()) weight.toLong().toString() else weight.toString()
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Empty state
-// ──────────────────────────────────────────────────────────────────────────────
-
-@Composable
-private fun EmptyExercisesContent(
-    onAddClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.FitnessCenter,
-            contentDescription = null,
-            modifier = Modifier.size(72.dp),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
-        )
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.workout_detail_empty),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.workout_detail_empty_hint),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(24.dp))
-        TextButton(onClick = onAddClick) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 8.dp),
-            )
-            Text(stringResource(R.string.add_exercise_to_workout))
-        }
-    }
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Exercise picker dialog
-// ──────────────────────────────────────────────────────────────────────────────
 
 internal fun filterExercisesByName(exercises: List<Exercise>, query: String): List<Exercise> {
     val trimmed = query.trim()
@@ -698,16 +635,18 @@ private fun ExercisePickerDialog(
 @Composable
 private fun ExerciseConfigurationDialog(
     detail: WorkoutExerciseDetail,
+    initialRounds: Int,
+    initialRestSeconds: Int,
     onConfirm: (sets: Int, minReps: Int, maxReps: Int, weight: Double, restSeconds: Int, notes: String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val isNew = detail.workoutExercise.id == 0L
 
-    var sets by remember(detail) { mutableStateOf(detail.sets.toString()) }
+    var sets by remember(detail, initialRounds) { mutableStateOf(initialRounds.toString()) }
     var minReps by remember(detail) { mutableStateOf(detail.minRepetitions.toString()) }
     var maxReps by remember(detail) { mutableStateOf(detail.maxRepetitions.toString()) }
     var weight by remember(detail) { mutableStateOf(formatWeight(detail.weight)) }
-    var restSeconds by remember(detail) { mutableStateOf(detail.restSeconds.toString()) }
+    var restSeconds by remember(detail, initialRestSeconds) { mutableStateOf(initialRestSeconds.toString()) }
     var notes by remember(detail) { mutableStateOf(detail.notes) }
 
     var setsError by remember { mutableStateOf<Int?>(null) }
@@ -919,16 +858,15 @@ private fun NumberField(
 // ──────────────────────────────────────────────────────────────────────────────
 
 @Composable
-private fun DeleteExerciseDialog(
-    detail: WorkoutExerciseDetail,
+private fun DeleteBlockDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.remove_exercise_from_workout)) },
+        title = { Text(stringResource(R.string.delete_block)) },
         text = {
-            Text(stringResource(R.string.remove_exercise_confirmation, detail.exercise.name))
+            Text(stringResource(R.string.delete_block_confirmation))
         },
         confirmButton = {
             TextButton(
@@ -1012,117 +950,4 @@ private fun EditWorkoutDialog(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
     )
-}
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Previews
-// ──────────────────────────────────────────────────────────────────────────────
-
-@Preview(showBackground = true)
-@Composable
-private fun WorkoutDetailContentLoadingPreview() {
-    GymTrackTheme {
-        WorkoutDetailContent(
-            uiState = WorkoutDetailUiState(isLoading = true),
-            availableExercises = emptyList(),
-            contentPadding = PaddingValues(),
-            onNavigateBack = {},
-            onShowEditWorkoutDialog = {},
-            onDismissEditWorkoutDialog = {},
-            onSaveWorkout = { _, _ -> },
-            onShowExercisePicker = {},
-            onDismissExercisePicker = {},
-            onSelectExercise = {},
-            onNavigateToExercises = {},
-            onDismissExerciseConfiguration = {},
-            onSaveExerciseConfiguration = { _, _, _, _, _, _ -> },
-            onShowEditExercise = {},
-            onShowDeleteConfirmation = {},
-            onDismissDeleteConfirmation = {},
-            onConfirmDelete = {},
-            onMoveUp = {},
-            onMoveDown = {},
-            onStartWorkout = {},
-            onContinueInProgressSession = {},
-            onDismissInProgressConflict = {},
-            onErrorShown = {},
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun WorkoutDetailContentEmptyPreview() {
-    GymTrackTheme {
-        WorkoutDetailContent(
-            uiState = WorkoutDetailUiState(
-                workout = Workout(1L, "Push Day", "Peitoral e tríceps"),
-                isLoading = false,
-            ),
-            availableExercises = emptyList(),
-            contentPadding = PaddingValues(),
-            onNavigateBack = {},
-            onShowEditWorkoutDialog = {},
-            onDismissEditWorkoutDialog = {},
-            onSaveWorkout = { _, _ -> },
-            onShowExercisePicker = {},
-            onDismissExercisePicker = {},
-            onSelectExercise = {},
-            onNavigateToExercises = {},
-            onDismissExerciseConfiguration = {},
-            onSaveExerciseConfiguration = { _, _, _, _, _, _ -> },
-            onShowEditExercise = {},
-            onShowDeleteConfirmation = {},
-            onDismissDeleteConfirmation = {},
-            onConfirmDelete = {},
-            onMoveUp = {},
-            onMoveDown = {},
-            onStartWorkout = {},
-            onContinueInProgressSession = {},
-            onDismissInProgressConflict = {},
-            onErrorShown = {},
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun WorkoutDetailContentListPreview() {
-    val exercise = Exercise(1L, "Supino reto", "Peitoral", "Barra")
-    val we = WorkoutExercise(
-        id = 1L, workoutId = 1L, exerciseId = 1L,
-        position = 0, sets = 4, minRepetitions = 8, maxRepetitions = 12,
-        weight = 60.0, restSeconds = 90, notes = "Controlar a descida",
-    )
-    GymTrackTheme {
-        WorkoutDetailContent(
-            uiState = WorkoutDetailUiState(
-                workout = Workout(1L, "Push Day", "Peitoral e tríceps"),
-                exercises = listOf(WorkoutExerciseDetail(we, exercise)),
-                isLoading = false,
-            ),
-            availableExercises = listOf(exercise),
-            contentPadding = PaddingValues(),
-            onNavigateBack = {},
-            onShowEditWorkoutDialog = {},
-            onDismissEditWorkoutDialog = {},
-            onSaveWorkout = { _, _ -> },
-            onShowExercisePicker = {},
-            onDismissExercisePicker = {},
-            onSelectExercise = {},
-            onNavigateToExercises = {},
-            onDismissExerciseConfiguration = {},
-            onSaveExerciseConfiguration = { _, _, _, _, _, _ -> },
-            onShowEditExercise = {},
-            onShowDeleteConfirmation = {},
-            onDismissDeleteConfirmation = {},
-            onConfirmDelete = {},
-            onMoveUp = {},
-            onMoveDown = {},
-            onStartWorkout = {},
-            onContinueInProgressSession = {},
-            onDismissInProgressConflict = {},
-            onErrorShown = {},
-        )
-    }
 }

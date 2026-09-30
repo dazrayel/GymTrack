@@ -221,24 +221,24 @@ class ExerciseCatalogImporterTest {
         importer.importJson(pack(item("exercise-1", "Nome antigo")))
         val exerciseId = db.exerciseDao().getByExternalIdentity("free-exercise-db", "exercise-1")!!.id
         val workoutId = db.workoutDao().insert(WorkoutEntity(name = "A", description = ""))
-        val relationId = db.workoutExerciseDao().insert(
-            WorkoutExerciseEntity(
+        val blockId = db.workoutBlockDao().insert(
+            com.gymtrack.data.local.entity.WorkoutBlockEntity(
                 workoutId = workoutId,
-                exerciseId = exerciseId,
                 position = 0,
-                sets = 3,
-                minRepetitions = 8,
-                maxRepetitions = 12,
-                weight = 60.0,
-                restSeconds = 90,
+                type = "SINGLE",
+                rounds = 3,
+                restSeconds = 60,
             ),
+        )
+        val relationId = db.workoutExerciseDao().insert(
+            WorkoutExerciseEntity(id = 0, blockId = blockId, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 60.0),
         )
         importer.importJson(pack(item("exercise-1", "Nome novo")))
         val after = db.exerciseDao().getByExternalIdentity("free-exercise-db", "exercise-1")!!
         val relation = db.workoutExerciseDao().getById(relationId).first()!!
         assertEquals(exerciseId, after.id)
         assertEquals(exerciseId, relation.exerciseId)
-        assertEquals(workoutId, relation.workoutId)
+        assertEquals(blockId, relation.blockId)
     }
 
     @Test
@@ -246,17 +246,17 @@ class ExerciseCatalogImporterTest {
         importer.importJson(pack(item("exercise-1", "Nome antigo")))
         val exerciseId = db.exerciseDao().getByExternalIdentity("free-exercise-db", "exercise-1")!!.id
         val workoutId = db.workoutDao().insert(WorkoutEntity(name = "A", description = ""))
-        db.workoutExerciseDao().insert(
-            WorkoutExerciseEntity(
+        val blockId = db.workoutBlockDao().insert(
+            com.gymtrack.data.local.entity.WorkoutBlockEntity(
                 workoutId = workoutId,
-                exerciseId = exerciseId,
                 position = 0,
-                sets = 3,
-                minRepetitions = 8,
-                maxRepetitions = 12,
-                weight = 60.0,
-                restSeconds = 90,
+                type = "SINGLE",
+                rounds = 3,
+                restSeconds = 60,
             ),
+        )
+        db.workoutExerciseDao().insert(
+            WorkoutExerciseEntity(id = 0, blockId = blockId, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 60.0),
         )
         val sessionId = db.workoutSessionDao().insert(
             WorkoutSessionEntity(

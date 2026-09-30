@@ -1,6 +1,7 @@
 package com.gymtrack.domain.repository
 
 import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutBlock
 import com.gymtrack.domain.model.WorkoutExercise
 import kotlinx.coroutines.flow.Flow
 
@@ -18,22 +19,57 @@ interface WorkoutRepository {
 
     suspend fun delete(workout: Workout)
 
-    // ─── WorkoutExercise operations ───────────────────────────────────────────
+    // ─── WorkoutBlock operations ──────────────────────────────────────────────
 
-    fun getExercises(workoutId: Long): Flow<List<WorkoutExercise>>
+    fun getBlocks(workoutId: Long): Flow<List<WorkoutBlock>>
 
+    /**
+     * Returns all exercises for a workout ordered by block position then
+     * positionInBlock, via an inner JOIN through workout_blocks.
+     */
+    fun getExercisesForWorkout(workoutId: Long): Flow<List<WorkoutExercise>>
+
+    /**
+     * Validates the block's type against the exercise count, then inserts the block
+     * and all exercises in a single transaction.
+     *
+     * @return the new block id
+     */
+    suspend fun addBlock(block: WorkoutBlock, exercises: List<WorkoutExercise>): Long
+
+    suspend fun updateBlock(block: WorkoutBlock)
+
+    suspend fun updateBlockExercise(exercise: WorkoutExercise)
+
+    /**
+     * Swaps the catalogue exercise referenced by [exerciseRowId] to [newCatalogueExerciseId].
+     */
+    suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long)
+
+    suspend fun removeBlock(blockId: Long)
+
+    /**
+     * Updates only the [WorkoutBlock.position] of each entry.
+     * Keys are WorkoutBlock IDs; values are the new positions.
+     * Applied atomically.
+     */
+    suspend fun updateBlockPositions(positions: Map<Long, Int>)
+
+    // ─── Thin wrappers kept for ViewModel compatibility ───────────────────────
+
+    /** Alias for [getExercisesForWorkout]. */
+    fun getExercises(workoutId: Long): Flow<List<WorkoutExercise>> = getExercisesForWorkout(workoutId)
+
+    /** Creates a SINGLE block containing this exercise; returns the block id. */
     suspend fun addExercise(workoutExercise: WorkoutExercise): Long
 
+    /** Updates the exercise parameters. */
     suspend fun updateExercise(workoutExercise: WorkoutExercise)
 
     suspend fun removeExercise(workoutExercise: WorkoutExercise)
 
     suspend fun removeExerciseById(id: Long)
 
-    /**
-     * Updates only the [WorkoutExercise.position] of each entry.
-     * Keys are WorkoutExercise IDs; values are the new positions.
-     * Applied atomically.
-     */
+    /** Reorders blocks by exercise id (1:1 SINGLE-block assumption). */
     suspend fun updateExercisePositions(positions: Map<Long, Int>)
 }

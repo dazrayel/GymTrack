@@ -14,6 +14,8 @@ import com.gymtrack.MainActivity
 import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutBlock
+import com.gymtrack.domain.model.WorkoutBlockType
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutRepository
@@ -59,17 +61,9 @@ class HistoryNavigationTest {
             exerciseId = exerciseRepository.save(
                 Exercise(name = "Supino Histórico Nav", muscleGroup = "Peitoral", equipmentType = "Barra"),
             )
-            workoutRepository.addExercise(
-                WorkoutExercise(
-                    workoutId = workoutId,
-                    exerciseId = exerciseId,
-                    position = 0,
-                    sets = 1,
-                    minRepetitions = 8,
-                    maxRepetitions = 12,
-                    weight = 40.0,
-                    restSeconds = 0,
-                ),
+            workoutRepository.addBlock(
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 40.0, notes = "")),
             )
             sessionId = (workoutSessionRepository.startSession(workoutId) as StartSessionResult.Created).sessionId
             val exercises = workoutSessionRepository.observeSessionExercises(sessionId).first()

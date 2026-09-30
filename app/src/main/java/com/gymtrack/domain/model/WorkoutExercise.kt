@@ -1,14 +1,16 @@
 package com.gymtrack.domain.model
 
+/**
+ * An exercise slot inside a [WorkoutBlock].
+ * Round/set count and rest live on the parent block so bi/tri-sets share them.
+ */
 data class WorkoutExercise(
     val id: Long = 0,
-    val workoutId: Long,
+    val blockId: Long,
     val exerciseId: Long,
-    val position: Int,
-    val sets: Int,
+    val positionInBlock: Int,
     val minRepetitions: Int,
     val maxRepetitions: Int,
     val weight: Double,
-    val restSeconds: Int,
     val notes: String = "",
 )

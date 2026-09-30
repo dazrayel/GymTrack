@@ -11,6 +11,7 @@ import com.gymtrack.data.local.entity.WorkoutSessionExerciseEntity
 import com.gymtrack.data.local.entity.WorkoutSetEntity
 import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.StartSessionResult
+import com.gymtrack.domain.model.WorkoutBlockType
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
@@ -59,10 +60,13 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
 
             val workout = workoutRepository.getById(workoutId).first()
                 ?: throw IllegalArgumentException("Workout not found: $workoutId")
-            val template = workoutRepository.getExercises(workoutId).first()
-            if (template.isEmpty()) {
+            val blocks = workoutRepository.getBlocks(workoutId).first()
+            val exercises = workoutRepository.getExercisesForWorkout(workoutId).first()
+            if (exercises.isEmpty()) {
                 throw IllegalStateException("Workout has no exercises: $workoutId")
             }
+            // Build a map from blockId → block for quick lookup.
+            val blockById = blocks.associateBy { it.id }
             val catalogue = exerciseRepository.getAll().first().associateBy { it.id }
 
             val sessionId = database.withTransaction {
@@ -77,23 +81,30 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
                         inProgressLock = 1,
                     ),
                 )
-                val snapshots = template.map { we ->
+                // Flatten exercises ordered by block position then positionInBlock (already sorted
+                // by getExercisesForWorkout). Snapshot each with block metadata.
+                val snapshots = exercises.mapIndexed { flatIndex, we ->
+                    val block = blockById[we.blockId]
+                        ?: throw IllegalStateException("Block not found: ${we.blockId}")
                     val exercise = catalogue[we.exerciseId]
                         ?: throw IllegalStateException("Exercise not found: ${we.exerciseId}")
                     WorkoutSessionExerciseEntity(
                         sessionId = createdId,
                         exerciseId = we.exerciseId,
-                        position = we.position,
+                        position = flatIndex,
                         exerciseName = exercise.name,
                         muscleGroup = exercise.muscleGroup,
                         equipmentType = exercise.equipmentType,
-                        plannedSets = we.sets,
+                        plannedSets = block.rounds,
                         minRepetitions = we.minRepetitions,
                         maxRepetitions = we.maxRepetitions,
                         plannedWeight = we.weight,
-                        restSeconds = we.restSeconds,
+                        restSeconds = block.restSeconds,
                         notes = we.notes,
                         secondaryMuscles = serializeSecondaryMuscles(exercise.secondaryMuscles),
+                        blockType = block.type.name,
+                        blockPosition = block.position,
+                        positionInBlock = we.positionInBlock,
                     )
                 }
                 sessionExerciseDao.insertAll(snapshots)
@@ -305,6 +316,9 @@ private fun WorkoutSessionExerciseEntity.toDomain() = WorkoutSessionExercise(
     notes = notes,
     secondaryMuscles = deserializeSecondaryMuscles(secondaryMuscles),
     status = parseWorkoutSessionExerciseStatus(status),
+    blockType = WorkoutBlockType.parse(blockType),
+    blockPosition = blockPosition,
+    positionInBlock = positionInBlock,
 )
 
 private fun WorkoutSetEntity.toDomain() = WorkoutSet(

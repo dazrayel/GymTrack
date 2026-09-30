@@ -16,4 +16,7 @@ data class WorkoutSessionExercise(
     val notes: String = "",
     val secondaryMuscles: List<String> = emptyList(),
     val status: WorkoutSessionExerciseStatus = WorkoutSessionExerciseStatus.PENDING,
+    val blockType: WorkoutBlockType = WorkoutBlockType.SINGLE,
+    val blockPosition: Int = 0,
+    val positionInBlock: Int = 0,
 )
