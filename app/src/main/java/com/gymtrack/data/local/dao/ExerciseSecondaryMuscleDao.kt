@@ -19,6 +19,12 @@ interface ExerciseSecondaryMuscleDao {
     )
     fun getMuscles(exerciseId: Long): Flow<List<String>>
 
+    @Query(
+        "SELECT muscle FROM exercise_secondary_muscles " +
+            "WHERE exerciseId = :exerciseId ORDER BY muscle ASC",
+    )
+    fun getMusclesOnce(exerciseId: Long): List<String>
+
     @Query("DELETE FROM exercise_secondary_muscles WHERE exerciseId = :exerciseId")
     fun deleteByExerciseId(exerciseId: Long)
 

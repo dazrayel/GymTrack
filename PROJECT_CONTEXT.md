@@ -126,17 +126,19 @@ Antes de alterar a arquitetura, analisar o código existente e explicar o motivo
 
 ### Persistência
 
-* Room versão **8** (`GymTrackDatabase`, `exportSchema = true`).
+* Room versão **9** (`GymTrackDatabase`, `exportSchema = true`).
 * SQLite (`gymtrack.db`).
-* Migrations registradas em `DatabaseModule`: `1→2` … `7→8`. **Não existe** `MIGRATION_8_9` nem coluna `selectedExerciseId`.
-* Schemas exportados: `app/schemas/.../7.json` e `8.json` (além das versões anteriores já existentes).
+* Migrations registradas em `DatabaseModule`: `1→2` … `8→9`.
+* Schemas exportados: `app/schemas/...` até `9.json` (versões históricas preservadas).
 * Não existe tabela específica para estatísticas.
 * Não existe tabela específica para PRs.
 * Métricas são derivadas dos dados existentes.
 
 Detalhe do catálogo, músculos secundários, `status` por exercício da sessão e ordem livre: ver a seção **Catálogo, status e ordem livre** abaixo.
 
-Exclusão de sessões `COMPLETED` no histórico: ver **Exclusão de sessões do histórico**. Sem migration; Room permanece na versão 8.
+Identidade externa do catálogo (`externalSource` + `externalId`) e `MIGRATION_8_9`: ver **Identidade externa do catálogo**. O importador do pack normalizado existe (`ExerciseCatalogImporter`) e **não** corre automaticamente na abertura do banco.
+
+Exclusão de sessões `COMPLETED` no histórico: ver **Exclusão de sessões do histórico**. Sem migration extra além da 8→9 de identidade.
 
 Busca local no seletor de exercícios do detalhe do treino e capitalização de frases nos campos de texto livre: ver **Busca no seletor de exercícios** e **Capitalização de campos de texto**. Sem alteração de Room, migration ou ViewModel para essas UX.
 
@@ -233,7 +235,9 @@ Exercise(
     name,
     muscleGroup,       // primário (catálogo fechado MUSCLE_GROUPS)
     equipmentType,     // catálogo fechado EQUIPMENT_TYPES (inclui Outro)
-    secondaryMuscles   // 0..N, List<String>, nunca inclui o primário
+    secondaryMuscles,  // 0..N, List<String>, nunca inclui o primário
+    externalSource,    // nullable; null = criado pelo utilizador
+    externalId         // nullable; identidade lógica = (externalSource, externalId)
 )
 ```
 
@@ -1441,7 +1445,7 @@ B ≠ bug. Sem Bloco A. Sem implementação aprovada. Sem nova fase.
 
 ### Proteções (intactas)
 
-8.S–8.7; Fase 9; Fase 10; Fase 11; timer/rest; Navigation; harness (`PAUSED` / `DESTROYED` / crash / `restEnds_returnsToWorking`). Não reabrir essas fases. O schema **atual** é Room 8 (trabalho posterior a esta auditoria).
+8.S–8.7; Fase 9; Fase 10; Fase 11; timer/rest; Navigation; harness (`PAUSED` / `DESTROYED` / crash / `restEnds_returnsToWorking`). Não reabrir essas fases. O schema **atual** é Room 9 (identidade externa + importador explícito, sem seed automático).
 
 ---
 
@@ -1483,6 +1487,27 @@ Ao criar a sessão, os snapshots nascem com `status` default `PENDING`. O primei
 * Snapshot da sessão: coluna TEXT `secondaryMuscles` (`serializeSecondaryMuscles` / `deserializeSecondaryMuscles`, CSV ordenado). Não é tabela N:N no snapshot.
 
 `MIGRATION_6_7` **não** mapeia valores desconhecidos (ex. `Legs`) para o catálogo; só sinónimos listados no SQL.
+
+---
+
+## Identidade externa do catálogo
+
+Room **versão 9**. `MIGRATION_8_9` (ALTER TABLE, sem reconstruir `exercises`):
+
+* colunas nullable `externalSource` e `externalId`;
+* índice único composto `index_exercises_externalSource_externalId`;
+* exercícios já existentes ficam `(null, null)`;
+* IDs e relações (`workout_exercises`, secundários, sessões) preservados.
+
+A PK continua `id` Long AUTOINCREMENT. A UI de cadastro manual não foi alterada. Não há `RoomDatabase.Callback` nem importação no startup.
+
+O pack publicado (Etapa 4.9 / V2.1) vive em `app/src/main/assets/exercises/gymtrack-exercises.json` (**136** exercícios; fonte `MAIN_CATALOG_V2_1.json`). Nomes de apresentação estão em **pt-BR** (Etapa 4.8). Cada exercício publicado tem mídia local `0.jpg`/`1.jpg` (272 JPG; preview animado de 2 frames na UI). O arquivo completo **876** fica em `tools/exercise-import/output/free-exercise-db/gymtrack-exercises-full-876.json` (análise / Stage 2.5 / testes — **não** é o asset de produção). `ExerciseCatalogImporter.importJson` / `importDefaultAsset` faz upsert por `(externalSource, externalId)`: `insertImported` (`ABORT`, nunca `REPLACE`) ou `updateImported` (não altera identidade). Em **debug**, Configurações expõe importação explícita do asset. Exercícios manuais `(null, null)` não são seleccionados. Ausentes do pack **não** são apagados. Política 2.5 (arquivo completo): 777 importáveis / 99 recusados; fallback de equipamento bola/foam → `Outro`, EZ-bar → `Barra`; `equipment` JSON `null` **não** vira `Outro`. O Room **não** persiste `sourceData`, blobs de imagem nem instruções — só os campos canónicos do exercício.
+
+SQLite trata cada `NULL` no índice único como distinto: vários manuais `(null, null)` são permitidos.
+
+`ExerciseDao.insert` (cadastro manual) continua com `OnConflictStrategy.REPLACE`. O importador **não** o utiliza.
+
+Detalhe: `tools/exercise-import/README.md`, `tools/exercise-import/analysis/STAGE_3A_IDENTITY.md`.
 
 ---
 
@@ -1967,11 +1992,11 @@ Fase 8  — Polimento             8.S–8.7 concluídas
 Fase 9  — Hardening/Testes      CONCLUÍDA, SEM IMPLEMENTAÇÃO (suíte alargada depois em 15c03f8)
 Fase 10 — IA                    AUDITADA — ESCOPO INSUFICIENTEMENTE DEFINIDO
 Fase 11 — Backend               AUDITADA — ESCOPO INSUFICIENTEMENTE DEFINIDO
-Room    — versão 8 (migrations até 7→8; sem 8→9)
+Room    — versão 9 (migrations até 8→9; identidade externa; importador explícito, sem seed automático)
 ```
 
 Auditoria exploratória do MVP (pós-Fase 11): **CONCLUÍDA** — nenhum problema real; não é fase nova; sem Bloco A.
 
-Trabalho posterior na mesma branch: catálogo de músculos/equipamentos, secundários N:N, status de exercício, skip, “Fazer agora”, drafts, exclusão de sessões concluídas no histórico, busca local no seletor de exercícios do detalhe do treino, capitalização de frases nos campos de texto livre. `README.md` é portfólio público (ficheiro separado).
+Trabalho posterior na mesma branch: catálogo de músculos/equipamentos, secundários N:N, status de exercício, skip, “Fazer agora”, drafts, exclusão de sessões concluídas no histórico, busca local no seletor de exercícios do detalhe do treino, capitalização de frases nos campos de texto livre, identidade externa Room 9, pipeline Free Exercise DB (Stages 2.5–4.9): classificação 876→777+99, nomes pt-BR, curadoria V2.1 (**136** publicados com 272 JPG), preview animado 2 frames, importador explícito (debug Settings). O dataset completo 876 permanece só para análise/testes. `README.md` é portfólio público (ficheiro separado).
 
 Fases 10 e 11 não são backlog de implementação.

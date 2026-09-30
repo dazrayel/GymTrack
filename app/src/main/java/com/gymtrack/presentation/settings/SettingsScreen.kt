@@ -34,6 +34,7 @@ fun SettingsScreen(
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary,
         )
+        DebugSettingsSection()
     }
 }
 

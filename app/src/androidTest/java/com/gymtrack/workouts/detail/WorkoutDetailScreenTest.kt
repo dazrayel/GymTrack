@@ -552,6 +552,8 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Agachamento Teste").performClick()
         composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("picker_confirm_select").performClick()
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
         composeTestRule.onNodeWithText("Agachamento Teste").assertIsDisplayed()
@@ -572,6 +574,8 @@ class WorkoutDetailScreenTest {
         assertTrue(pickerEntries.fetchSemanticsNodes().size >= 2)
         pickerEntries.onLast().performClick()
         composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("picker_confirm_select").performClick()
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
     }
@@ -590,6 +594,8 @@ class WorkoutDetailScreenTest {
 
         composeTestRule.onNodeWithText("Supino Teste").performClick()
         composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("picker_confirm_select").performClick()
+        composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
     }
@@ -607,6 +613,8 @@ class WorkoutDetailScreenTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Supino Teste").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("picker_confirm_select").performClick()
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Cancelar").performClick()
@@ -689,6 +697,8 @@ class WorkoutDetailScreenTest {
         composeTestRule.onNodeWithContentDescription("Adicionar exercício").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Supino Teste").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("picker_confirm_select").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Configurar exercício").assertIsDisplayed()
     }

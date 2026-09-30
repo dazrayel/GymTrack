@@ -77,6 +77,7 @@
     <string name="exercise_view_performance">Ver desempenho</string>
     <string name="delete_exercise">Excluir exercício</string>
     <string name="delete_exercise_confirmation">Tem certeza que deseja excluir o exercício \"%1$s\"?</string>
+    <string name="exercise_demo_unavailable">Demonstração indisponível</string>
 
     <!-- Workouts screen -->
     <string name="empty_workouts">Nenhum treino cadastrado</string>
@@ -158,6 +159,7 @@
     <!-- Exercise picker -->
     <string name="pick_exercise_title">Selecionar exercício</string>
     <string name="pick_exercise_search">Buscar exercício</string>
+    <string name="pick_exercise_confirm">Selecionar</string>
     <string name="pick_exercise_empty">Nenhum exercício disponível na biblioteca</string>
     <string name="pick_exercise_empty_hint">Cadastre um exercício para adicioná-lo ao treino</string>
     <string name="go_to_exercises">Ir para exercícios</string>

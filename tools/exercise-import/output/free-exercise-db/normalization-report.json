@@ -1,0 +1,2067 @@
+{
+  "source": "free-exercise-db",
+  "multiplePrimaryRule": "first_source_primary_becomes_muscleGroup; extra mapped primaries append to secondaryMuscles",
+  "inputExerciseCount": 876,
+  "outputExerciseCount": 876,
+  "failedExerciseCount": 121,
+  "mappedMuscles": {
+    "abdominals": 152,
+    "biceps": 127,
+    "calves": 209,
+    "chest": 147,
+    "forearms": 119,
+    "glutes": 242,
+    "hamstrings": 280,
+    "lats": 94,
+    "lower back": 131,
+    "middle back": 100,
+    "quadriceps": 230,
+    "shoulders": 339,
+    "traps": 99,
+    "triceps": 221
+  },
+  "unmappedMuscles": {
+    "abductors": 43,
+    "adductors": 54,
+    "neck": 9
+  },
+  "mappedEquipment": {
+    "bands": 20,
+    "barbell": 170,
+    "body only": 111,
+    "cable": 81,
+    "dumbbell": 123,
+    "kettlebells": 56,
+    "machine": 67,
+    "other": 122
+  },
+  "unmappedEquipment": {
+    "e-z curl bar": 9,
+    "exercise ball": 12,
+    "foam roll": 11,
+    "medicine ball": 17
+  },
+  "nullEquipmentCount": 77,
+  "nullEquipmentExternalIds": [
+    "Adductor_Groin",
+    "Alternate_Leg_Diagonal_Bound",
+    "Ankle_Circles",
+    "Ankle_On_The_Knee",
+    "Arm_Circles",
+    "Bodyweight_Walking_Lunge",
+    "Calf_Stretch_Elbows_Against_Wall",
+    "Calf_Stretch_Hands_Against_Wall",
+    "Carioca_Quick_Step",
+    "Cat_Stretch",
+    "Chair_Lower_Back_Stretch",
+    "Childs_Pose",
+    "Chin_To_Chest_Stretch",
+    "Crossover_Reverse_Lunge",
+    "Dancers_Stretch",
+    "Decline_Push-Up",
+    "Dynamic_Back_Stretch",
+    "Dynamic_Chest_Stretch",
+    "Elbow_Circles",
+    "Elbows_Back",
+    "Floor_Glute-Ham_Raise",
+    "Frog_Hops",
+    "Groin_and_Back_Stretch",
+    "Hamstring_Stretch",
+    "Hug_Knees_To_Chest",
+    "Inverted_Row",
+    "Iron_Crosses_stretch",
+    "Knee_Across_The_Body",
+    "Kneeling_Arm_Drill",
+    "Kneeling_Forearm_Stretch",
+    "Kneeling_Hip_Flexor",
+    "Leg-Up_Hamstring_Stretch",
+    "Linear_3-Part_Start_Technique",
+    "Linear_Acceleration_Wall_Drill",
+    "Looking_At_Ceiling",
+    "Middle_Back_Stretch",
+    "Mountain_Climbers",
+    "Moving_Claw_Series",
+    "On_Your_Side_Quad_Stretch",
+    "One_Arm_Against_Wall",
+    "One_Half_Locust",
+    "One_Knee_To_Chest",
+    "Overhead_Stretch",
+    "Pelvic_Tilt_Into_Bridge",
+    "Prone_Manual_Hamstring",
+    "Runners_Stretch",
+    "Scapular_Pull-Up",
+    "Seated_Calf_Stretch",
+    "Seated_Floor_Hamstring_Stretch",
+    "Seated_Hamstring",
+    "Seated_Overhead_Stretch",
+    "Shoulder_Circles",
+    "Shoulder_Raise",
+    "Shoulder_Stretch",
+    "Side-Lying_Floor_Stretch",
+    "Side_Lying_Groin_Stretch",
+    "Side_Neck_Stretch",
+    "Side_Standing_Long_Jump",
+    "Side_Wrist_Pull",
+    "Sit_Squats",
+    "Spinal_Stretch",
+    "Split_Squats",
+    "Standing_Gastrocnemius_Calf_Stretch",
+    "Standing_Hip_Flexors",
+    "Standing_Lateral_Stretch",
+    "Standing_Pelvic_Tilt",
+    "Standing_Soleus_And_Achilles_Stretch",
+    "Standing_Toe_Touches",
+    "The_Straddle",
+    "Trail_Running_Walking",
+    "Tricep_Side_Stretch",
+    "Triceps_Stretch",
+    "Upper_Back-Leg_Grab",
+    "Upper_Back_Stretch",
+    "Upward_Stretch",
+    "Windmills",
+    "Worlds_Greatest_Stretch"
+  ],
+  "originalMuscleCounts": {
+    "abdominals": 152,
+    "abductors": 43,
+    "adductors": 54,
+    "biceps": 127,
+    "calves": 209,
+    "chest": 147,
+    "forearms": 119,
+    "glutes": 242,
+    "hamstrings": 280,
+    "lats": 94,
+    "lower back": 131,
+    "middle back": 100,
+    "neck": 9,
+    "quadriceps": 230,
+    "shoulders": 339,
+    "traps": 99,
+    "triceps": 221
+  },
+  "originalEquipmentCounts": {
+    "bands": 20,
+    "barbell": 170,
+    "body only": 111,
+    "cable": 81,
+    "dumbbell": 123,
+    "e-z curl bar": 9,
+    "exercise ball": 12,
+    "foam roll": 11,
+    "kettlebells": 56,
+    "machine": 67,
+    "medicine ball": 17,
+    "null": 77,
+    "other": 122
+  },
+  "finalMuscleGroupCounts": {
+    "Abdômen": 93,
+    "Antebraço": 25,
+    "Bíceps": 53,
+    "Costas": 72,
+    "Glúteos": 22,
+    "Lombar": 27,
+    "Ombros": 129,
+    "Panturrilhas": 28,
+    "Peitoral": 84,
+    "Posteriores": 79,
+    "Quadríceps": 148,
+    "Trapézio": 15,
+    "Tríceps": 72,
+    "null": 29
+  },
+  "finalEquipmentTypeCounts": {
+    "Barra": 170,
+    "Cabos": 81,
+    "Elástico": 20,
+    "Halteres": 123,
+    "Kettlebell": 56,
+    "Máquina": 67,
+    "Outro": 122,
+    "Peso corporal": 111,
+    "null": 126
+  },
+  "multiplePrimaryMuscleExercises": [
+    {
+      "externalId": "Kettlebell_Halo_With_Overhead_Extension",
+      "name": "Kettlebell Halo with Overhead Extension",
+      "primaryMuscles": [
+        "shoulders",
+        "triceps"
+      ],
+      "rule": "first_source_primary_becomes_muscleGroup; extra mapped primaries append to secondaryMuscles",
+      "muscleGroup": "Ombros"
+    }
+  ],
+  "primarySecondaryOverlapExercises": [
+    {
+      "externalId": "All_Fours_Quad_Stretch",
+      "name": "All Fours Quad Stretch",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "quadriceps"
+      ]
+    },
+    {
+      "externalId": "Alternating_Kettlebell_Row",
+      "name": "Alternating Kettlebell Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Alternating_Renegade_Row",
+      "name": "Alternating Renegade Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "abdominals",
+        "biceps",
+        "chest",
+        "lats",
+        "triceps"
+      ]
+    },
+    {
+      "externalId": "Band_Assisted_Pull-Up",
+      "name": "Band Assisted Pull-Up",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "abdominals",
+        "forearms",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Barbell_Step_Ups",
+      "name": "Barbell Step Ups",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "glutes",
+        "hamstrings",
+        "quadriceps"
+      ]
+    },
+    {
+      "externalId": "Bent-Arm_Barbell_Pullover",
+      "name": "Bent-Arm Barbell Pullover",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "chest",
+        "lats",
+        "shoulders",
+        "triceps"
+      ]
+    },
+    {
+      "externalId": "Bent_Over_Barbell_Row",
+      "name": "Bent Over Barbell Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Bent_Over_One-Arm_Long_Bar_Row",
+      "name": "Bent Over One-Arm Long Bar Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "lower back",
+        "traps"
+      ]
+    },
+    {
+      "externalId": "Bent_Over_Two-Arm_Long_Bar_Row",
+      "name": "Bent Over Two-Arm Long Bar Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Bent_Over_Two-Dumbbell_Row",
+      "name": "Bent Over Two-Dumbbell Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Bent_Over_Two-Dumbbell_Row_With_Palms_In",
+      "name": "Bent Over Two-Dumbbell Row With Palms In",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Bodyweight_Mid_Row",
+      "name": "Bodyweight Mid Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Chin-Up",
+      "name": "Chin-Up",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "forearms",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Clean_and_Press",
+      "name": "Clean and Press",
+      "primaryMuscles": [
+        "shoulders"
+      ],
+      "secondaryMuscles": [
+        "abdominals",
+        "calves",
+        "glutes",
+        "hamstrings",
+        "lower back",
+        "middle back",
+        "quadriceps",
+        "shoulders",
+        "traps",
+        "triceps"
+      ]
+    },
+    {
+      "externalId": "Close-Grip_Front_Lat_Pulldown",
+      "name": "Close-Grip Front Lat Pulldown",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Dumbbell_Incline_Row",
+      "name": "Dumbbell Incline Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "forearms",
+        "lats",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Elevated_Cable_Rows",
+      "name": "Elevated Cable Rows",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "middle back",
+        "traps"
+      ]
+    },
+    {
+      "externalId": "Full_Range-Of-Motion_Lat_Pulldown",
+      "name": "Full Range-Of-Motion Lat Pulldown",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Gironda_Sternum_Chins",
+      "name": "Gironda Sternum Chins",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Hurdle_Hops",
+      "name": "Hurdle Hops",
+      "primaryMuscles": [
+        "hamstrings"
+      ],
+      "secondaryMuscles": [
+        "abductors",
+        "adductors",
+        "calves",
+        "glutes",
+        "hamstrings"
+      ]
+    },
+    {
+      "externalId": "Incline_Bench_Pull",
+      "name": "Incline Bench Pull",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "lats",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Inverted_Row",
+      "name": "Inverted Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Inverted_Row_with_Straps",
+      "name": "Inverted Row with Straps",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Kipping_Muscle_Up",
+      "name": "Kipping Muscle Up",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "abdominals",
+        "biceps",
+        "forearms",
+        "middle back",
+        "shoulders",
+        "traps",
+        "triceps"
+      ]
+    },
+    {
+      "externalId": "Kneeling_High_Pulley_Row",
+      "name": "Kneeling High Pulley Row",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Kneeling_Hip_Flexor",
+      "name": "Kneeling Hip Flexor",
+      "primaryMuscles": [
+        "quadriceps"
+      ],
+      "secondaryMuscles": [
+        "quadriceps"
+      ]
+    },
+    {
+      "externalId": "Kneeling_Single-Arm_High_Pulley_Row",
+      "name": "Kneeling Single-Arm High Pulley Row",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Leverage_High_Row",
+      "name": "Leverage High Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Leverage_Iso_Row",
+      "name": "Leverage Iso Row",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "London_Bridges",
+      "name": "London Bridges",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "forearms",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Lying_Cambered_Barbell_Row",
+      "name": "Lying Cambered Barbell Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "traps"
+      ]
+    },
+    {
+      "externalId": "Lying_T-Bar_Row",
+      "name": "Lying T-Bar Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Middle_Back_Stretch",
+      "name": "Middle Back Stretch",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "abdominals",
+        "lats",
+        "lower back"
+      ]
+    },
+    {
+      "externalId": "Mixed_Grip_Chin",
+      "name": "Mixed Grip Chin",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Muscle_Up",
+      "name": "Muscle Up",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "abdominals",
+        "biceps",
+        "forearms",
+        "middle back",
+        "shoulders",
+        "traps",
+        "triceps"
+      ]
+    },
+    {
+      "externalId": "One-Arm_Dumbbell_Row",
+      "name": "One-Arm Dumbbell Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "One-Arm_Kettlebell_Row",
+      "name": "One-Arm Kettlebell Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "One-Arm_Long_Bar_Row",
+      "name": "One-Arm Long Bar Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "One_Arm_Chin-Up",
+      "name": "One Arm Chin-Up",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "forearms",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "One_Arm_Lat_Pulldown",
+      "name": "One Arm Lat Pulldown",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Pullups",
+      "name": "Pullups",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Reverse_Grip_Bent-Over_Rows",
+      "name": "Reverse Grip Bent-Over Rows",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Rocky_Pull-Ups_Pulldowns",
+      "name": "Rocky Pull-Ups/Pulldowns",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Rope_Climb",
+      "name": "Rope Climb",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "forearms",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Seated_Cable_Rows",
+      "name": "Seated Cable Rows",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Seated_One-arm_Cable_Pulley_Rows",
+      "name": "Seated One-arm Cable Pulley Rows",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "traps"
+      ]
+    },
+    {
+      "externalId": "Shotgun_Row",
+      "name": "Shotgun Row",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Side_To_Side_Chins",
+      "name": "Side To Side Chins",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "forearms",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Sled_Row",
+      "name": "Sled Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Smith_Machine_Bent_Over_Row",
+      "name": "Smith Machine Bent Over Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Snatch_Deadlift",
+      "name": "Snatch Deadlift",
+      "primaryMuscles": [
+        "hamstrings"
+      ],
+      "secondaryMuscles": [
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "lower back",
+        "quadriceps",
+        "traps"
+      ]
+    },
+    {
+      "externalId": "Spinal_Stretch",
+      "name": "Spinal Stretch",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "lats",
+        "lower back",
+        "neck",
+        "traps"
+      ]
+    },
+    {
+      "externalId": "Split_Snatch",
+      "name": "Split Snatch",
+      "primaryMuscles": [
+        "hamstrings"
+      ],
+      "secondaryMuscles": [
+        "calves",
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "lower back",
+        "quadriceps",
+        "shoulders",
+        "traps",
+        "triceps"
+      ]
+    },
+    {
+      "externalId": "Straight_Bar_Bench_Mid_Rows",
+      "name": "Straight Bar Bench Mid Rows",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Suspended_Row",
+      "name": "Suspended Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "T-Bar_Row_with_Handle",
+      "name": "T-Bar Row with Handle",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Two-Arm_Kettlebell_Row",
+      "name": "Two-Arm Kettlebell Row",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "lats"
+      ]
+    },
+    {
+      "externalId": "Underhand_Cable_Pulldowns",
+      "name": "Underhand Cable Pulldowns",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Upper_Back_Stretch",
+      "name": "Upper Back Stretch",
+      "primaryMuscles": [
+        "middle back"
+      ],
+      "secondaryMuscles": [
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "V-Bar_Pulldown",
+      "name": "V-Bar Pulldown",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "V-Bar_Pullup",
+      "name": "V-Bar Pullup",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Weighted_Pull_Ups",
+      "name": "Weighted Pull Ups",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back"
+      ]
+    },
+    {
+      "externalId": "Wide-Grip_Lat_Pulldown",
+      "name": "Wide-Grip Lat Pulldown",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Wide-Grip_Pulldown_Behind_The_Neck",
+      "name": "Wide-Grip Pulldown Behind The Neck",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    },
+    {
+      "externalId": "Wide-Grip_Rear_Pull-Up",
+      "name": "Wide-Grip Rear Pull-Up",
+      "primaryMuscles": [
+        "lats"
+      ],
+      "secondaryMuscles": [
+        "biceps",
+        "middle back",
+        "shoulders"
+      ]
+    }
+  ],
+  "duplicateSecondaryAfterNormalization": [
+    "Barbell_Deadlift",
+    "Barbell_Rear_Delt_Row",
+    "Pin_Presses",
+    "Reverse_Band_Bench_Press",
+    "Scapular_Pull-Up",
+    "Sledgehammer_Swings"
+  ],
+  "emptyInstructionsExternalIds": [
+    "Iron_Cross",
+    "One-Arm_Kettlebell_Swings",
+    "Push_Press",
+    "Side_Bridge",
+    "Side_Jackknife"
+  ],
+  "emptyImagesExternalIds": [
+    "Kettlebell_Halo",
+    "Kettlebell_Halo_With_Overhead_Extension",
+    "Kettlebell_Overhead_Triceps_Extension"
+  ],
+  "failedExternalIds": [
+    "Adductor",
+    "Adductor_Groin",
+    "Alternate_Leg_Diagonal_Bound",
+    "Atlas_Stones",
+    "Backward_Medicine_Ball_Throw",
+    "Ball_Leg_Curl",
+    "Band_Hip_Adductions",
+    "Bodyweight_Flyes",
+    "Box_Jump_Multiple_Response",
+    "Box_Skip",
+    "Box_Squat",
+    "Box_Squat_with_Bands",
+    "Box_Squat_with_Chains",
+    "Brachialis-SMR",
+    "Calves-SMR",
+    "Carioca_Quick_Step",
+    "Catch_and_Overhead_Throw",
+    "Chair_Leg_Extended_Stretch",
+    "Chest_Push_from_3_point_stance",
+    "Chest_Push_multiple_response",
+    "Chest_Push_single_response",
+    "Chest_Push_with_Run_Release",
+    "Chest_Stretch_on_Stability_Ball",
+    "Chin_To_Chest_Stretch",
+    "Close-Grip_EZ-Bar_Curl_with_Band",
+    "Close-Grip_EZ-Bar_Press",
+    "Crossover_Reverse_Lunge",
+    "Dancers_Stretch",
+    "Depth_Jump_Leap",
+    "Double_Leg_Butt_Kick",
+    "Downward_Facing_Balance",
+    "EZ-Bar_Curl",
+    "EZ-Bar_Skullcrusher",
+    "Exercise_Ball_Crunch",
+    "Exercise_Ball_Pull-In",
+    "Fast_Skipping",
+    "Front_Box_Jump",
+    "Front_Cone_Hops_or_hurdle_hops",
+    "Groin_and_Back_Stretch",
+    "Groiners",
+    "Hamstring-SMR",
+    "Hip_Circles_prone",
+    "Hug_A_Ball",
+    "Hurdle_Hops",
+    "IT_Band_and_Glute_Stretch",
+    "Iliotibial_Tract-SMR",
+    "Isometric_Neck_Exercise_-_Front_And_Back",
+    "Isometric_Neck_Exercise_-_Sides",
+    "Kettlebell_Sumo_High_Pull",
+    "Knee_Across_The_Body",
+    "Knee_Tuck_Jump",
+    "Lateral_Bound",
+    "Lateral_Box_Jump",
+    "Lateral_Cone_Hops",
+    "Latissimus_Dorsi-SMR",
+    "Lower_Back-SMR",
+    "Lying_Bent_Leg_Groin",
+    "Lying_Close-Grip_Barbell_Triceps_Press_To_Chin",
+    "Lying_Crossover",
+    "Lying_Face_Down_Plate_Neck_Resistance",
+    "Lying_Face_Up_Plate_Neck_Resistance",
+    "Lying_Glute",
+    "Lying_Triceps_Press",
+    "Medicine_Ball_Chest_Pass",
+    "Medicine_Ball_Full_Twist",
+    "Medicine_Ball_Scoop_Throw",
+    "Monster_Walk",
+    "Neck-SMR",
+    "One-Arm_Medicine_Ball_Slam",
+    "Overhead_Slam",
+    "Peroneals-SMR",
+    "Physioball_Hip_Bridge",
+    "Piriformis-SMR",
+    "Power_Stairs",
+    "Push-Ups_With_Feet_On_An_Exercise_Ball",
+    "Pyramid",
+    "Quadriceps-SMR",
+    "Return_Push_from_Stance",
+    "Reverse_Band_Box_Squat",
+    "Reverse_Band_Deadlift",
+    "Reverse_Band_Power_Squat",
+    "Reverse_Band_Sumo_Deadlift",
+    "Reverse_Barbell_Preacher_Curls",
+    "Rhomboids-SMR",
+    "Seated_Glute",
+    "Seated_Head_Harness_Neck_Resistance",
+    "Side_Hop-Sprint",
+    "Side_Leg_Raises",
+    "Side_Lying_Groin_Stretch",
+    "Side_Neck_Stretch",
+    "Side_to_Side_Box_Shuffle",
+    "Single-Leg_Hop_Progression",
+    "Single-Leg_Lateral_Hop",
+    "Single-Leg_Stride_Jump",
+    "Sit_Squats",
+    "Skating",
+    "Spider_Curl",
+    "Spinal_Stretch",
+    "Squat_with_Bands",
+    "Squat_with_Chains",
+    "Squat_with_Plate_Movers",
+    "Standing_Hip_Circles",
+    "Standing_Two-Arm_Overhead_Throw",
+    "Stride_Jump_Crossover",
+    "Sumo_Deadlift",
+    "Sumo_Deadlift_with_Bands",
+    "Sumo_Deadlift_with_Chains",
+    "Supine_Chest_Throw",
+    "Supine_One-Arm_Overhead_Throw",
+    "Supine_Two-Arm_Overhead_Throw",
+    "Suspended_Split_Squat",
+    "The_Straddle",
+    "Thigh_Abductor",
+    "Thigh_Adductor",
+    "Torso_Rotation",
+    "Weighted_Ball_Hyperextension",
+    "Weighted_Ball_Side_Bend",
+    "Weighted_Crunches",
+    "Wide_Stance_Stiff_Legs",
+    "Windmills",
+    "Yoke_Walk"
+  ],
+  "warnings": [
+    {
+      "externalId": "All_Fours_Quad_Stretch",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Alternating_Kettlebell_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Alternating_Renegade_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Band_Assisted_Pull-Up",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Barbell_Deadlift",
+      "warning": "duplicate_secondary_after_normalization"
+    },
+    {
+      "externalId": "Barbell_Rear_Delt_Row",
+      "warning": "duplicate_secondary_after_normalization"
+    },
+    {
+      "externalId": "Barbell_Step_Ups",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Bent-Arm_Barbell_Pullover",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Bent_Over_Barbell_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Bent_Over_One-Arm_Long_Bar_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Bent_Over_Two-Arm_Long_Bar_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Bent_Over_Two-Dumbbell_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Bent_Over_Two-Dumbbell_Row_With_Palms_In",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Bodyweight_Mid_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Chin-Up",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Clean_and_Press",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Close-Grip_Front_Lat_Pulldown",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Dumbbell_Incline_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Elevated_Cable_Rows",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Full_Range-Of-Motion_Lat_Pulldown",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Gironda_Sternum_Chins",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Hurdle_Hops",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Incline_Bench_Pull",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Inverted_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Inverted_Row_with_Straps",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Iron_Cross",
+      "warning": "empty_instructions"
+    },
+    {
+      "externalId": "Kettlebell_Halo",
+      "warning": "empty_images"
+    },
+    {
+      "externalId": "Kettlebell_Halo_With_Overhead_Extension",
+      "warning": "multiple_primaryMuscles"
+    },
+    {
+      "externalId": "Kettlebell_Halo_With_Overhead_Extension",
+      "warning": "empty_images"
+    },
+    {
+      "externalId": "Kettlebell_Overhead_Triceps_Extension",
+      "warning": "empty_images"
+    },
+    {
+      "externalId": "Kipping_Muscle_Up",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Kneeling_High_Pulley_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Kneeling_Hip_Flexor",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Kneeling_Single-Arm_High_Pulley_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Leverage_High_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Leverage_Iso_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "London_Bridges",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Lying_Cambered_Barbell_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Lying_T-Bar_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Middle_Back_Stretch",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Mixed_Grip_Chin",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Muscle_Up",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "One-Arm_Dumbbell_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "One-Arm_Kettlebell_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "One-Arm_Kettlebell_Swings",
+      "warning": "empty_instructions"
+    },
+    {
+      "externalId": "One-Arm_Long_Bar_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "One_Arm_Chin-Up",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "One_Arm_Lat_Pulldown",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Pin_Presses",
+      "warning": "duplicate_secondary_after_normalization"
+    },
+    {
+      "externalId": "Pullups",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Push_Press",
+      "warning": "empty_instructions"
+    },
+    {
+      "externalId": "Reverse_Band_Bench_Press",
+      "warning": "duplicate_secondary_after_normalization"
+    },
+    {
+      "externalId": "Reverse_Grip_Bent-Over_Rows",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Rocky_Pull-Ups_Pulldowns",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Rope_Climb",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Scapular_Pull-Up",
+      "warning": "duplicate_secondary_after_normalization"
+    },
+    {
+      "externalId": "Seated_Cable_Rows",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Seated_One-arm_Cable_Pulley_Rows",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Shotgun_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Side_Bridge",
+      "warning": "empty_instructions"
+    },
+    {
+      "externalId": "Side_Jackknife",
+      "warning": "empty_instructions"
+    },
+    {
+      "externalId": "Side_To_Side_Chins",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Sled_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Sledgehammer_Swings",
+      "warning": "duplicate_secondary_after_normalization"
+    },
+    {
+      "externalId": "Smith_Machine_Bent_Over_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Snatch_Deadlift",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Spinal_Stretch",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Split_Snatch",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Straight_Bar_Bench_Mid_Rows",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Suspended_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "T-Bar_Row_with_Handle",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Two-Arm_Kettlebell_Row",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Underhand_Cable_Pulldowns",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Upper_Back_Stretch",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "V-Bar_Pulldown",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "V-Bar_Pullup",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Weighted_Pull_Ups",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Wide-Grip_Lat_Pulldown",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Wide-Grip_Pulldown_Behind_The_Neck",
+      "warning": "primary_secondary_overlap"
+    },
+    {
+      "externalId": "Wide-Grip_Rear_Pull-Up",
+      "warning": "primary_secondary_overlap"
+    }
+  ],
+  "errors": [
+    {
+      "externalId": "Adductor",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Adductor",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Adductor_Groin",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Alternate_Leg_Diagonal_Bound",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Alternate_Leg_Diagonal_Bound",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Atlas_Stones",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Backward_Medicine_Ball_Throw",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Ball_Leg_Curl",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Band_Hip_Adductions",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Bodyweight_Flyes",
+      "error": "unmapped_equipment:e-z curl bar"
+    },
+    {
+      "externalId": "Box_Jump_Multiple_Response",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Box_Jump_Multiple_Response",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Box_Skip",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Box_Skip",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Box_Squat",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Box_Squat_with_Bands",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Box_Squat_with_Bands",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Box_Squat_with_Chains",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Box_Squat_with_Chains",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Brachialis-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Calves-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Carioca_Quick_Step",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Carioca_Quick_Step",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Catch_and_Overhead_Throw",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Chair_Leg_Extended_Stretch",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Chest_Push_from_3_point_stance",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Chest_Push_multiple_response",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Chest_Push_single_response",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Chest_Push_with_Run_Release",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Chest_Stretch_on_Stability_Ball",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Chin_To_Chest_Stretch",
+      "error": "unmapped_primary:neck"
+    },
+    {
+      "externalId": "Close-Grip_EZ-Bar_Curl_with_Band",
+      "error": "unmapped_equipment:e-z curl bar"
+    },
+    {
+      "externalId": "Close-Grip_EZ-Bar_Press",
+      "error": "unmapped_equipment:e-z curl bar"
+    },
+    {
+      "externalId": "Crossover_Reverse_Lunge",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Dancers_Stretch",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Depth_Jump_Leap",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Depth_Jump_Leap",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Double_Leg_Butt_Kick",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Double_Leg_Butt_Kick",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Downward_Facing_Balance",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "EZ-Bar_Curl",
+      "error": "unmapped_equipment:e-z curl bar"
+    },
+    {
+      "externalId": "EZ-Bar_Skullcrusher",
+      "error": "unmapped_equipment:e-z curl bar"
+    },
+    {
+      "externalId": "Exercise_Ball_Crunch",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Exercise_Ball_Pull-In",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Fast_Skipping",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Fast_Skipping",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Front_Box_Jump",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Front_Box_Jump",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Front_Cone_Hops_or_hurdle_hops",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Front_Cone_Hops_or_hurdle_hops",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Groin_and_Back_Stretch",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Groiners",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Hamstring-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Hip_Circles_prone",
+      "error": "unmapped_primary:abductors"
+    },
+    {
+      "externalId": "Hip_Circles_prone",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Hug_A_Ball",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Hurdle_Hops",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Hurdle_Hops",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "IT_Band_and_Glute_Stretch",
+      "error": "unmapped_primary:abductors"
+    },
+    {
+      "externalId": "Iliotibial_Tract-SMR",
+      "error": "unmapped_primary:abductors"
+    },
+    {
+      "externalId": "Iliotibial_Tract-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Isometric_Neck_Exercise_-_Front_And_Back",
+      "error": "unmapped_primary:neck"
+    },
+    {
+      "externalId": "Isometric_Neck_Exercise_-_Sides",
+      "error": "unmapped_primary:neck"
+    },
+    {
+      "externalId": "Kettlebell_Sumo_High_Pull",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Knee_Across_The_Body",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Knee_Tuck_Jump",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Knee_Tuck_Jump",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Lateral_Bound",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Lateral_Bound",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Lateral_Box_Jump",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Lateral_Box_Jump",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Lateral_Cone_Hops",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Lateral_Cone_Hops",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Latissimus_Dorsi-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Lower_Back-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Lying_Bent_Leg_Groin",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Lying_Close-Grip_Barbell_Triceps_Press_To_Chin",
+      "error": "unmapped_equipment:e-z curl bar"
+    },
+    {
+      "externalId": "Lying_Crossover",
+      "error": "unmapped_primary:abductors"
+    },
+    {
+      "externalId": "Lying_Face_Down_Plate_Neck_Resistance",
+      "error": "unmapped_primary:neck"
+    },
+    {
+      "externalId": "Lying_Face_Up_Plate_Neck_Resistance",
+      "error": "unmapped_primary:neck"
+    },
+    {
+      "externalId": "Lying_Glute",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Lying_Triceps_Press",
+      "error": "unmapped_equipment:e-z curl bar"
+    },
+    {
+      "externalId": "Medicine_Ball_Chest_Pass",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Medicine_Ball_Full_Twist",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Medicine_Ball_Scoop_Throw",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Monster_Walk",
+      "error": "unmapped_primary:abductors"
+    },
+    {
+      "externalId": "Neck-SMR",
+      "error": "unmapped_primary:neck"
+    },
+    {
+      "externalId": "One-Arm_Medicine_Ball_Slam",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Overhead_Slam",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Peroneals-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Physioball_Hip_Bridge",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Piriformis-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Power_Stairs",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Push-Ups_With_Feet_On_An_Exercise_Ball",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Pyramid",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Quadriceps-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Return_Push_from_Stance",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Reverse_Band_Box_Squat",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Reverse_Band_Box_Squat",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Reverse_Band_Deadlift",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Reverse_Band_Deadlift",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Reverse_Band_Power_Squat",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Reverse_Band_Sumo_Deadlift",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Reverse_Band_Sumo_Deadlift",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Reverse_Barbell_Preacher_Curls",
+      "error": "unmapped_equipment:e-z curl bar"
+    },
+    {
+      "externalId": "Rhomboids-SMR",
+      "error": "unmapped_equipment:foam roll"
+    },
+    {
+      "externalId": "Seated_Glute",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Seated_Head_Harness_Neck_Resistance",
+      "error": "unmapped_primary:neck"
+    },
+    {
+      "externalId": "Side_Hop-Sprint",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Side_Hop-Sprint",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Side_Leg_Raises",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Side_Lying_Groin_Stretch",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Side_Neck_Stretch",
+      "error": "unmapped_primary:neck"
+    },
+    {
+      "externalId": "Side_to_Side_Box_Shuffle",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Side_to_Side_Box_Shuffle",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Single-Leg_Hop_Progression",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Single-Leg_Hop_Progression",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Single-Leg_Lateral_Hop",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Single-Leg_Lateral_Hop",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Single-Leg_Stride_Jump",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Single-Leg_Stride_Jump",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Sit_Squats",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Skating",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Skating",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Spider_Curl",
+      "error": "unmapped_equipment:e-z curl bar"
+    },
+    {
+      "externalId": "Spinal_Stretch",
+      "error": "unmapped_secondary:neck"
+    },
+    {
+      "externalId": "Squat_with_Bands",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Squat_with_Chains",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Squat_with_Plate_Movers",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Squat_with_Plate_Movers",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Standing_Hip_Circles",
+      "error": "unmapped_primary:abductors"
+    },
+    {
+      "externalId": "Standing_Hip_Circles",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Standing_Two-Arm_Overhead_Throw",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Stride_Jump_Crossover",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Stride_Jump_Crossover",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Sumo_Deadlift",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Sumo_Deadlift_with_Bands",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Sumo_Deadlift_with_Chains",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Sumo_Deadlift_with_Chains",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Supine_Chest_Throw",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Supine_One-Arm_Overhead_Throw",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Supine_Two-Arm_Overhead_Throw",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Suspended_Split_Squat",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Suspended_Split_Squat",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "The_Straddle",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Thigh_Abductor",
+      "error": "unmapped_primary:abductors"
+    },
+    {
+      "externalId": "Thigh_Adductor",
+      "error": "unmapped_primary:adductors"
+    },
+    {
+      "externalId": "Torso_Rotation",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Weighted_Ball_Hyperextension",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Weighted_Ball_Side_Bend",
+      "error": "unmapped_equipment:exercise ball"
+    },
+    {
+      "externalId": "Weighted_Crunches",
+      "error": "unmapped_equipment:medicine ball"
+    },
+    {
+      "externalId": "Wide_Stance_Stiff_Legs",
+      "error": "unmapped_secondary:adductors"
+    },
+    {
+      "externalId": "Windmills",
+      "error": "unmapped_primary:abductors"
+    },
+    {
+      "externalId": "Yoke_Walk",
+      "error": "unmapped_secondary:abductors"
+    },
+    {
+      "externalId": "Yoke_Walk",
+      "error": "unmapped_secondary:adductors"
+    }
+  ]
+}

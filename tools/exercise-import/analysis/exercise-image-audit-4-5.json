@@ -1,0 +1,3593 @@
+{
+  "stage": "4.5",
+  "selectedCount": 102,
+  "imageClassification": {
+    "GOOD_CANDIDATE": 102
+  },
+  "imageCountDistribution": {
+    "2": 102
+  },
+  "twoImages": 102,
+  "oneImage": 0,
+  "zeroImages": 0,
+  "goodCandidate": 102,
+  "limited": 0,
+  "noImage": 0,
+  "totalAssetBytesJpg": 12868527,
+  "estimatedWebpBytes": 8430712,
+  "estimatedWebpReductionPercent": 34.5,
+  "assetsRoot": "app/src/main/assets/exercises",
+  "licenseNote": "Free Exercise DB dataset uses Unlicense; image provenance/licensing has been questioned in community discussions. Treat bundled images as development/prototype assets until legal review before commercial release.",
+  "exercises": [
+    {
+      "externalId": "3_4_Sit-Up",
+      "originalName": "3/4 Sit-Up",
+      "translatedName": "Abdominal",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "3_4_Sit-Up/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/3_4_Sit-Up/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 38047,
+          "width": 750,
+          "height": 500,
+          "sha256": "26e9975d65f43036",
+          "webpEstimateBytes": 26474
+        },
+        {
+          "sourcePath": "3_4_Sit-Up/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/3_4_Sit-Up/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 39230,
+          "width": 750,
+          "height": 500,
+          "sha256": "ca79885d0ca86a84",
+          "webpEstimateBytes": 27444
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/3_4_Sit-Up/0.jpg",
+        "app/src/main/assets/exercises/3_4_Sit-Up/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Ab_Roller",
+      "originalName": "Ab Roller",
+      "translatedName": "Rolo Abdominal",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Outro",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Ab_Roller/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Ab_Roller/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 58646,
+          "width": 800,
+          "height": 533,
+          "sha256": "ee135be474621be2",
+          "webpEstimateBytes": 38644
+        },
+        {
+          "sourcePath": "Ab_Roller/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Ab_Roller/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 61976,
+          "width": 800,
+          "height": 533,
+          "sha256": "f310ffb7672316ef",
+          "webpEstimateBytes": 41666
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Ab_Roller/0.jpg",
+        "app/src/main/assets/exercises/Ab_Roller/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Alternate_Hammer_Curl",
+      "originalName": "Alternate Hammer Curl",
+      "translatedName": "Rosca Martelo Alternado",
+      "muscleGroup": "Bíceps",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Alternate_Hammer_Curl/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternate_Hammer_Curl/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 58965,
+          "width": 850,
+          "height": 567,
+          "sha256": "ba832f1ce6e85506",
+          "webpEstimateBytes": 36632
+        },
+        {
+          "sourcePath": "Alternate_Hammer_Curl/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternate_Hammer_Curl/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 58120,
+          "width": 850,
+          "height": 567,
+          "sha256": "9aee7afaf1ef6014",
+          "webpEstimateBytes": 35850
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Alternate_Hammer_Curl/0.jpg",
+        "app/src/main/assets/exercises/Alternate_Hammer_Curl/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Alternate_Incline_Dumbbell_Curl",
+      "originalName": "Alternate Incline Dumbbell Curl",
+      "translatedName": "Rosca Alternado Inclinado com Halteres",
+      "muscleGroup": "Bíceps",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Alternate_Incline_Dumbbell_Curl/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternate_Incline_Dumbbell_Curl/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 55564,
+          "width": 850,
+          "height": 567,
+          "sha256": "1a0e534d6408c13c",
+          "webpEstimateBytes": 33770
+        },
+        {
+          "sourcePath": "Alternate_Incline_Dumbbell_Curl/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternate_Incline_Dumbbell_Curl/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 56425,
+          "width": 850,
+          "height": 567,
+          "sha256": "a57042c3ed7eaaaa",
+          "webpEstimateBytes": 36184
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Alternate_Incline_Dumbbell_Curl/0.jpg",
+        "app/src/main/assets/exercises/Alternate_Incline_Dumbbell_Curl/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Alternating_Cable_Shoulder_Press",
+      "originalName": "Alternating Cable Shoulder Press",
+      "translatedName": "Desenvolvimento Alternado na Polia",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Alternating_Cable_Shoulder_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Cable_Shoulder_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 44800,
+          "width": 500,
+          "height": 750,
+          "sha256": "a94a9e2775c6e1f0",
+          "webpEstimateBytes": 28796
+        },
+        {
+          "sourcePath": "Alternating_Cable_Shoulder_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Cable_Shoulder_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 45486,
+          "width": 500,
+          "height": 750,
+          "sha256": "f7076a6de1d64678",
+          "webpEstimateBytes": 29612
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Alternating_Cable_Shoulder_Press/0.jpg",
+        "app/src/main/assets/exercises/Alternating_Cable_Shoulder_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Alternating_Deltoid_Raise",
+      "originalName": "Alternating Deltoid Raise",
+      "translatedName": "Elevação Alternado do Deltóide",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Alternating_Deltoid_Raise/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Deltoid_Raise/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 61843,
+          "width": 850,
+          "height": 567,
+          "sha256": "a6d0f59993430fb3",
+          "webpEstimateBytes": 41518
+        },
+        {
+          "sourcePath": "Alternating_Deltoid_Raise/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Deltoid_Raise/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 62681,
+          "width": 850,
+          "height": 567,
+          "sha256": "7f319b6c2ad0ab10",
+          "webpEstimateBytes": 42200
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Alternating_Deltoid_Raise/0.jpg",
+        "app/src/main/assets/exercises/Alternating_Deltoid_Raise/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Alternating_Floor_Press",
+      "originalName": "Alternating Floor Press",
+      "translatedName": "Supino no Chão Alternado",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Kettlebell",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Alternating_Floor_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Floor_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 36188,
+          "width": 850,
+          "height": 569,
+          "sha256": "eab274fa6d8b6db1",
+          "webpEstimateBytes": 26378
+        },
+        {
+          "sourcePath": "Alternating_Floor_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Floor_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 35685,
+          "width": 850,
+          "height": 569,
+          "sha256": "82534ca9ec9efc54",
+          "webpEstimateBytes": 25914
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Alternating_Floor_Press/0.jpg",
+        "app/src/main/assets/exercises/Alternating_Floor_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Alternating_Hang_Clean",
+      "originalName": "Alternating Hang Clean",
+      "translatedName": "Hang Clean Alternado",
+      "muscleGroup": "Posteriores",
+      "equipmentType": "Kettlebell",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Alternating_Hang_Clean/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Hang_Clean/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 35962,
+          "width": 850,
+          "height": 569,
+          "sha256": "a6b8fd0f296e54d5",
+          "webpEstimateBytes": 25996
+        },
+        {
+          "sourcePath": "Alternating_Hang_Clean/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Hang_Clean/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 35005,
+          "width": 850,
+          "height": 569,
+          "sha256": "e848401c59114f3d",
+          "webpEstimateBytes": 25374
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Alternating_Hang_Clean/0.jpg",
+        "app/src/main/assets/exercises/Alternating_Hang_Clean/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Alternating_Kettlebell_Row",
+      "originalName": "Alternating Kettlebell Row",
+      "translatedName": "Remada Alternado com Kettlebell",
+      "muscleGroup": "Costas",
+      "equipmentType": "Kettlebell",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Alternating_Kettlebell_Row/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Kettlebell_Row/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 34659,
+          "width": 850,
+          "height": 569,
+          "sha256": "50c11172c80de0db",
+          "webpEstimateBytes": 24220
+        },
+        {
+          "sourcePath": "Alternating_Kettlebell_Row/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Kettlebell_Row/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 35050,
+          "width": 850,
+          "height": 569,
+          "sha256": "4eafb869ecd2194c",
+          "webpEstimateBytes": 24544
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Alternating_Kettlebell_Row/0.jpg",
+        "app/src/main/assets/exercises/Alternating_Kettlebell_Row/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Alternating_Renegade_Row",
+      "originalName": "Alternating Renegade Row",
+      "translatedName": "Remada Renegade Alternada",
+      "muscleGroup": "Costas",
+      "equipmentType": "Kettlebell",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Alternating_Renegade_Row/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Renegade_Row/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 33835,
+          "width": 850,
+          "height": 569,
+          "sha256": "a85127300a8dcb1d",
+          "webpEstimateBytes": 23464
+        },
+        {
+          "sourcePath": "Alternating_Renegade_Row/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Alternating_Renegade_Row/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 32913,
+          "width": 850,
+          "height": 569,
+          "sha256": "3c18e0bd11d4ac3c",
+          "webpEstimateBytes": 22380
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Alternating_Renegade_Row/0.jpg",
+        "app/src/main/assets/exercises/Alternating_Renegade_Row/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Ball_Leg_Curl",
+      "originalName": "Ball Leg Curl",
+      "translatedName": "Flexão de Pernas com Bola",
+      "muscleGroup": "Posteriores",
+      "equipmentType": null,
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Ball_Leg_Curl/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Ball_Leg_Curl/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 95703,
+          "width": 850,
+          "height": 567,
+          "sha256": "bce5fadf2f8ec76d",
+          "webpEstimateBytes": 82374
+        },
+        {
+          "sourcePath": "Ball_Leg_Curl/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Ball_Leg_Curl/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 95811,
+          "width": 850,
+          "height": 567,
+          "sha256": "95fba1c19a885185",
+          "webpEstimateBytes": 84638
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Ball_Leg_Curl/0.jpg",
+        "app/src/main/assets/exercises/Ball_Leg_Curl/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Band_Good_Morning",
+      "originalName": "Band Good Morning",
+      "translatedName": "Good Morning com Faixa Elástica",
+      "muscleGroup": "Posteriores",
+      "equipmentType": "Elástico",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Band_Good_Morning/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Band_Good_Morning/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 37616,
+          "width": 850,
+          "height": 567,
+          "sha256": "e84e33b0e6f57adf",
+          "webpEstimateBytes": 26300
+        },
+        {
+          "sourcePath": "Band_Good_Morning/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Band_Good_Morning/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 33763,
+          "width": 850,
+          "height": 567,
+          "sha256": "014c059d4aa6e45b",
+          "webpEstimateBytes": 22480
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Band_Good_Morning/0.jpg",
+        "app/src/main/assets/exercises/Band_Good_Morning/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Band_Skull_Crusher",
+      "originalName": "Band Skull Crusher",
+      "translatedName": "Skull Crusher com Faixa Elástica",
+      "muscleGroup": "Tríceps",
+      "equipmentType": "Elástico",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Band_Skull_Crusher/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Band_Skull_Crusher/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 82834,
+          "width": 850,
+          "height": 567,
+          "sha256": "96094529fe698463",
+          "webpEstimateBytes": 57220
+        },
+        {
+          "sourcePath": "Band_Skull_Crusher/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Band_Skull_Crusher/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 83214,
+          "width": 850,
+          "height": 567,
+          "sha256": "0981454f029833fd",
+          "webpEstimateBytes": 57050
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Band_Skull_Crusher/0.jpg",
+        "app/src/main/assets/exercises/Band_Skull_Crusher/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Bench_Press_-_Medium_Grip",
+      "originalName": "Barbell Bench Press - Medium Grip",
+      "translatedName": "Supino com Barra Pegada Média",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Bench_Press_-_Medium_Grip/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 72816,
+          "width": 850,
+          "height": 567,
+          "sha256": "44ba81b3ea124f62",
+          "webpEstimateBytes": 47662
+        },
+        {
+          "sourcePath": "Barbell_Bench_Press_-_Medium_Grip/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Bench_Press_-_Medium_Grip/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 72202,
+          "width": 850,
+          "height": 567,
+          "sha256": "5056475ae5def865",
+          "webpEstimateBytes": 47336
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Bench_Press_-_Medium_Grip/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Curl",
+      "originalName": "Barbell Curl",
+      "translatedName": "Rosca com Barra",
+      "muscleGroup": "Bíceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Curl/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Curl/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 60608,
+          "width": 850,
+          "height": 567,
+          "sha256": "eb409ec1cced4d85",
+          "webpEstimateBytes": 32058
+        },
+        {
+          "sourcePath": "Barbell_Curl/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Curl/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 62920,
+          "width": 850,
+          "height": 567,
+          "sha256": "27474187c6868052",
+          "webpEstimateBytes": 33690
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Curl/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Curl/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Curls_Lying_Against_An_Incline",
+      "originalName": "Barbell Curls Lying Against An Incline",
+      "translatedName": "Rosca Inclinado Deitado com Barra",
+      "muscleGroup": "Bíceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Curls_Lying_Against_An_Incline/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Curls_Lying_Against_An_Incline/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 57059,
+          "width": 850,
+          "height": 567,
+          "sha256": "1a4ad26343c8cacc",
+          "webpEstimateBytes": 34192
+        },
+        {
+          "sourcePath": "Barbell_Curls_Lying_Against_An_Incline/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Curls_Lying_Against_An_Incline/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 57457,
+          "width": 850,
+          "height": 567,
+          "sha256": "66678bfc192ed2ae",
+          "webpEstimateBytes": 34538
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Curls_Lying_Against_An_Incline/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Curls_Lying_Against_An_Incline/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Deadlift",
+      "originalName": "Barbell Deadlift",
+      "translatedName": "Levantamento Terra com Barra",
+      "muscleGroup": "Lombar",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Deadlift/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Deadlift/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 69854,
+          "width": 850,
+          "height": 567,
+          "sha256": "f032a7e4566eb3e7",
+          "webpEstimateBytes": 45552
+        },
+        {
+          "sourcePath": "Barbell_Deadlift/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Deadlift/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 67563,
+          "width": 850,
+          "height": 567,
+          "sha256": "cf206d0738830af8",
+          "webpEstimateBytes": 42514
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Deadlift/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Deadlift/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Full_Squat",
+      "originalName": "Barbell Full Squat",
+      "translatedName": "Agachamento Completo com Barra",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Full_Squat/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Full_Squat/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 71421,
+          "width": 850,
+          "height": 567,
+          "sha256": "64f176d77b1edb44",
+          "webpEstimateBytes": 46472
+        },
+        {
+          "sourcePath": "Barbell_Full_Squat/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Full_Squat/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 70167,
+          "width": 850,
+          "height": 567,
+          "sha256": "be1b63ed2cc383c0",
+          "webpEstimateBytes": 46184
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Full_Squat/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Full_Squat/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Glute_Bridge",
+      "originalName": "Barbell Glute Bridge",
+      "translatedName": "Ponte de Glúteos com Barra",
+      "muscleGroup": "Glúteos",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Glute_Bridge/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Glute_Bridge/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 50945,
+          "width": 850,
+          "height": 567,
+          "sha256": "d1df1bd592523e68",
+          "webpEstimateBytes": 30496
+        },
+        {
+          "sourcePath": "Barbell_Glute_Bridge/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Glute_Bridge/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 48064,
+          "width": 850,
+          "height": 567,
+          "sha256": "c6028b123f187e35",
+          "webpEstimateBytes": 28506
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Glute_Bridge/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Glute_Bridge/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Guillotine_Bench_Press",
+      "originalName": "Barbell Guillotine Bench Press",
+      "translatedName": "Supino Guilhotina com Barra",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Guillotine_Bench_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Guillotine_Bench_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 73798,
+          "width": 850,
+          "height": 567,
+          "sha256": "62cdf1bfa6fa889a",
+          "webpEstimateBytes": 52468
+        },
+        {
+          "sourcePath": "Barbell_Guillotine_Bench_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Guillotine_Bench_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 75145,
+          "width": 850,
+          "height": 567,
+          "sha256": "d4b79be17c2905c7",
+          "webpEstimateBytes": 53454
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Guillotine_Bench_Press/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Guillotine_Bench_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Hack_Squat",
+      "originalName": "Barbell Hack Squat",
+      "translatedName": "Agachamento Hack com Barra",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Hack_Squat/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Hack_Squat/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 71900,
+          "width": 850,
+          "height": 567,
+          "sha256": "5f88db8ea171cc09",
+          "webpEstimateBytes": 46054
+        },
+        {
+          "sourcePath": "Barbell_Hack_Squat/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Hack_Squat/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 69805,
+          "width": 850,
+          "height": 567,
+          "sha256": "6160d5fae8d00a17",
+          "webpEstimateBytes": 44460
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Hack_Squat/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Hack_Squat/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Hip_Thrust",
+      "originalName": "Barbell Hip Thrust",
+      "translatedName": "Elevação Pélvica com Barra",
+      "muscleGroup": "Glúteos",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Hip_Thrust/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Hip_Thrust/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 53764,
+          "width": 850,
+          "height": 567,
+          "sha256": "b2c82d4647df0621",
+          "webpEstimateBytes": 31676
+        },
+        {
+          "sourcePath": "Barbell_Hip_Thrust/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Hip_Thrust/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 52252,
+          "width": 850,
+          "height": 567,
+          "sha256": "de1a6390ff4b2720",
+          "webpEstimateBytes": 30168
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Hip_Thrust/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Hip_Thrust/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Incline_Bench_Press_-_Medium_Grip",
+      "originalName": "Barbell Incline Bench Press - Medium Grip",
+      "translatedName": "Supino Pegada Média Inclinado com Barra",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Incline_Bench_Press_-_Medium_Grip/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Incline_Bench_Press_-_Medium_Grip/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 72311,
+          "width": 850,
+          "height": 567,
+          "sha256": "4a306bb94d93afc0",
+          "webpEstimateBytes": 46940
+        },
+        {
+          "sourcePath": "Barbell_Incline_Bench_Press_-_Medium_Grip/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Incline_Bench_Press_-_Medium_Grip/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 71198,
+          "width": 850,
+          "height": 567,
+          "sha256": "f803aa1a085cbeea",
+          "webpEstimateBytes": 45474
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Incline_Bench_Press_-_Medium_Grip/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Incline_Bench_Press_-_Medium_Grip/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Lunge",
+      "originalName": "Barbell Lunge",
+      "translatedName": "Afundo com Barra",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Lunge/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Lunge/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 65140,
+          "width": 850,
+          "height": 567,
+          "sha256": "344bfb904d401611",
+          "webpEstimateBytes": 39440
+        },
+        {
+          "sourcePath": "Barbell_Lunge/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Lunge/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 70466,
+          "width": 850,
+          "height": 567,
+          "sha256": "220fbd64f2da7317",
+          "webpEstimateBytes": 46494
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Lunge/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Lunge/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Seated_Calf_Raise",
+      "originalName": "Barbell Seated Calf Raise",
+      "translatedName": "Elevação de Panturrilhas Sentado com Barra",
+      "muscleGroup": "Panturrilhas",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Seated_Calf_Raise/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Seated_Calf_Raise/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 66650,
+          "width": 850,
+          "height": 567,
+          "sha256": "d674d57f3a6bef02",
+          "webpEstimateBytes": 41892
+        },
+        {
+          "sourcePath": "Barbell_Seated_Calf_Raise/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Seated_Calf_Raise/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 67712,
+          "width": 850,
+          "height": 567,
+          "sha256": "d0a2841d94553d27",
+          "webpEstimateBytes": 44138
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Seated_Calf_Raise/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Seated_Calf_Raise/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Shoulder_Press",
+      "originalName": "Barbell Shoulder Press",
+      "translatedName": "Desenvolvimento com Barra",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Shoulder_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Shoulder_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 70631,
+          "width": 850,
+          "height": 567,
+          "sha256": "90dcc91593fe8d97",
+          "webpEstimateBytes": 44806
+        },
+        {
+          "sourcePath": "Barbell_Shoulder_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Shoulder_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 69354,
+          "width": 850,
+          "height": 567,
+          "sha256": "487e9bef066fb627",
+          "webpEstimateBytes": 43434
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Shoulder_Press/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Shoulder_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Shrug",
+      "originalName": "Barbell Shrug",
+      "translatedName": "Encolhimento com Barra",
+      "muscleGroup": "Trapézio",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Shrug/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Shrug/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 60819,
+          "width": 850,
+          "height": 567,
+          "sha256": "3ab3561fcb372ee7",
+          "webpEstimateBytes": 34238
+        },
+        {
+          "sourcePath": "Barbell_Shrug/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Shrug/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 62383,
+          "width": 850,
+          "height": 567,
+          "sha256": "0ada57b816f69943",
+          "webpEstimateBytes": 35494
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Shrug/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Shrug/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Shrug_Behind_The_Back",
+      "originalName": "Barbell Shrug Behind The Back",
+      "translatedName": "Encolhimento por Trás da Nuca com Barra",
+      "muscleGroup": "Trapézio",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Shrug_Behind_The_Back/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Shrug_Behind_The_Back/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 65860,
+          "width": 850,
+          "height": 567,
+          "sha256": "379f356f487ef904",
+          "webpEstimateBytes": 38472
+        },
+        {
+          "sourcePath": "Barbell_Shrug_Behind_The_Back/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Shrug_Behind_The_Back/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 66579,
+          "width": 850,
+          "height": 567,
+          "sha256": "2e54326b170d1969",
+          "webpEstimateBytes": 38994
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Shrug_Behind_The_Back/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Shrug_Behind_The_Back/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Side_Split_Squat",
+      "originalName": "Barbell Side Split Squat",
+      "translatedName": "Agachamento Lateral Afundado com Barra",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Side_Split_Squat/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Side_Split_Squat/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 68924,
+          "width": 850,
+          "height": 567,
+          "sha256": "5927a80ddb679917",
+          "webpEstimateBytes": 42166
+        },
+        {
+          "sourcePath": "Barbell_Side_Split_Squat/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Side_Split_Squat/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 66565,
+          "width": 850,
+          "height": 567,
+          "sha256": "94cad02113c56202",
+          "webpEstimateBytes": 39686
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Side_Split_Squat/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Side_Split_Squat/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Squat",
+      "originalName": "Barbell Squat",
+      "translatedName": "Agachamento com Barra",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Squat/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Squat/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 72823,
+          "width": 850,
+          "height": 567,
+          "sha256": "469a3c5a6eb35b88",
+          "webpEstimateBytes": 46030
+        },
+        {
+          "sourcePath": "Barbell_Squat/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Squat/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 71334,
+          "width": 850,
+          "height": 567,
+          "sha256": "8663a34f2d0a0a33",
+          "webpEstimateBytes": 44210
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Squat/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Squat/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Squat_To_A_Bench",
+      "originalName": "Barbell Squat To A Bench",
+      "translatedName": "Agachamento no Banco com Barra",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Squat_To_A_Bench/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Squat_To_A_Bench/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 72342,
+          "width": 850,
+          "height": 567,
+          "sha256": "9b6d388687cf5d90",
+          "webpEstimateBytes": 47230
+        },
+        {
+          "sourcePath": "Barbell_Squat_To_A_Bench/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Squat_To_A_Bench/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 71895,
+          "width": 850,
+          "height": 567,
+          "sha256": "25f74da0f2ca00b6",
+          "webpEstimateBytes": 47834
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Squat_To_A_Bench/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Squat_To_A_Bench/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Barbell_Step_Ups",
+      "originalName": "Barbell Step Ups",
+      "translatedName": "Subida no Banco com Barra",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Barbell_Step_Ups/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Step_Ups/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 70042,
+          "width": 850,
+          "height": 567,
+          "sha256": "aea3ae14b4b6d5c2",
+          "webpEstimateBytes": 45576
+        },
+        {
+          "sourcePath": "Barbell_Step_Ups/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Barbell_Step_Ups/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 61558,
+          "width": 850,
+          "height": 567,
+          "sha256": "630057ccd90a8e7b",
+          "webpEstimateBytes": 38332
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Barbell_Step_Ups/0.jpg",
+        "app/src/main/assets/exercises/Barbell_Step_Ups/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Bench_Dips",
+      "originalName": "Bench Dips",
+      "translatedName": "Paralelas no Banco",
+      "muscleGroup": "Tríceps",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Bench_Dips/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bench_Dips/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 58381,
+          "width": 850,
+          "height": 567,
+          "sha256": "82b17762ad761df9",
+          "webpEstimateBytes": 35390
+        },
+        {
+          "sourcePath": "Bench_Dips/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bench_Dips/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 58433,
+          "width": 850,
+          "height": 567,
+          "sha256": "d34b8ba2e2c45eca",
+          "webpEstimateBytes": 36230
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Bench_Dips/0.jpg",
+        "app/src/main/assets/exercises/Bench_Dips/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Bench_Press_-_Powerlifting",
+      "originalName": "Bench Press - Powerlifting",
+      "translatedName": "Supino (Powerlifting)",
+      "muscleGroup": "Tríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Bench_Press_-_Powerlifting/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bench_Press_-_Powerlifting/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 54684,
+          "width": 850,
+          "height": 567,
+          "sha256": "eb32767fa9ad6430",
+          "webpEstimateBytes": 32276
+        },
+        {
+          "sourcePath": "Bench_Press_-_Powerlifting/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bench_Press_-_Powerlifting/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 55891,
+          "width": 850,
+          "height": 567,
+          "sha256": "8f6d2de893de6645",
+          "webpEstimateBytes": 33538
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Bench_Press_-_Powerlifting/0.jpg",
+        "app/src/main/assets/exercises/Bench_Press_-_Powerlifting/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Bench_Press_-_With_Bands",
+      "originalName": "Bench Press - With Bands",
+      "translatedName": "Supino com Faixa Elástica",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Elástico",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Bench_Press_-_With_Bands/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bench_Press_-_With_Bands/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 72390,
+          "width": 850,
+          "height": 567,
+          "sha256": "c0bf8ecd36c6b905",
+          "webpEstimateBytes": 47212
+        },
+        {
+          "sourcePath": "Bench_Press_-_With_Bands/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bench_Press_-_With_Bands/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 72007,
+          "width": 850,
+          "height": 567,
+          "sha256": "a69322ee5fd38025",
+          "webpEstimateBytes": 47134
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Bench_Press_-_With_Bands/0.jpg",
+        "app/src/main/assets/exercises/Bench_Press_-_With_Bands/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Bent-Arm_Barbell_Pullover",
+      "originalName": "Bent-Arm Barbell Pullover",
+      "translatedName": "Pullover com Barra (Braços Dobrados)",
+      "muscleGroup": "Costas",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Bent-Arm_Barbell_Pullover/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent-Arm_Barbell_Pullover/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 62520,
+          "width": 850,
+          "height": 567,
+          "sha256": "7e1d127718470a37",
+          "webpEstimateBytes": 38352
+        },
+        {
+          "sourcePath": "Bent-Arm_Barbell_Pullover/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent-Arm_Barbell_Pullover/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 64205,
+          "width": 850,
+          "height": 567,
+          "sha256": "dd9a3f780605595a",
+          "webpEstimateBytes": 40530
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Bent-Arm_Barbell_Pullover/0.jpg",
+        "app/src/main/assets/exercises/Bent-Arm_Barbell_Pullover/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Bent-Arm_Dumbbell_Pullover",
+      "originalName": "Bent-Arm Dumbbell Pullover",
+      "translatedName": "Pullover com Halteres (Braços Dobrados)",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Bent-Arm_Dumbbell_Pullover/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent-Arm_Dumbbell_Pullover/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 63149,
+          "width": 850,
+          "height": 567,
+          "sha256": "1b08d7edc8c5da85",
+          "webpEstimateBytes": 40984
+        },
+        {
+          "sourcePath": "Bent-Arm_Dumbbell_Pullover/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent-Arm_Dumbbell_Pullover/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 61708,
+          "width": 850,
+          "height": 567,
+          "sha256": "6154605ca5bf4472",
+          "webpEstimateBytes": 38938
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Bent-Arm_Dumbbell_Pullover/0.jpg",
+        "app/src/main/assets/exercises/Bent-Arm_Dumbbell_Pullover/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Bent_Over_Barbell_Row",
+      "originalName": "Bent Over Barbell Row",
+      "translatedName": "Remada Curvada com Barra",
+      "muscleGroup": "Costas",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Bent_Over_Barbell_Row/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent_Over_Barbell_Row/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 64589,
+          "width": 850,
+          "height": 567,
+          "sha256": "09abbeb2fca7006d",
+          "webpEstimateBytes": 37622
+        },
+        {
+          "sourcePath": "Bent_Over_Barbell_Row/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent_Over_Barbell_Row/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 66556,
+          "width": 850,
+          "height": 567,
+          "sha256": "3c323601573df29c",
+          "webpEstimateBytes": 39524
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Bent_Over_Barbell_Row/0.jpg",
+        "app/src/main/assets/exercises/Bent_Over_Barbell_Row/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench",
+      "originalName": "Bent Over Dumbbell Rear Delt Raise With Head On Bench",
+      "translatedName": "Elevação do Deltóide Posterior Curvado com Halteres (Cabeça no Banco)",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 57978,
+          "width": 850,
+          "height": 567,
+          "sha256": "96474831b0193198",
+          "webpEstimateBytes": 34544
+        },
+        {
+          "sourcePath": "Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 59408,
+          "width": 850,
+          "height": 567,
+          "sha256": "8bbea1e8187d0296",
+          "webpEstimateBytes": 35638
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench/0.jpg",
+        "app/src/main/assets/exercises/Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Bent_Over_One-Arm_Long_Bar_Row",
+      "originalName": "Bent Over One-Arm Long Bar Row",
+      "translatedName": "Remada Curvada Unilateral com Barra Longa",
+      "muscleGroup": "Costas",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Bent_Over_One-Arm_Long_Bar_Row/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent_Over_One-Arm_Long_Bar_Row/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 65406,
+          "width": 850,
+          "height": 567,
+          "sha256": "e1627c45899d270e",
+          "webpEstimateBytes": 38998
+        },
+        {
+          "sourcePath": "Bent_Over_One-Arm_Long_Bar_Row/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bent_Over_One-Arm_Long_Bar_Row/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 70380,
+          "width": 850,
+          "height": 567,
+          "sha256": "a8f091eae7457260",
+          "webpEstimateBytes": 44412
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Bent_Over_One-Arm_Long_Bar_Row/0.jpg",
+        "app/src/main/assets/exercises/Bent_Over_One-Arm_Long_Bar_Row/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Bottoms-Up_Clean_From_The_Hang_Position",
+      "originalName": "Bottoms-Up Clean From The Hang Position",
+      "translatedName": "Bottoms-Up Clean da Posição de Suspensão",
+      "muscleGroup": "Antebraço",
+      "equipmentType": "Kettlebell",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Bottoms-Up_Clean_From_The_Hang_Position/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bottoms-Up_Clean_From_The_Hang_Position/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 36154,
+          "width": 850,
+          "height": 569,
+          "sha256": "7fca02119b9c611b",
+          "webpEstimateBytes": 25122
+        },
+        {
+          "sourcePath": "Bottoms-Up_Clean_From_The_Hang_Position/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Bottoms-Up_Clean_From_The_Hang_Position/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 36169,
+          "width": 850,
+          "height": 569,
+          "sha256": "f8a5931b35e22dfd",
+          "webpEstimateBytes": 25900
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Bottoms-Up_Clean_From_The_Hang_Position/0.jpg",
+        "app/src/main/assets/exercises/Bottoms-Up_Clean_From_The_Hang_Position/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Butt_Lift_Bridge",
+      "originalName": "Butt Lift (Bridge)",
+      "translatedName": "Elevação de Quadril (Bridge)",
+      "muscleGroup": "Glúteos",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Butt_Lift_Bridge/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Butt_Lift_Bridge/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 57056,
+          "width": 850,
+          "height": 567,
+          "sha256": "f74f6813fc43cd5f",
+          "webpEstimateBytes": 37766
+        },
+        {
+          "sourcePath": "Butt_Lift_Bridge/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Butt_Lift_Bridge/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 58796,
+          "width": 850,
+          "height": 567,
+          "sha256": "3eacd0851b56e3e1",
+          "webpEstimateBytes": 39778
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Butt_Lift_Bridge/0.jpg",
+        "app/src/main/assets/exercises/Butt_Lift_Bridge/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Cable_Crossover",
+      "originalName": "Cable Crossover",
+      "translatedName": "Crossover na Polia",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Cable_Crossover/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Cable_Crossover/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 74524,
+          "width": 850,
+          "height": 567,
+          "sha256": "a0d37cf03da0a31a",
+          "webpEstimateBytes": 47292
+        },
+        {
+          "sourcePath": "Cable_Crossover/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Cable_Crossover/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 76451,
+          "width": 850,
+          "height": 567,
+          "sha256": "ebaf5aa26a4c7502",
+          "webpEstimateBytes": 48848
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Cable_Crossover/0.jpg",
+        "app/src/main/assets/exercises/Cable_Crossover/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Cable_Crunch",
+      "originalName": "Cable Crunch",
+      "translatedName": "Abdominal na Polia",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Cable_Crunch/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Cable_Crunch/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 67271,
+          "width": 850,
+          "height": 567,
+          "sha256": "196cc4cb510ecafe",
+          "webpEstimateBytes": 41954
+        },
+        {
+          "sourcePath": "Cable_Crunch/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Cable_Crunch/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 65445,
+          "width": 850,
+          "height": 567,
+          "sha256": "e65fc1effc632eb7",
+          "webpEstimateBytes": 40160
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Cable_Crunch/0.jpg",
+        "app/src/main/assets/exercises/Cable_Crunch/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Cable_Rope_Overhead_Triceps_Extension",
+      "originalName": "Cable Rope Overhead Triceps Extension",
+      "translatedName": "Extensão de Tríceps Acima da Cabeça na Polia com Corda",
+      "muscleGroup": "Tríceps",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Cable_Rope_Overhead_Triceps_Extension/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Cable_Rope_Overhead_Triceps_Extension/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 88076,
+          "width": 850,
+          "height": 567,
+          "sha256": "206683ce757bedf8",
+          "webpEstimateBytes": 60914
+        },
+        {
+          "sourcePath": "Cable_Rope_Overhead_Triceps_Extension/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Cable_Rope_Overhead_Triceps_Extension/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 87578,
+          "width": 850,
+          "height": 567,
+          "sha256": "7f2b439eff6d30be",
+          "webpEstimateBytes": 60192
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Cable_Rope_Overhead_Triceps_Extension/0.jpg",
+        "app/src/main/assets/exercises/Cable_Rope_Overhead_Triceps_Extension/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Calf_Press",
+      "originalName": "Calf Press",
+      "translatedName": "Press de Panturrilha",
+      "muscleGroup": "Panturrilhas",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Calf_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Calf_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 124744,
+          "width": 850,
+          "height": 1275,
+          "sha256": "e44be5c8a0eaa702",
+          "webpEstimateBytes": 87100
+        },
+        {
+          "sourcePath": "Calf_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Calf_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 126333,
+          "width": 850,
+          "height": 1275,
+          "sha256": "4e29394d20ace4cb",
+          "webpEstimateBytes": 87550
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Calf_Press/0.jpg",
+        "app/src/main/assets/exercises/Calf_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Chin-Up",
+      "originalName": "Chin-Up",
+      "translatedName": "Barra Fixa Supinada",
+      "muscleGroup": "Costas",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Chin-Up/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Chin-Up/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 45846,
+          "width": 850,
+          "height": 567,
+          "sha256": "efab20da5a0916ee",
+          "webpEstimateBytes": 22962
+        },
+        {
+          "sourcePath": "Chin-Up/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Chin-Up/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 45627,
+          "width": 850,
+          "height": 567,
+          "sha256": "b31bd59a44e6c7df",
+          "webpEstimateBytes": 23428
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Chin-Up/0.jpg",
+        "app/src/main/assets/exercises/Chin-Up/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Close-Grip_Barbell_Bench_Press",
+      "originalName": "Close-Grip Barbell Bench Press",
+      "translatedName": "Supino com Barra Pegada Fechada",
+      "muscleGroup": "Tríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Close-Grip_Barbell_Bench_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Close-Grip_Barbell_Bench_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 74240,
+          "width": 850,
+          "height": 567,
+          "sha256": "3a428440c0f95ee8",
+          "webpEstimateBytes": 52048
+        },
+        {
+          "sourcePath": "Close-Grip_Barbell_Bench_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Close-Grip_Barbell_Bench_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 76127,
+          "width": 850,
+          "height": 567,
+          "sha256": "108a66dc2dcb09d1",
+          "webpEstimateBytes": 55290
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Close-Grip_Barbell_Bench_Press/0.jpg",
+        "app/src/main/assets/exercises/Close-Grip_Barbell_Bench_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Cross-Body_Crunch",
+      "originalName": "Cross-Body Crunch",
+      "translatedName": "Abdominal Cruzado",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Cross-Body_Crunch/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Cross-Body_Crunch/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 61069,
+          "width": 850,
+          "height": 567,
+          "sha256": "e4461ca43d5c7bec",
+          "webpEstimateBytes": 42278
+        },
+        {
+          "sourcePath": "Cross-Body_Crunch/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Cross-Body_Crunch/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 62634,
+          "width": 850,
+          "height": 567,
+          "sha256": "f644b4bcb482aa40",
+          "webpEstimateBytes": 44174
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Cross-Body_Crunch/0.jpg",
+        "app/src/main/assets/exercises/Cross-Body_Crunch/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Crunches",
+      "originalName": "Crunches",
+      "translatedName": "Abdominal",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Crunches/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Crunches/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 69289,
+          "width": 850,
+          "height": 567,
+          "sha256": "8b424d42b3196b9b",
+          "webpEstimateBytes": 51556
+        },
+        {
+          "sourcePath": "Crunches/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Crunches/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 69225,
+          "width": 850,
+          "height": 567,
+          "sha256": "84df8957fcc20c05",
+          "webpEstimateBytes": 50554
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Crunches/0.jpg",
+        "app/src/main/assets/exercises/Crunches/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Deadlift_with_Bands",
+      "originalName": "Deadlift with Bands",
+      "translatedName": "Levantamento Terra com Faixa Elástica",
+      "muscleGroup": "Lombar",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Deadlift_with_Bands/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Deadlift_with_Bands/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 44320,
+          "width": 850,
+          "height": 567,
+          "sha256": "5c33472bd83e6bee",
+          "webpEstimateBytes": 32908
+        },
+        {
+          "sourcePath": "Deadlift_with_Bands/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Deadlift_with_Bands/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 44690,
+          "width": 850,
+          "height": 567,
+          "sha256": "3a34ec92feaffb43",
+          "webpEstimateBytes": 33420
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Deadlift_with_Bands/0.jpg",
+        "app/src/main/assets/exercises/Deadlift_with_Bands/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Decline_Barbell_Bench_Press",
+      "originalName": "Decline Barbell Bench Press",
+      "translatedName": "Supino com Barra Declinado",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Decline_Barbell_Bench_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Decline_Barbell_Bench_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 84500,
+          "width": 850,
+          "height": 567,
+          "sha256": "3ab81fce71c90d2f",
+          "webpEstimateBytes": 60014
+        },
+        {
+          "sourcePath": "Decline_Barbell_Bench_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Decline_Barbell_Bench_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 90450,
+          "width": 850,
+          "height": 567,
+          "sha256": "b6fcac67f252e3e3",
+          "webpEstimateBytes": 66038
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Decline_Barbell_Bench_Press/0.jpg",
+        "app/src/main/assets/exercises/Decline_Barbell_Bench_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Dips_-_Chest_Version",
+      "originalName": "Dips - Chest Version",
+      "translatedName": "Paralelas (Ênfase no Peito)",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Outro",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Dips_-_Chest_Version/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dips_-_Chest_Version/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 73206,
+          "width": 850,
+          "height": 567,
+          "sha256": "4140a8932a82e743",
+          "webpEstimateBytes": 49928
+        },
+        {
+          "sourcePath": "Dips_-_Chest_Version/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dips_-_Chest_Version/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 72525,
+          "width": 850,
+          "height": 567,
+          "sha256": "3d537e22cb97304c",
+          "webpEstimateBytes": 49836
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Dips_-_Chest_Version/0.jpg",
+        "app/src/main/assets/exercises/Dips_-_Chest_Version/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Dips_-_Triceps_Version",
+      "originalName": "Dips - Triceps Version",
+      "translatedName": "Paralelas (Ênfase no Tríceps)",
+      "muscleGroup": "Tríceps",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Dips_-_Triceps_Version/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dips_-_Triceps_Version/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 71969,
+          "width": 850,
+          "height": 567,
+          "sha256": "e724b6def4bc6299",
+          "webpEstimateBytes": 47910
+        },
+        {
+          "sourcePath": "Dips_-_Triceps_Version/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dips_-_Triceps_Version/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 73290,
+          "width": 850,
+          "height": 567,
+          "sha256": "5de1f351e7dff44c",
+          "webpEstimateBytes": 49556
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Dips_-_Triceps_Version/0.jpg",
+        "app/src/main/assets/exercises/Dips_-_Triceps_Version/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Donkey_Calf_Raises",
+      "originalName": "Donkey Calf Raises",
+      "translatedName": "Elevação de Panturrilhas (Donkey)",
+      "muscleGroup": "Panturrilhas",
+      "equipmentType": "Outro",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Donkey_Calf_Raises/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Donkey_Calf_Raises/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 87923,
+          "width": 850,
+          "height": 567,
+          "sha256": "171ceb7f01c95c89",
+          "webpEstimateBytes": 58912
+        },
+        {
+          "sourcePath": "Donkey_Calf_Raises/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Donkey_Calf_Raises/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 88967,
+          "width": 850,
+          "height": 567,
+          "sha256": "d47d7ab19e96f378",
+          "webpEstimateBytes": 60272
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Donkey_Calf_Raises/0.jpg",
+        "app/src/main/assets/exercises/Donkey_Calf_Raises/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Dumbbell_Bicep_Curl",
+      "originalName": "Dumbbell Bicep Curl",
+      "translatedName": "Rosca de Bíceps com Halteres",
+      "muscleGroup": "Bíceps",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Dumbbell_Bicep_Curl/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dumbbell_Bicep_Curl/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 57223,
+          "width": 850,
+          "height": 567,
+          "sha256": "fad8458c2f70c39e",
+          "webpEstimateBytes": 34054
+        },
+        {
+          "sourcePath": "Dumbbell_Bicep_Curl/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dumbbell_Bicep_Curl/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 58066,
+          "width": 850,
+          "height": 567,
+          "sha256": "ec2c3a539aa80ea9",
+          "webpEstimateBytes": 33620
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Dumbbell_Bicep_Curl/0.jpg",
+        "app/src/main/assets/exercises/Dumbbell_Bicep_Curl/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Dumbbell_Flyes",
+      "originalName": "Dumbbell Flyes",
+      "translatedName": "Crucifixo com Halteres",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Dumbbell_Flyes/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dumbbell_Flyes/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 63679,
+          "width": 850,
+          "height": 567,
+          "sha256": "215bef04ad13e162",
+          "webpEstimateBytes": 41112
+        },
+        {
+          "sourcePath": "Dumbbell_Flyes/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dumbbell_Flyes/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 63977,
+          "width": 850,
+          "height": 567,
+          "sha256": "009abc57d77c47eb",
+          "webpEstimateBytes": 41028
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Dumbbell_Flyes/0.jpg",
+        "app/src/main/assets/exercises/Dumbbell_Flyes/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Dumbbell_Lunges",
+      "originalName": "Dumbbell Lunges",
+      "translatedName": "Afundo com Halteres",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Dumbbell_Lunges/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dumbbell_Lunges/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 55460,
+          "width": 850,
+          "height": 567,
+          "sha256": "ab3d56b0b44e82d1",
+          "webpEstimateBytes": 33474
+        },
+        {
+          "sourcePath": "Dumbbell_Lunges/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dumbbell_Lunges/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 61678,
+          "width": 850,
+          "height": 567,
+          "sha256": "138a08303cb955b1",
+          "webpEstimateBytes": 39664
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Dumbbell_Lunges/0.jpg",
+        "app/src/main/assets/exercises/Dumbbell_Lunges/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Dumbbell_Shoulder_Press",
+      "originalName": "Dumbbell Shoulder Press",
+      "translatedName": "Desenvolvimento com Halteres",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Dumbbell_Shoulder_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dumbbell_Shoulder_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 62474,
+          "width": 850,
+          "height": 567,
+          "sha256": "e0a775bfa0b32b63",
+          "webpEstimateBytes": 41434
+        },
+        {
+          "sourcePath": "Dumbbell_Shoulder_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Dumbbell_Shoulder_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 63882,
+          "width": 850,
+          "height": 567,
+          "sha256": "940d5aad6b85960e",
+          "webpEstimateBytes": 42388
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Dumbbell_Shoulder_Press/0.jpg",
+        "app/src/main/assets/exercises/Dumbbell_Shoulder_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "EZ-Bar_Skullcrusher",
+      "originalName": "EZ-Bar Skullcrusher",
+      "translatedName": "Skull Crusher com Barra EZ",
+      "muscleGroup": "Tríceps",
+      "equipmentType": null,
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "EZ-Bar_Skullcrusher/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/EZ-Bar_Skullcrusher/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 38566,
+          "width": 750,
+          "height": 500,
+          "sha256": "5ea3eb7db1b5f1e2",
+          "webpEstimateBytes": 25814
+        },
+        {
+          "sourcePath": "EZ-Bar_Skullcrusher/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/EZ-Bar_Skullcrusher/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 37438,
+          "width": 750,
+          "height": 500,
+          "sha256": "af4a3c804320429b",
+          "webpEstimateBytes": 24378
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/EZ-Bar_Skullcrusher/0.jpg",
+        "app/src/main/assets/exercises/EZ-Bar_Skullcrusher/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Face_Pull",
+      "originalName": "Face Pull",
+      "translatedName": "Face Pull",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Face_Pull/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Face_Pull/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 40188,
+          "width": 850,
+          "height": 567,
+          "sha256": "a184e981e8cc261a",
+          "webpEstimateBytes": 26916
+        },
+        {
+          "sourcePath": "Face_Pull/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Face_Pull/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 46451,
+          "width": 850,
+          "height": 567,
+          "sha256": "1aeee744a027983d",
+          "webpEstimateBytes": 34218
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Face_Pull/0.jpg",
+        "app/src/main/assets/exercises/Face_Pull/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Farmers_Walk",
+      "originalName": "Farmer's Walk",
+      "translatedName": "Farmer's Walk",
+      "muscleGroup": "Antebraço",
+      "equipmentType": "Outro",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Farmers_Walk/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Farmers_Walk/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 54501,
+          "width": 850,
+          "height": 567,
+          "sha256": "e07a10c235963ea1",
+          "webpEstimateBytes": 45420
+        },
+        {
+          "sourcePath": "Farmers_Walk/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Farmers_Walk/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 51227,
+          "width": 850,
+          "height": 567,
+          "sha256": "5a55e8adf33bea01",
+          "webpEstimateBytes": 43268
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Farmers_Walk/0.jpg",
+        "app/src/main/assets/exercises/Farmers_Walk/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Flutter_Kicks",
+      "originalName": "Flutter Kicks",
+      "translatedName": "Flutter Kicks",
+      "muscleGroup": "Glúteos",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Flutter_Kicks/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Flutter_Kicks/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 57145,
+          "width": 850,
+          "height": 567,
+          "sha256": "790c29636b60eb23",
+          "webpEstimateBytes": 35180
+        },
+        {
+          "sourcePath": "Flutter_Kicks/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Flutter_Kicks/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 58673,
+          "width": 850,
+          "height": 567,
+          "sha256": "c4a12155e263f31d",
+          "webpEstimateBytes": 36308
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Flutter_Kicks/0.jpg",
+        "app/src/main/assets/exercises/Flutter_Kicks/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Front_Squat_Clean_Grip",
+      "originalName": "Front Squat (Clean Grip)",
+      "translatedName": "Clean Agachamento Frontal Pegada",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Front_Squat_Clean_Grip/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Front_Squat_Clean_Grip/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 36571,
+          "width": 850,
+          "height": 567,
+          "sha256": "995a2c4f6618a56e",
+          "webpEstimateBytes": 26226
+        },
+        {
+          "sourcePath": "Front_Squat_Clean_Grip/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Front_Squat_Clean_Grip/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 35308,
+          "width": 850,
+          "height": 567,
+          "sha256": "a9c7a229406192d0",
+          "webpEstimateBytes": 25280
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Front_Squat_Clean_Grip/0.jpg",
+        "app/src/main/assets/exercises/Front_Squat_Clean_Grip/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Glute_Kickback",
+      "originalName": "Glute Kickback",
+      "translatedName": "Coice de Glúteos",
+      "muscleGroup": "Glúteos",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Glute_Kickback/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Glute_Kickback/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 67875,
+          "width": 850,
+          "height": 567,
+          "sha256": "e0a72e4dbcc763ad",
+          "webpEstimateBytes": 44382
+        },
+        {
+          "sourcePath": "Glute_Kickback/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Glute_Kickback/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 68709,
+          "width": 850,
+          "height": 567,
+          "sha256": "daae648a3c6f51d1",
+          "webpEstimateBytes": 44822
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Glute_Kickback/0.jpg",
+        "app/src/main/assets/exercises/Glute_Kickback/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Goblet_Squat",
+      "originalName": "Goblet Squat",
+      "translatedName": "Agachamento Goblet",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Kettlebell",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Goblet_Squat/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Goblet_Squat/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 34299,
+          "width": 850,
+          "height": 569,
+          "sha256": "342ea87afb9fa03d",
+          "webpEstimateBytes": 24194
+        },
+        {
+          "sourcePath": "Goblet_Squat/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Goblet_Squat/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 34362,
+          "width": 850,
+          "height": 569,
+          "sha256": "49d5facb019c3be9",
+          "webpEstimateBytes": 24414
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Goblet_Squat/0.jpg",
+        "app/src/main/assets/exercises/Goblet_Squat/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Good_Morning",
+      "originalName": "Good Morning",
+      "translatedName": "Good Morning",
+      "muscleGroup": "Posteriores",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Good_Morning/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Good_Morning/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 45191,
+          "width": 850,
+          "height": 567,
+          "sha256": "e85711c454e0cc43",
+          "webpEstimateBytes": 32700
+        },
+        {
+          "sourcePath": "Good_Morning/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Good_Morning/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 45447,
+          "width": 850,
+          "height": 567,
+          "sha256": "d58742f191821aa4",
+          "webpEstimateBytes": 33786
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Good_Morning/0.jpg",
+        "app/src/main/assets/exercises/Good_Morning/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Hack_Squat",
+      "originalName": "Hack Squat",
+      "translatedName": "Agachamento Hack",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Hack_Squat/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Hack_Squat/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 114305,
+          "width": 760,
+          "height": 760,
+          "sha256": "f8721b7d75025f29",
+          "webpEstimateBytes": 59708
+        },
+        {
+          "sourcePath": "Hack_Squat/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Hack_Squat/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 106734,
+          "width": 760,
+          "height": 760,
+          "sha256": "ecd48b616f38fefe",
+          "webpEstimateBytes": 54336
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Hack_Squat/0.jpg",
+        "app/src/main/assets/exercises/Hack_Squat/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Hanging_Leg_Raise",
+      "originalName": "Hanging Leg Raise",
+      "translatedName": "Elevação de Pernas na Barra",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Hanging_Leg_Raise/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Hanging_Leg_Raise/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 51687,
+          "width": 850,
+          "height": 567,
+          "sha256": "c166cd61aec9cd4c",
+          "webpEstimateBytes": 29276
+        },
+        {
+          "sourcePath": "Hanging_Leg_Raise/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Hanging_Leg_Raise/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 56061,
+          "width": 850,
+          "height": 567,
+          "sha256": "c623bd4bb6848367",
+          "webpEstimateBytes": 32064
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Hanging_Leg_Raise/0.jpg",
+        "app/src/main/assets/exercises/Hanging_Leg_Raise/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Hip_Extension_with_Bands",
+      "originalName": "Hip Extension with Bands",
+      "translatedName": "Extensão de Quadril com Faixa Elástica",
+      "muscleGroup": "Glúteos",
+      "equipmentType": "Elástico",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Hip_Extension_with_Bands/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Hip_Extension_with_Bands/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 35502,
+          "width": 850,
+          "height": 567,
+          "sha256": "b198d99056439be1",
+          "webpEstimateBytes": 23182
+        },
+        {
+          "sourcePath": "Hip_Extension_with_Bands/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Hip_Extension_with_Bands/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 36771,
+          "width": 850,
+          "height": 567,
+          "sha256": "5b58e2152cc379d5",
+          "webpEstimateBytes": 23878
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Hip_Extension_with_Bands/0.jpg",
+        "app/src/main/assets/exercises/Hip_Extension_with_Bands/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Hyperextensions_Back_Extensions",
+      "originalName": "Hyperextensions (Back Extensions)",
+      "translatedName": "Hiperextensão Lombar",
+      "muscleGroup": "Lombar",
+      "equipmentType": "Outro",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Hyperextensions_Back_Extensions/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Hyperextensions_Back_Extensions/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 72031,
+          "width": 850,
+          "height": 567,
+          "sha256": "48f077fe32d2b839",
+          "webpEstimateBytes": 52634
+        },
+        {
+          "sourcePath": "Hyperextensions_Back_Extensions/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Hyperextensions_Back_Extensions/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 71234,
+          "width": 850,
+          "height": 567,
+          "sha256": "1e1d6c7131444657",
+          "webpEstimateBytes": 50522
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Hyperextensions_Back_Extensions/0.jpg",
+        "app/src/main/assets/exercises/Hyperextensions_Back_Extensions/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Incline_Dumbbell_Press",
+      "originalName": "Incline Dumbbell Press",
+      "translatedName": "Supino Inclinado com Halteres",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Incline_Dumbbell_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Incline_Dumbbell_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 61978,
+          "width": 850,
+          "height": 567,
+          "sha256": "5128af58efedb66e",
+          "webpEstimateBytes": 39744
+        },
+        {
+          "sourcePath": "Incline_Dumbbell_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Incline_Dumbbell_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 61629,
+          "width": 850,
+          "height": 567,
+          "sha256": "7e4cd389cd0c5379",
+          "webpEstimateBytes": 39632
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Incline_Dumbbell_Press/0.jpg",
+        "app/src/main/assets/exercises/Incline_Dumbbell_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Kettlebell_Thruster",
+      "originalName": "Kettlebell Thruster",
+      "translatedName": "Thruster com Kettlebell",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Kettlebell",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Kettlebell_Thruster/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Kettlebell_Thruster/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 35804,
+          "width": 850,
+          "height": 569,
+          "sha256": "b4b7fab07f3cae19",
+          "webpEstimateBytes": 25774
+        },
+        {
+          "sourcePath": "Kettlebell_Thruster/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Kettlebell_Thruster/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 37473,
+          "width": 850,
+          "height": 569,
+          "sha256": "92acb4917c7f6004",
+          "webpEstimateBytes": 27120
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Kettlebell_Thruster/0.jpg",
+        "app/src/main/assets/exercises/Kettlebell_Thruster/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Leg_Extensions",
+      "originalName": "Leg Extensions",
+      "translatedName": "Extensão de Pernas",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Leg_Extensions/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Leg_Extensions/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 81219,
+          "width": 850,
+          "height": 567,
+          "sha256": "54fd46441d63459e",
+          "webpEstimateBytes": 53322
+        },
+        {
+          "sourcePath": "Leg_Extensions/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Leg_Extensions/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 82758,
+          "width": 850,
+          "height": 567,
+          "sha256": "9e04d0e306d8fee6",
+          "webpEstimateBytes": 54976
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Leg_Extensions/0.jpg",
+        "app/src/main/assets/exercises/Leg_Extensions/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Leg_Press",
+      "originalName": "Leg Press",
+      "translatedName": "Leg Press",
+      "muscleGroup": "Quadríceps",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Leg_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Leg_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 84753,
+          "width": 850,
+          "height": 567,
+          "sha256": "55079d514ae8d4db",
+          "webpEstimateBytes": 60420
+        },
+        {
+          "sourcePath": "Leg_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Leg_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 83900,
+          "width": 850,
+          "height": 567,
+          "sha256": "f4e08d4ad4e6542f",
+          "webpEstimateBytes": 57776
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Leg_Press/0.jpg",
+        "app/src/main/assets/exercises/Leg_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Lying_Leg_Curls",
+      "originalName": "Lying Leg Curls",
+      "translatedName": "Flexão de Pernas Deitado",
+      "muscleGroup": "Posteriores",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Lying_Leg_Curls/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Lying_Leg_Curls/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 77402,
+          "width": 850,
+          "height": 567,
+          "sha256": "0875bf50a6615d4d",
+          "webpEstimateBytes": 53716
+        },
+        {
+          "sourcePath": "Lying_Leg_Curls/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Lying_Leg_Curls/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 87755,
+          "width": 850,
+          "height": 567,
+          "sha256": "4ccf6f4a26dc97dc",
+          "webpEstimateBytes": 64584
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Lying_Leg_Curls/0.jpg",
+        "app/src/main/assets/exercises/Lying_Leg_Curls/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Machine_Bench_Press",
+      "originalName": "Machine Bench Press",
+      "translatedName": "Supino na Máquina",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Machine_Bench_Press/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Machine_Bench_Press/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 73844,
+          "width": 850,
+          "height": 567,
+          "sha256": "d3d8399ff8da0886",
+          "webpEstimateBytes": 56210
+        },
+        {
+          "sourcePath": "Machine_Bench_Press/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Machine_Bench_Press/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 72789,
+          "width": 850,
+          "height": 567,
+          "sha256": "b916ff565039208b",
+          "webpEstimateBytes": 53334
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Machine_Bench_Press/0.jpg",
+        "app/src/main/assets/exercises/Machine_Bench_Press/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Machine_Preacher_Curls",
+      "originalName": "Machine Preacher Curls",
+      "translatedName": "Rosca Scott na Máquina",
+      "muscleGroup": "Bíceps",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Machine_Preacher_Curls/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Machine_Preacher_Curls/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 93638,
+          "width": 850,
+          "height": 567,
+          "sha256": "120054967ea0c1f0",
+          "webpEstimateBytes": 70770
+        },
+        {
+          "sourcePath": "Machine_Preacher_Curls/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Machine_Preacher_Curls/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 92812,
+          "width": 850,
+          "height": 567,
+          "sha256": "3292cf4856ecacab",
+          "webpEstimateBytes": 69592
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Machine_Preacher_Curls/0.jpg",
+        "app/src/main/assets/exercises/Machine_Preacher_Curls/1.jpg"
+      ]
+    },
+    {
+      "externalId": "One-Arm_Dumbbell_Row",
+      "originalName": "One-Arm Dumbbell Row",
+      "translatedName": "Remada Unilateral com Halteres",
+      "muscleGroup": "Costas",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "One-Arm_Dumbbell_Row/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/One-Arm_Dumbbell_Row/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 70752,
+          "width": 850,
+          "height": 567,
+          "sha256": "04b2f49e6ba0c2fc",
+          "webpEstimateBytes": 46998
+        },
+        {
+          "sourcePath": "One-Arm_Dumbbell_Row/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/One-Arm_Dumbbell_Row/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 71407,
+          "width": 850,
+          "height": 567,
+          "sha256": "83d5ceaa6d9ec673",
+          "webpEstimateBytes": 46966
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/One-Arm_Dumbbell_Row/0.jpg",
+        "app/src/main/assets/exercises/One-Arm_Dumbbell_Row/1.jpg"
+      ]
+    },
+    {
+      "externalId": "One-Legged_Cable_Kickback",
+      "originalName": "One-Legged Cable Kickback",
+      "translatedName": "Kickback Unilateral na Polia",
+      "muscleGroup": "Glúteos",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "One-Legged_Cable_Kickback/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/One-Legged_Cable_Kickback/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 74142,
+          "width": 850,
+          "height": 567,
+          "sha256": "a1f283eeba62ba67",
+          "webpEstimateBytes": 46208
+        },
+        {
+          "sourcePath": "One-Legged_Cable_Kickback/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/One-Legged_Cable_Kickback/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 75672,
+          "width": 850,
+          "height": 567,
+          "sha256": "0baa168e9e558cdb",
+          "webpEstimateBytes": 48860
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/One-Legged_Cable_Kickback/0.jpg",
+        "app/src/main/assets/exercises/One-Legged_Cable_Kickback/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Plank",
+      "originalName": "Plank",
+      "translatedName": "Prancha",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Plank/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Plank/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 43296,
+          "width": 850,
+          "height": 567,
+          "sha256": "7a6545152b4c918a",
+          "webpEstimateBytes": 25558
+        },
+        {
+          "sourcePath": "Plank/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Plank/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 43135,
+          "width": 850,
+          "height": 567,
+          "sha256": "7f6b690f7594dfab",
+          "webpEstimateBytes": 26906
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Plank/0.jpg",
+        "app/src/main/assets/exercises/Plank/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Power_Clean",
+      "originalName": "Power Clean",
+      "translatedName": "Power Clean",
+      "muscleGroup": "Posteriores",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Power_Clean/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Power_Clean/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 70183,
+          "width": 850,
+          "height": 567,
+          "sha256": "3b81dd260783a0ca",
+          "webpEstimateBytes": 43806
+        },
+        {
+          "sourcePath": "Power_Clean/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Power_Clean/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 70360,
+          "width": 850,
+          "height": 567,
+          "sha256": "5e9ea4e4d6c3d482",
+          "webpEstimateBytes": 44330
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Power_Clean/0.jpg",
+        "app/src/main/assets/exercises/Power_Clean/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Pull_Through",
+      "originalName": "Pull Through",
+      "translatedName": "Pull Through",
+      "muscleGroup": "Glúteos",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Pull_Through/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Pull_Through/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 39927,
+          "width": 850,
+          "height": 567,
+          "sha256": "9c0d877f1cfc455f",
+          "webpEstimateBytes": 27916
+        },
+        {
+          "sourcePath": "Pull_Through/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Pull_Through/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 33667,
+          "width": 850,
+          "height": 567,
+          "sha256": "c9c71951a1879295",
+          "webpEstimateBytes": 22340
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Pull_Through/0.jpg",
+        "app/src/main/assets/exercises/Pull_Through/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Pullups",
+      "originalName": "Pullups",
+      "translatedName": "Barra Fixa",
+      "muscleGroup": "Costas",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Pullups/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Pullups/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 42281,
+          "width": 850,
+          "height": 567,
+          "sha256": "e56c8c43a41cfe24",
+          "webpEstimateBytes": 22474
+        },
+        {
+          "sourcePath": "Pullups/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Pullups/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 40018,
+          "width": 850,
+          "height": 567,
+          "sha256": "40549a52b064e508",
+          "webpEstimateBytes": 21378
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Pullups/0.jpg",
+        "app/src/main/assets/exercises/Pullups/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Pushups",
+      "originalName": "Pushups",
+      "translatedName": "Flexões de Braços",
+      "muscleGroup": "Peitoral",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Pushups/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Pushups/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 66786,
+          "width": 850,
+          "height": 567,
+          "sha256": "8e6757ae0dc1d50a",
+          "webpEstimateBytes": 45950
+        },
+        {
+          "sourcePath": "Pushups/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Pushups/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 64283,
+          "width": 850,
+          "height": 567,
+          "sha256": "e835d50facea3258",
+          "webpEstimateBytes": 42924
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Pushups/0.jpg",
+        "app/src/main/assets/exercises/Pushups/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Reverse_Flyes",
+      "originalName": "Reverse Flyes",
+      "translatedName": "Crucifixo Reverso",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Reverse_Flyes/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Reverse_Flyes/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 56640,
+          "width": 850,
+          "height": 567,
+          "sha256": "5d6d690c24bfa66b",
+          "webpEstimateBytes": 34362
+        },
+        {
+          "sourcePath": "Reverse_Flyes/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Reverse_Flyes/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 58189,
+          "width": 850,
+          "height": 567,
+          "sha256": "298365210924b9c5",
+          "webpEstimateBytes": 37948
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Reverse_Flyes/0.jpg",
+        "app/src/main/assets/exercises/Reverse_Flyes/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Romanian_Deadlift",
+      "originalName": "Romanian Deadlift",
+      "translatedName": "Levantamento Terra Romeno",
+      "muscleGroup": "Posteriores",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Romanian_Deadlift/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Romanian_Deadlift/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 59859,
+          "width": 850,
+          "height": 567,
+          "sha256": "cd62a031d395afa1",
+          "webpEstimateBytes": 35768
+        },
+        {
+          "sourcePath": "Romanian_Deadlift/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Romanian_Deadlift/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 57367,
+          "width": 850,
+          "height": 567,
+          "sha256": "156406c703e8d4a1",
+          "webpEstimateBytes": 34028
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Romanian_Deadlift/0.jpg",
+        "app/src/main/assets/exercises/Romanian_Deadlift/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Russian_Twist",
+      "originalName": "Russian Twist",
+      "translatedName": "Rotação de Tronco (Russian Twist)",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Russian_Twist/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Russian_Twist/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 70925,
+          "width": 850,
+          "height": 567,
+          "sha256": "e82f47fe7f7f9ba5",
+          "webpEstimateBytes": 49694
+        },
+        {
+          "sourcePath": "Russian_Twist/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Russian_Twist/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 70973,
+          "width": 850,
+          "height": 567,
+          "sha256": "7942e01c08ff47f7",
+          "webpEstimateBytes": 49298
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Russian_Twist/0.jpg",
+        "app/src/main/assets/exercises/Russian_Twist/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Seated_Cable_Rows",
+      "originalName": "Seated Cable Rows",
+      "translatedName": "Remada Sentado na Polia",
+      "muscleGroup": "Costas",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Seated_Cable_Rows/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Seated_Cable_Rows/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 65319,
+          "width": 850,
+          "height": 567,
+          "sha256": "f5a4adf972f93a6c",
+          "webpEstimateBytes": 41586
+        },
+        {
+          "sourcePath": "Seated_Cable_Rows/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Seated_Cable_Rows/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 65659,
+          "width": 850,
+          "height": 567,
+          "sha256": "0b8e1a0b0fff86ca",
+          "webpEstimateBytes": 41314
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Seated_Cable_Rows/0.jpg",
+        "app/src/main/assets/exercises/Seated_Cable_Rows/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Seated_Calf_Raise",
+      "originalName": "Seated Calf Raise",
+      "translatedName": "Elevação de Panturrilhas Sentado",
+      "muscleGroup": "Panturrilhas",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Seated_Calf_Raise/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Seated_Calf_Raise/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 60369,
+          "width": 850,
+          "height": 567,
+          "sha256": "6f1e5d06681b9d70",
+          "webpEstimateBytes": 38422
+        },
+        {
+          "sourcePath": "Seated_Calf_Raise/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Seated_Calf_Raise/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 61832,
+          "width": 850,
+          "height": 567,
+          "sha256": "c397665d9d93377d",
+          "webpEstimateBytes": 39620
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Seated_Calf_Raise/0.jpg",
+        "app/src/main/assets/exercises/Seated_Calf_Raise/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Seated_Palm-Up_Barbell_Wrist_Curl",
+      "originalName": "Seated Palm-Up Barbell Wrist Curl",
+      "translatedName": "Rosca de Punho Sentado com Barra, Palmas para Cima",
+      "muscleGroup": "Antebraço",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Seated_Palm-Up_Barbell_Wrist_Curl/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Seated_Palm-Up_Barbell_Wrist_Curl/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 52344,
+          "width": 850,
+          "height": 567,
+          "sha256": "37be49b5db8bd7ef",
+          "webpEstimateBytes": 31504
+        },
+        {
+          "sourcePath": "Seated_Palm-Up_Barbell_Wrist_Curl/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Seated_Palm-Up_Barbell_Wrist_Curl/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 51958,
+          "width": 850,
+          "height": 567,
+          "sha256": "9d4c7cc1e5270d7a",
+          "webpEstimateBytes": 31462
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Seated_Palm-Up_Barbell_Wrist_Curl/0.jpg",
+        "app/src/main/assets/exercises/Seated_Palm-Up_Barbell_Wrist_Curl/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Side_Bridge",
+      "originalName": "Side Bridge",
+      "translatedName": "Prancha Lateral",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Peso corporal",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Side_Bridge/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Side_Bridge/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 69518,
+          "width": 850,
+          "height": 567,
+          "sha256": "fcbf157799efdce6",
+          "webpEstimateBytes": 49298
+        },
+        {
+          "sourcePath": "Side_Bridge/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Side_Bridge/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 63711,
+          "width": 850,
+          "height": 567,
+          "sha256": "ba9eb40f70d37af9",
+          "webpEstimateBytes": 45750
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Side_Bridge/0.jpg",
+        "app/src/main/assets/exercises/Side_Bridge/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Side_Lateral_Raise",
+      "originalName": "Side Lateral Raise",
+      "translatedName": "Elevação Lateral Lateral",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Halteres",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Side_Lateral_Raise/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Side_Lateral_Raise/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 57101,
+          "width": 850,
+          "height": 567,
+          "sha256": "aa1982c367ea9151",
+          "webpEstimateBytes": 34474
+        },
+        {
+          "sourcePath": "Side_Lateral_Raise/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Side_Lateral_Raise/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 56355,
+          "width": 850,
+          "height": 567,
+          "sha256": "9210e0fb0202c306",
+          "webpEstimateBytes": 33816
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Side_Lateral_Raise/0.jpg",
+        "app/src/main/assets/exercises/Side_Lateral_Raise/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Smith_Machine_Bent_Over_Row",
+      "originalName": "Smith Machine Bent Over Row",
+      "translatedName": "Remada Curvada na Máquina Smith",
+      "muscleGroup": "Costas",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Smith_Machine_Bent_Over_Row/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Smith_Machine_Bent_Over_Row/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 76200,
+          "width": 850,
+          "height": 567,
+          "sha256": "e3225e4f3448678f",
+          "webpEstimateBytes": 53024
+        },
+        {
+          "sourcePath": "Smith_Machine_Bent_Over_Row/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Smith_Machine_Bent_Over_Row/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 76752,
+          "width": 850,
+          "height": 567,
+          "sha256": "6fafe85f708fa2f0",
+          "webpEstimateBytes": 54432
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Smith_Machine_Bent_Over_Row/0.jpg",
+        "app/src/main/assets/exercises/Smith_Machine_Bent_Over_Row/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Standing_Cable_Wood_Chop",
+      "originalName": "Standing Cable Wood Chop",
+      "translatedName": "Corte de Madeira com Cabo em Pé",
+      "muscleGroup": "Abdômen",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Standing_Cable_Wood_Chop/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Standing_Cable_Wood_Chop/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 107915,
+          "width": 850,
+          "height": 1275,
+          "sha256": "2527b5e163dbfe02",
+          "webpEstimateBytes": 64832
+        },
+        {
+          "sourcePath": "Standing_Cable_Wood_Chop/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Standing_Cable_Wood_Chop/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 112505,
+          "width": 850,
+          "height": 1275,
+          "sha256": "ae61b06de1c58add",
+          "webpEstimateBytes": 67508
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Standing_Cable_Wood_Chop/0.jpg",
+        "app/src/main/assets/exercises/Standing_Cable_Wood_Chop/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Standing_Calf_Raises",
+      "originalName": "Standing Calf Raises",
+      "translatedName": "Elevação de Panturrilhas em Pé",
+      "muscleGroup": "Panturrilhas",
+      "equipmentType": "Máquina",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Standing_Calf_Raises/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Standing_Calf_Raises/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 60966,
+          "width": 850,
+          "height": 567,
+          "sha256": "44922f411d204bb0",
+          "webpEstimateBytes": 37476
+        },
+        {
+          "sourcePath": "Standing_Calf_Raises/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Standing_Calf_Raises/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 59984,
+          "width": 850,
+          "height": 567,
+          "sha256": "f0990fed5d984fdf",
+          "webpEstimateBytes": 37558
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Standing_Calf_Raises/0.jpg",
+        "app/src/main/assets/exercises/Standing_Calf_Raises/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Stiff-Legged_Barbell_Deadlift",
+      "originalName": "Stiff-Legged Barbell Deadlift",
+      "translatedName": "Levantamento Terra Stiff com Barra",
+      "muscleGroup": "Posteriores",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Stiff-Legged_Barbell_Deadlift/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Stiff-Legged_Barbell_Deadlift/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 67855,
+          "width": 850,
+          "height": 567,
+          "sha256": "8eb5a2b4c19ebe60",
+          "webpEstimateBytes": 41594
+        },
+        {
+          "sourcePath": "Stiff-Legged_Barbell_Deadlift/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Stiff-Legged_Barbell_Deadlift/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 68335,
+          "width": 850,
+          "height": 567,
+          "sha256": "faca4cc4a88f2abb",
+          "webpEstimateBytes": 41744
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Stiff-Legged_Barbell_Deadlift/0.jpg",
+        "app/src/main/assets/exercises/Stiff-Legged_Barbell_Deadlift/1.jpg"
+      ]
+    },
+    {
+      "externalId": "T-Bar_Row_with_Handle",
+      "originalName": "T-Bar Row with Handle",
+      "translatedName": "Remada T-Bar com Handle",
+      "muscleGroup": "Costas",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "T-Bar_Row_with_Handle/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/T-Bar_Row_with_Handle/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 46113,
+          "width": 500,
+          "height": 750,
+          "sha256": "ad58082378c6c638",
+          "webpEstimateBytes": 29504
+        },
+        {
+          "sourcePath": "T-Bar_Row_with_Handle/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/T-Bar_Row_with_Handle/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 44884,
+          "width": 500,
+          "height": 750,
+          "sha256": "e03a03b8458c6721",
+          "webpEstimateBytes": 28682
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/T-Bar_Row_with_Handle/0.jpg",
+        "app/src/main/assets/exercises/T-Bar_Row_with_Handle/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Triceps_Pushdown",
+      "originalName": "Triceps Pushdown",
+      "translatedName": "Tríceps na Polia",
+      "muscleGroup": "Tríceps",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Triceps_Pushdown/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Triceps_Pushdown/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 77630,
+          "width": 850,
+          "height": 567,
+          "sha256": "5f52b0f699fcd01b",
+          "webpEstimateBytes": 52196
+        },
+        {
+          "sourcePath": "Triceps_Pushdown/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Triceps_Pushdown/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 78235,
+          "width": 850,
+          "height": 567,
+          "sha256": "76f7793452cebb4f",
+          "webpEstimateBytes": 52428
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Triceps_Pushdown/0.jpg",
+        "app/src/main/assets/exercises/Triceps_Pushdown/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Underhand_Cable_Pulldowns",
+      "originalName": "Underhand Cable Pulldowns",
+      "translatedName": "Cable Pulldown Pegada Supinada",
+      "muscleGroup": "Costas",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Underhand_Cable_Pulldowns/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Underhand_Cable_Pulldowns/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 65340,
+          "width": 850,
+          "height": 567,
+          "sha256": "9cf650a2a4bbe33d",
+          "webpEstimateBytes": 43204
+        },
+        {
+          "sourcePath": "Underhand_Cable_Pulldowns/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Underhand_Cable_Pulldowns/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 63811,
+          "width": 850,
+          "height": 567,
+          "sha256": "9e4ce83781e80d48",
+          "webpEstimateBytes": 42198
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Underhand_Cable_Pulldowns/0.jpg",
+        "app/src/main/assets/exercises/Underhand_Cable_Pulldowns/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Upright_Barbell_Row",
+      "originalName": "Upright Barbell Row",
+      "translatedName": "Remada Alta com Barra",
+      "muscleGroup": "Ombros",
+      "equipmentType": "Barra",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Upright_Barbell_Row/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Upright_Barbell_Row/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 55002,
+          "width": 850,
+          "height": 567,
+          "sha256": "7fcef07cc8cc51e8",
+          "webpEstimateBytes": 30744
+        },
+        {
+          "sourcePath": "Upright_Barbell_Row/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Upright_Barbell_Row/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 54626,
+          "width": 850,
+          "height": 567,
+          "sha256": "357c45246057e372",
+          "webpEstimateBytes": 30336
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Upright_Barbell_Row/0.jpg",
+        "app/src/main/assets/exercises/Upright_Barbell_Row/1.jpg"
+      ]
+    },
+    {
+      "externalId": "Wide-Grip_Lat_Pulldown",
+      "originalName": "Wide-Grip Lat Pulldown",
+      "translatedName": "Lat Pulldown Pegada Aberta",
+      "muscleGroup": "Costas",
+      "equipmentType": "Cabos",
+      "imageCount": 2,
+      "classification": "GOOD_CANDIDATE",
+      "files": [
+        {
+          "sourcePath": "Wide-Grip_Lat_Pulldown/0.jpg",
+          "localPath": "input/free-exercise-db/exercises/Wide-Grip_Lat_Pulldown/0.jpg",
+          "fileName": "0.jpg",
+          "bytes": 71951,
+          "width": 850,
+          "height": 567,
+          "sha256": "929bc29751c35d0a",
+          "webpEstimateBytes": 47602
+        },
+        {
+          "sourcePath": "Wide-Grip_Lat_Pulldown/1.jpg",
+          "localPath": "input/free-exercise-db/exercises/Wide-Grip_Lat_Pulldown/1.jpg",
+          "fileName": "1.jpg",
+          "bytes": 71400,
+          "width": 850,
+          "height": 567,
+          "sha256": "781952e629e8a4cf",
+          "webpEstimateBytes": 47578
+        }
+      ],
+      "assetPaths": [
+        "app/src/main/assets/exercises/Wide-Grip_Lat_Pulldown/0.jpg",
+        "app/src/main/assets/exercises/Wide-Grip_Lat_Pulldown/1.jpg"
+      ]
+    }
+  ]
+}

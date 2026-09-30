@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -39,7 +41,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,8 +62,12 @@ import androidx.compose.ui.unit.min
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
+import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.formatRepetitionTarget
 import com.gymtrack.domain.time.formatElapsedMillis
+import com.gymtrack.presentation.exercises.ExerciseAnimation
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +84,14 @@ fun WorkoutExecutionScreen(
         val sessionId = uiState.sessionFinishedEvent ?: return@LaunchedEffect
         onNavigateToSummary(sessionId)
         viewModel.consumeSessionFinishedEvent()
+    }
+
+    LaunchedEffect(uiState.restBeepEvent) {
+        if (uiState.restBeepEvent == null) return@LaunchedEffect
+        withContext(Dispatchers.Default) {
+            RestCompletionBeep.play()
+        }
+        viewModel.consumeRestBeepEvent()
     }
 
     WorkoutExecutionContent(
@@ -134,39 +147,35 @@ private fun WorkoutExecutionContent(
         onErrorShown()
     }
 
-    val title = stringResource(R.string.workout_in_progress)
-
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         modifier = modifier.padding(contentPadding),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier.testTag("execution_back_button"),
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
-                },
-                actions = {
-                    TextButton(
-                        onClick = onRequestFinish,
-                        modifier = Modifier.testTag("finish_workout_button"),
-                    ) {
-                        Text(stringResource(R.string.finish_workout))
-                    }
-                },
-            )
+                }
+                Spacer(Modifier.weight(1f))
+                TextButton(
+                    onClick = onRequestFinish,
+                    modifier = Modifier.testTag("finish_workout_button"),
+                ) {
+                    Text(stringResource(R.string.finish_workout))
+                }
+            }
         },
     ) { innerPadding ->
         when {
@@ -196,7 +205,7 @@ private fun WorkoutExecutionContent(
                         progressPercent = uiState.progressPercent,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
+                            .padding(horizontal = 24.dp, vertical = 4.dp),
                     )
                     when {
                         uiState.phase == WorkoutExecutionPhase.FINISHED ||
@@ -242,6 +251,7 @@ private fun WorkoutExecutionContent(
                                     exerciseName = exercise.exerciseName,
                                     muscleGroup = exercise.muscleGroup,
                                     notes = exercise.notes,
+                                    mediaExercise = uiState.mediaExercise,
                                     currentSetNumber = uiState.currentSetIndex + 1,
                                     plannedSets = exercise.plannedSets,
                                     minRepetitions = exercise.minRepetitions,
@@ -379,7 +389,7 @@ private fun ExecutionProgressSummary(
 
     Column(
         modifier = modifier.testTag("execution_progress"),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = stringResource(R.string.elapsed_time_label),
@@ -388,7 +398,7 @@ private fun ExecutionProgressSummary(
         )
         Text(
             text = elapsedClock,
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .testTag("elapsed_timer")
@@ -460,6 +470,7 @@ private fun ActiveSetContent(
     exerciseName: String,
     muscleGroup: String,
     notes: String,
+    mediaExercise: Exercise?,
     currentSetNumber: Int,
     plannedSets: Int,
     minRepetitions: Int,
@@ -479,28 +490,33 @@ private fun ActiveSetContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (workoutName.isNotBlank()) {
             Text(
                 text = workoutName,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             )
         }
         Text(
             text = exerciseName,
-            style = MaterialTheme.typography.headlineSmall,
+            style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
         if (muscleGroup.isNotBlank()) {
             Text(
                 text = muscleGroup,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             )
         }
+        ExerciseAnimation(
+            exercise = mediaExercise,
+            height = 100.dp,
+            modifier = Modifier.testTag("execution_exercise_animation"),
+        )
         Text(
             text = stringResource(R.string.current_set, currentSetNumber, plannedSets),
             style = MaterialTheme.typography.titleMedium,
@@ -509,7 +525,7 @@ private fun ActiveSetContent(
         formatRepetitionTarget(minRepetitions, maxRepetitions)?.let { target ->
             Text(
                 text = stringResource(R.string.execution_reps_target, target),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                 modifier = Modifier.testTag("reps_target"),
             )
@@ -517,34 +533,39 @@ private fun ActiveSetContent(
         if (notes.isNotBlank()) {
             Text(
                 text = notes,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
         }
-        OutlinedTextField(
-            value = repsInput,
-            onValueChange = onRepsChanged,
-            label = { Text(stringResource(R.string.reps_label)) },
-            isError = repsError != null,
-            supportingText = repsError?.let { resId -> { Text(stringResource(resId)) } },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("reps_field"),
-        )
-        OutlinedTextField(
-            value = weightInput,
-            onValueChange = onWeightChanged,
-            label = { Text(stringResource(R.string.weight_label)) },
-            isError = weightError != null,
-            supportingText = weightError?.let { resId -> { Text(stringResource(resId)) } },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("weight_field"),
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            OutlinedTextField(
+                value = repsInput,
+                onValueChange = onRepsChanged,
+                label = { Text(stringResource(R.string.reps_label)) },
+                isError = repsError != null,
+                supportingText = repsError?.let { resId -> { Text(stringResource(resId)) } },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("reps_field"),
+            )
+            OutlinedTextField(
+                value = weightInput,
+                onValueChange = onWeightChanged,
+                label = { Text(stringResource(R.string.weight_label)) },
+                isError = weightError != null,
+                supportingText = weightError?.let { resId -> { Text(stringResource(resId)) } },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("weight_field"),
+            )
+        }
         Button(
             onClick = onCompleteSet,
             modifier = Modifier

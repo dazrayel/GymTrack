@@ -1,0 +1,341 @@
+{
+  "file_bytes": 1005327,
+  "total_exercises": 876,
+  "distinct_ids": 876,
+  "duplicate_ids": {},
+  "duplicate_names": {},
+  "fields_present_in_data": [
+    "category",
+    "equipment",
+    "force",
+    "id",
+    "images",
+    "instructions",
+    "level",
+    "mechanic",
+    "name",
+    "primaryMuscles",
+    "secondaryMuscles"
+  ],
+  "schema_properties": [
+    "id",
+    "name",
+    "force",
+    "level",
+    "mechanic",
+    "equipment",
+    "primaryMuscles",
+    "secondaryMuscles",
+    "instructions",
+    "category",
+    "images"
+  ],
+  "schema_required": [
+    "id",
+    "name",
+    "level",
+    "mechanic",
+    "equipment",
+    "primaryMuscles",
+    "secondaryMuscles",
+    "instructions",
+    "category",
+    "images"
+  ],
+  "empty_name": 0,
+  "equipment_null": 77,
+  "force_null": 30,
+  "mechanic_null": 87,
+  "primaryMuscles_empty": 0,
+  "secondaryMuscles_empty": 272,
+  "instructions_empty": 5,
+  "images_empty": 3,
+  "missing_required_fields": {},
+  "ids_matching_schema_pattern": 876,
+  "ids_not_matching_schema_pattern": [],
+  "level_values": {
+    "beginner": 525,
+    "expert": 57,
+    "intermediate": 294
+  },
+  "force_values": {
+    "null": 30,
+    "pull": 371,
+    "push": 371,
+    "static": 104
+  },
+  "mechanic_values": {
+    "null": 87,
+    "compound": 491,
+    "isolation": 298
+  },
+  "equipment_values": {
+    "null": 77,
+    "bands": 20,
+    "barbell": 170,
+    "body only": 111,
+    "cable": 81,
+    "dumbbell": 123,
+    "e-z curl bar": 9,
+    "exercise ball": 12,
+    "foam roll": 11,
+    "kettlebells": 56,
+    "machine": 67,
+    "medicine ball": 17,
+    "other": 122
+  },
+  "category_values": {
+    "cardio": 14,
+    "olympic weightlifting": 35,
+    "plyometrics": 61,
+    "powerlifting": 38,
+    "strength": 584,
+    "stretching": 123,
+    "strongman": 21
+  },
+  "primaryMuscles_values": {
+    "abdominals": 93,
+    "abductors": 8,
+    "adductors": 13,
+    "biceps": 53,
+    "calves": 28,
+    "chest": 84,
+    "forearms": 25,
+    "glutes": 22,
+    "hamstrings": 79,
+    "lats": 38,
+    "lower back": 27,
+    "middle back": 34,
+    "neck": 8,
+    "quadriceps": 148,
+    "shoulders": 129,
+    "traps": 15,
+    "triceps": 73
+  },
+  "secondaryMuscles_values": {
+    "abdominals": 59,
+    "abductors": 35,
+    "adductors": 41,
+    "biceps": 74,
+    "calves": 181,
+    "chest": 63,
+    "forearms": 94,
+    "glutes": 220,
+    "hamstrings": 201,
+    "lats": 56,
+    "lower back": 104,
+    "middle back": 66,
+    "neck": 1,
+    "quadriceps": 82,
+    "shoulders": 210,
+    "traps": 84,
+    "triceps": 148
+  },
+  "multi_primary_count": 1,
+  "primary_secondary_overlap_count": 9,
+  "primary_secondary_overlap_examples": [
+    {
+      "id": "All_Fours_Quad_Stretch",
+      "name": "All Fours Quad Stretch",
+      "overlap": [
+        "quadriceps"
+      ]
+    },
+    {
+      "id": "Barbell_Step_Ups",
+      "name": "Barbell Step Ups",
+      "overlap": [
+        "quadriceps"
+      ]
+    },
+    {
+      "id": "Bent-Arm_Barbell_Pullover",
+      "name": "Bent-Arm Barbell Pullover",
+      "overlap": [
+        "lats"
+      ]
+    },
+    {
+      "id": "Clean_and_Press",
+      "name": "Clean and Press",
+      "overlap": [
+        "shoulders"
+      ]
+    },
+    {
+      "id": "Hurdle_Hops",
+      "name": "Hurdle Hops",
+      "overlap": [
+        "hamstrings"
+      ]
+    },
+    {
+      "id": "Kneeling_Hip_Flexor",
+      "name": "Kneeling Hip Flexor",
+      "overlap": [
+        "quadriceps"
+      ]
+    },
+    {
+      "id": "Snatch_Deadlift",
+      "name": "Snatch Deadlift",
+      "overlap": [
+        "hamstrings"
+      ]
+    },
+    {
+      "id": "Split_Snatch",
+      "name": "Split Snatch",
+      "overlap": [
+        "hamstrings"
+      ]
+    }
+  ],
+  "image_reference_count": 1746,
+  "rows_with_duplicate_images": 0,
+  "duplicate_image_row_ids": [],
+  "muscle_mapping": {
+    "abdominals": {
+      "gymtrack": null,
+      "status": "sem_sinonimo_no_GymTrack"
+    },
+    "abductors": {
+      "gymtrack": null,
+      "status": "sem_sinonimo_no_GymTrack"
+    },
+    "adductors": {
+      "gymtrack": null,
+      "status": "sem_sinonimo_no_GymTrack"
+    },
+    "biceps": {
+      "gymtrack": "Bíceps",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "calves": {
+      "gymtrack": "Panturrilhas",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "chest": {
+      "gymtrack": "Peitoral",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "forearms": {
+      "gymtrack": "Antebraço",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "glutes": {
+      "gymtrack": "Glúteos",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "hamstrings": {
+      "gymtrack": "Posteriores",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "lats": {
+      "gymtrack": null,
+      "status": "sem_sinonimo_no_GymTrack"
+    },
+    "lower back": {
+      "gymtrack": "Lombar",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "middle back": {
+      "gymtrack": null,
+      "status": "sem_sinonimo_no_GymTrack"
+    },
+    "neck": {
+      "gymtrack": null,
+      "status": "sem_sinonimo_no_GymTrack"
+    },
+    "quadriceps": {
+      "gymtrack": "Quadríceps",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "shoulders": {
+      "gymtrack": "Ombros",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "traps": {
+      "gymtrack": "Trapézio",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "triceps": {
+      "gymtrack": "Tríceps",
+      "status": "mapeavel_por_sinonimo_existente"
+    }
+  },
+  "gymtrack_muscles_without_source_value": [
+    "Costas",
+    "Abdômen"
+  ],
+  "equipment_mapping": {
+    "body only": {
+      "count": 111,
+      "gymtrack": "Peso corporal",
+      "status": "precisa_novo_sinonimo_nao_implementado"
+    },
+    "machine": {
+      "count": 67,
+      "gymtrack": "Máquina",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "other": {
+      "count": 122,
+      "gymtrack": "Outro",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "foam roll": {
+      "count": 11,
+      "gymtrack": "Outro",
+      "status": "precisa_novo_sinonimo_nao_implementado"
+    },
+    "null": {
+      "count": 77,
+      "gymtrack": null,
+      "status": "null_na_fonte"
+    },
+    "kettlebells": {
+      "count": 56,
+      "gymtrack": "Kettlebell",
+      "status": "precisa_novo_sinonimo_nao_implementado"
+    },
+    "dumbbell": {
+      "count": 123,
+      "gymtrack": "Halteres",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "cable": {
+      "count": 81,
+      "gymtrack": "Cabos",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "barbell": {
+      "count": 170,
+      "gymtrack": "Barra",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "bands": {
+      "count": 20,
+      "gymtrack": "Elástico",
+      "status": "mapeavel_por_sinonimo_existente"
+    },
+    "medicine ball": {
+      "count": 17,
+      "gymtrack": "Outro",
+      "status": "precisa_novo_sinonimo_nao_implementado"
+    },
+    "exercise ball": {
+      "count": 12,
+      "gymtrack": "Outro",
+      "status": "precisa_novo_sinonimo_nao_implementado"
+    },
+    "e-z curl bar": {
+      "count": 9,
+      "gymtrack": "Barra",
+      "status": "precisa_novo_sinonimo_nao_implementado"
+    }
+  },
+  "gymtrack_equipment_without_source_value": [
+    "Smith"
+  ]
+}

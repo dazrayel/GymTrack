@@ -183,6 +183,33 @@ class ExerciseViewModelTest {
     }
 
     @Test
+    fun saveExercise_editExisting_preservesExternalIdentity() = runTest(testDispatcher) {
+        fakeRepository.emit(
+            listOf(
+                Exercise(
+                    id = 7,
+                    name = "Sit-Up",
+                    muscleGroup = "Abdômen",
+                    equipmentType = "Peso corporal",
+                    externalSource = "free-exercise-db",
+                    externalId = "3_4_Sit-Up",
+                ),
+            ),
+        )
+        advanceUntilIdle()
+
+        val original = viewModel.uiState.value.exercises.first()
+        viewModel.showEditDialog(original)
+        viewModel.saveExercise("3/4 Sit-Up", "Abdômen", "Peso corporal")
+        advanceUntilIdle()
+
+        val edited = viewModel.uiState.value.exercises.single()
+        assertEquals("free-exercise-db", edited.externalSource)
+        assertEquals("3_4_Sit-Up", edited.externalId)
+        assertEquals(7L, edited.id)
+    }
+
+    @Test
     fun saveExercise_blankMuscleGroup_doesNotSave() = runTest(testDispatcher) {
         advanceUntilIdle()
 

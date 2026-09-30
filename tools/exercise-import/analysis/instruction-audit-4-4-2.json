@@ -1,0 +1,2576 @@
+{
+  "source": "free-exercise-db",
+  "version": 1,
+  "stage": "4.4.2A",
+  "totalExercises": 777,
+  "exercisesWithInstructions": 772,
+  "exercisesWithoutInstructions": 5,
+  "totalInstructions": 3441,
+  "uniqueInstructions": 2754,
+  "duplicatedUniqueInstructions": 274,
+  "exclusiveUniqueInstructions": 2480,
+  "duplicatedOccurrences": 961,
+  "classification": {
+    "TRANSLATED_EXISTING": 672,
+    "PASSTHROUGH_ENGLISH": 2767,
+    "PORTUGUESE": 0,
+    "MIXED": 0,
+    "UNKNOWN": 2
+  },
+  "classificationRule": "TRANSLATED_EXISTING = exact SENTENCE_LOOKUP hit with different PT text; else PORTUGUESE/MIXED by conservative heuristic; else PASSTHROUGH_ENGLISH for English/passthrough; else UNKNOWN. Categories are mutually exclusive by priority.",
+  "languageNote": "Language detection is heuristic and conservative. UNKNOWN means insufficient confidence — not a claim of foreign language.",
+  "instructionCountDistribution": [
+    {
+      "instructionCount": 0,
+      "exerciseCount": 5
+    },
+    {
+      "instructionCount": 1,
+      "exerciseCount": 5
+    },
+    {
+      "instructionCount": 2,
+      "exerciseCount": 56
+    },
+    {
+      "instructionCount": 3,
+      "exerciseCount": 132
+    },
+    {
+      "instructionCount": 4,
+      "exerciseCount": 221
+    },
+    {
+      "instructionCount": 5,
+      "exerciseCount": 196
+    },
+    {
+      "instructionCount": 6,
+      "exerciseCount": 104
+    },
+    {
+      "instructionCount": 7,
+      "exerciseCount": 45
+    },
+    {
+      "instructionCount": 8,
+      "exerciseCount": 8
+    },
+    {
+      "instructionCount": 9,
+      "exerciseCount": 3
+    },
+    {
+      "instructionCount": 10,
+      "exerciseCount": 1
+    },
+    {
+      "instructionCount": 24,
+      "exerciseCount": 1
+    }
+  ],
+  "topInstructions": [
+    {
+      "instruction": "Repeat for the recommended amount of repetitions.",
+      "count": 223,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Repeat the movement for the prescribed amount of repetitions.",
+      "count": 28,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Hold on to the bar using both arms at each side and lift it off the rack by first pushing with your legs and at the same time straightening your torso.",
+      "count": 11,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "After a brief pause, return to the starting position.",
+      "count": 9,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "When you are done, place the bar back in the rack.",
+      "count": 9,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Switch arms and repeat the exercise.",
+      "count": 8,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Switch arms and repeat the movement.",
+      "count": 8,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Repeat for the desired number of repetitions.",
+      "count": 7,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Repeat this motion for the prescribed amount of repetitions.",
+      "count": 7,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Repeat the movement for the prescribed amount of repetitions of your training program.",
+      "count": 6,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Slowly begin to bring the bar back to starting position as your breathe in.",
+      "count": 6,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Start out by curling your wrist upwards and exhaling.",
+      "count": 6,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Then, reposition and repeat the same series of movements on the opposite side.",
+      "count": 6,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Dip your body by bending the knees, keeping your torso upright.",
+      "count": 5,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Go back slowly to the starting position as you breathe in by lowering your heels as you bend the ankles until calves are stretched.",
+      "count": 5,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Lower the bar by bending at the hips and guiding it to the floor.",
+      "count": 5,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Slowly return to the starting position as you breathe in.",
+      "count": 5,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Your forearms should be stationary as your wrist is the only movement needed to perform this exercise.",
+      "count": 5,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "After a second on the contracted position, start to inhale and slowly lower your torso back to the starting position when your arms are fully extended and the lats are fully stretched.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "After a second pause at the contracted position, repeat the movement for the prescribed amount of repetitions.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "As the bar passes through the knees, lean back and drive the hips into the bar, pulling your shoulder blades together.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "As you have both arms extended in front of you holding the bar at the chosen grip width, bring your torso back around 30 degrees or so while creating a curvature on your lower back and sticking your chest out. This is your starting position.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Begin by stepping under the bar and placing it across the back of the shoulders. Squeeze your shoulder blades together and rotate your elbows forward, attempting to bend the bar across your shoulders. Remove the bar from the rack, creating a tight arch in your lower back, and step back into position. Place your feet wider for more emphasis on the back, glutes, adductors, and hamstrings, or closer together for more quad development. Keep your head facing forward.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Begin the first pull by driving through the heels, extending your knees. Your back angle should stay the same, and your arms should remain straight. Move the weight with control as you continue to above the knees.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Begin to slowly lower the bar by bending the knees as you maintain a straight posture with the head up. Continue down until the angle between the upper leg and the calves becomes slightly less than 90-degrees (which is the point in which the upper legs are below parallel to the floor). Inhale as you perform this portion of the movement. Tip: If you performed the exercise correctly, the front of the knees should make an imaginary straight line with the toes that is perpendicular to the front. If your knees are past that imaginary line (if they are past your toes) then you are placing undue stress on the knee and the exercise has been performed incorrectly.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Continue the movement until your biceps are fully contracted and the bar is at shoulder level. Hold the contracted position for a second and squeeze the biceps hard.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Immediately recover by driving through the heels, keeping the torso upright and elbows up. Continue until you have risen to a standing position.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Keeping your body straight, lower your chest to the bar by bending the arms.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Kneel down on both of your knees so that your body is facing the flat bench.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Lift the bar back up to the starting position as you exhale.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Lower yourself until your chest almost touches the floor as you inhale.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Place your feet flat on the floor, at a distance that is slightly wider than shoulder width apart.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Repeat for the recommended amount of repetitions and then switch to the other arm.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Repeat for the recommended amount of repetitions prescribed in your program.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Repeat for the recommended amount of times.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Repeat to failure.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Return the weight to the ground by bending at the hips and controlling the weight on the way down.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Return to the starting position by extending the elbows, pressing yourself back up.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Secure your legs at the end of the decline bench and slowly lay down on the bench.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Slowly begin to bring the dumbbells back to starting position as your breathe in.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Slowly lower the weight again to the starting position as you inhale.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Slowly lower your wrists back down to the starting position while inhaling.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Stand facing a Smith machine bar or sturdy elevated platform at an appropriate height.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Take a breath, and then lower your hips, looking forward with your head with your chest up. Drive through the floor, spreading your feet apart, with your weight on the back half of your feet. Extend through the hips and knees.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "This exercise is best performed inside a squat rack for safety purposes. To begin, first set the bar on a rack that best matches your height. Once the correct height is chosen and the bar is loaded, step under the bar and place the back of your shoulders (slightly below the neck) across it.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "Transition into the second pull by extending through the hips knees and ankles, driving the bar up as quickly as possible. The bar should be close to the body. At peak extension, shrug the shoulders and allow the elbows to flex to the side.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips until you are seated on the box. Ideally, your shins should be perpendicular to the ground. Pause when you reach the box, and relax the hip flexors. Never bounce off of a box.",
+      "count": 4,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "After a brief pause at the top, return the weight just above the start position, keeping tension on the muscles by not returning the weight to the stops until the set is complete.",
+      "count": 3,
+      "classification": "PASSTHROUGH_ENGLISH"
+    },
+    {
+      "instruction": "After a second pause, bring the bar back to the starting position as you breathe out and push the bar using your triceps muscles. Lock your arms in the contracted position, hold for a second and then start coming down slowly again. Tip: It should take at least twice as long to go down than to come up.",
+      "count": 3,
+      "classification": "TRANSLATED_EXISTING"
+    },
+    {
+      "instruction": "As you breathe in, slowly go back to the starting position.",
+      "count": 3,
+      "classification": "TRANSLATED_EXISTING"
+    }
+  ],
+  "patterns": [
+    {
+      "pattern": "Repeat…",
+      "count": 41,
+      "priority": "HIGH"
+    },
+    {
+      "pattern": "Return to the starting position…",
+      "count": 20,
+      "priority": "HIGH"
+    },
+    {
+      "pattern": "Step away from the rack and position your legs using a shoulder width medium …",
+      "count": 10,
+      "priority": "MEDIUM"
+    },
+    {
+      "pattern": "This exercise is best performed inside a squat rack for safety purposes. To b…",
+      "count": 9,
+      "priority": "MEDIUM"
+    },
+    {
+      "pattern": "After a second pause, bring the bar back to the starting position as you brea…",
+      "count": 8,
+      "priority": "MEDIUM"
+    },
+    {
+      "pattern": "Keeping the weight on your heels and pushing your feet and knees out, drive u…",
+      "count": 7,
+      "priority": "MEDIUM"
+    },
+    {
+      "pattern": "As you move your feet into the receiving position, forcefully pull yourself b…",
+      "count": 5,
+      "priority": "MEDIUM"
+    },
+    {
+      "pattern": "Clean two kettlebells to your shoulders. Clean the kettlebells to your should…",
+      "count": 5,
+      "priority": "MEDIUM"
+    },
+    {
+      "pattern": "Immediately reverse direction, driving through the heels, in essence jumping …",
+      "count": 5,
+      "priority": "MEDIUM"
+    },
+    {
+      "pattern": "As full extension is achieved, transition into the third pull by aggressively…",
+      "count": 4,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you breathe out, push the dumbbells up using your pectoral muscles. Lock y…",
+      "count": 4,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin the first pull by driving through the front of the heels, raising the b…",
+      "count": 4,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin to raise the bar as you exhale by pushing the floor with the heel of yo…",
+      "count": 4,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Bend your knees slightly and bring your torso forward, by bending at the wais…",
+      "count": 4,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Keeping the bar aligned over the front of the heels, your head and chest up, …",
+      "count": 4,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Load an appropriate weight onto the pins and adjust the seat for your height.…",
+      "count": 4,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Next comes the second pull, the main source of acceleration for the clean. As…",
+      "count": 4,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Adjust the weight to an appropriate amount and be seated, grasping the handle…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "After a brief pause at the top, return the weight just above the start positi…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Approach the bar so that it is centered over your feet. You feet should be ab…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you breathe in, come down slowly until you feel the bar on your middle che…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you breathe out, externally rotate your forearm so that the dumbbell is li…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you exhale, use the biceps to curl the weight up until your biceps is full…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "At this moment as the feet leave the floor, the feet must be placed into the …",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Attach dual handles to a sled connected by a rope or chain. Load the sled to …",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin by stepping under the bar and placing it across the back of the shoulde…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin the first pull by driving through the heels, extending your knees. Your…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin with a bar loaded on the ground. Approach the bar so that the bar inter…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin with a shoulder width, double overhand or hook grip, with the bar hangi…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Bend the elbows of the arm holding the dumbbell so that it creates a #-degree…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "By using your thighs to help you get the dumbbells up, clean the dumbbells on…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Clean a kettlebell to your shoulder. Clean the kettlebell to your shoulder by…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Ensuring that the dumbbell stays securely placed at the top of the bench, lie…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Grab the bar with the palms facing forward using the prescribed grip. Note on…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Immediately recover by driving through the heels, keeping the torso upright a…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Keeping the kettlebell locked out at all times, push your butt out in the dir…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Keeping the torso stationary, pull the handles back towards your torso while …",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Lift the bar off the rack by first pushing with your legs and at the same tim…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Lower the safety bars holding the weighted platform in place and press the pl…",
+      "count": 3,
+      "priority": "HIGH"
+    },
+    {
+      "pattern": "Once at shoulder width, rotate your wrists forward so that the palms of your …",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Pick a couple of dumbbells and stand with a straight torso and the dumbbells …",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Position your legs using a shoulder width medium stance with the toes slightl…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Return your arms back to the starting position as you squeeze your chest musc…",
+      "count": 3,
+      "priority": "HIGH"
+    },
+    {
+      "pattern": "Slowly begin to bring the dumbbells back to the starting position as your bre…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Slowly lower your wrists back down to the starting position while inhaling. M…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Slowly return to the starting position…",
+      "count": 3,
+      "priority": "HIGH"
+    },
+    {
+      "pattern": "Stand up straight while holding a barbell placed on the back of your shoulder…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Stand with your torso upright holding two dumbbells in your hands by your sid…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Standing upright with the torso straight and a very small inclination forward…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Standing with the weight racked on the front of the shoulders, begin with the…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "To begin, stand on an exercise band so that tension begins at arm's length. G…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "To begin, step onto the treadmill and select the desired option from the menu…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Treadmills offer convenience, cardiovascular benefits, and usually have less …",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Using a leg press machine, sit down on the machine and place your legs on the…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "With a slight bend on your elbows in order to prevent stress at the biceps te…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "With your feet, and your grip set, take a big breath and then lower your hips…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "With your side to the cable, grab the handle with one hand and step away from…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "With your upper arm in position, your elbow should be flexed to # degrees wit…",
+      "count": 3,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Absorb the impact of landing by bending the knees, rebounding out of the firs…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Adjust the seat to the appropriate height and make your weight selection. Pla…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "After #-# seconds, relax the arm and allow your partner to further stretch th…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "After a second contraction at the top, slowly lower the dumbbells back to the…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "After the bar passes the knees, aggressively pull the bar back, pulling your …",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Aggressively extend through the legs and hips. At peak extension, shrug the s…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you breathe in and you keep the upper arms stationary, bring the bar down …",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you breathe in, start to slowly lower the arms to the side while keeping t…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you breathe out, bring the bar down until it touches your upper chest by d…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you exhale bring the bar back up to the starting position by pushing the b…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you exhale start to bring the dumbbells back up to the starting position b…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "As you have both arms extended in front of you holding the bar at the chosen …",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Assume a lunge stance position with one foot forward with the knee bent, and …",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "At that point, bring the dumbbell back to the starting position using the arc…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "At the bottom, reverse the motion by pushing yourself up through elbow extens…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Avoid returning the weight all the way to the stops until the set is complete…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin by aggressively extending through the hips, knees and ankles, driving t…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin by extending through the elbow, pressing the handles together straight …",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin by flexing the elbow, lowering your body until your arms break # degree…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin by lying on your back on the ground. Your legs should be straight and y…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin by moving the pulleys to the high position, select the resistance to be…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin by swinging the arms upward as you push through the top leg, jumping up…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin in a power rack with a box at the appropriate height behind you. Set up…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin in a relaxed stance with your feet shoulder width apart and hold your a…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin the motion by extending through the hips with your glutes and hamstring…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin to lower the bar by bending the knees as you maintain a straight postur…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin to raise the bar as you exhale by pushing the floor mainly with the hee…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin to raise the unit as you exhale by pushing the floor with mainly with t…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin to slowly lower the unit by bending the knees as you maintain a straigh…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin to slowly lower your torso by bending the knees as you maintain a strai…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin with a loaded barbell on boxes or stands of the desired height. A wide …",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin with a loaded barbell on the floor. The bar should be close to or touch…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Begin with a wide grip on the bar, with an overhand or hook grip. The feet sh…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Bend forward until your torso is as close to parallel with the floor as you c…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Bend your knees and pull your upper thighs into your midsection as you breath…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Bring the knees in toward you as you move your torso closer to them at the sa…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Choke the band around a post. The band should be at the same height as your e…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Clean the kettlebells to your shoulders by extending through the legs and hip…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Continue alternating in this manner until all of the recommended repetitions …",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Continue the circle past the opposite ear and back down to the starting posit…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Continue to push down as hard as you can with your lower back as you contract…",
+      "count": 2,
+      "priority": "LOW"
+    },
+    {
+      "pattern": "Drive through the heels create as much speed and force as possible, and be su…",
+      "count": 2,
+      "priority": "LOW"
+    }
+  ],
+  "leadingVerbs": [
+    {
+      "verb": "repeat",
+      "count": 346
+    },
+    {
+      "verb": "begin",
+      "count": 203
+    },
+    {
+      "verb": "as",
+      "count": 150
+    },
+    {
+      "verb": "now",
+      "count": 121
+    },
+    {
+      "verb": "after",
+      "count": 118
+    },
+    {
+      "verb": "slowly",
+      "count": 105
+    },
+    {
+      "verb": "place",
+      "count": 96
+    },
+    {
+      "verb": "while",
+      "count": 90
+    },
+    {
+      "verb": "lie",
+      "count": 89
+    },
+    {
+      "verb": "stand",
+      "count": 89
+    },
+    {
+      "verb": "lower",
+      "count": 84
+    },
+    {
+      "verb": "with",
+      "count": 80
+    },
+    {
+      "verb": "to",
+      "count": 78
+    },
+    {
+      "verb": "keeping",
+      "count": 76
+    },
+    {
+      "verb": "hold",
+      "count": 75
+    },
+    {
+      "verb": "return",
+      "count": 67
+    },
+    {
+      "verb": "sit",
+      "count": 53
+    },
+    {
+      "verb": "position",
+      "count": 51
+    },
+    {
+      "verb": "start",
+      "count": 49
+    },
+    {
+      "verb": "continue",
+      "count": 46
+    },
+    {
+      "verb": "using",
+      "count": 46
+    },
+    {
+      "verb": "grab",
+      "count": 43
+    },
+    {
+      "verb": "pause",
+      "count": 40
+    },
+    {
+      "verb": "raise",
+      "count": 36
+    },
+    {
+      "verb": "at",
+      "count": 33
+    },
+    {
+      "verb": "once",
+      "count": 33
+    },
+    {
+      "verb": "this",
+      "count": 29
+    },
+    {
+      "verb": "step",
+      "count": 28
+    },
+    {
+      "verb": "then",
+      "count": 28
+    },
+    {
+      "verb": "clean",
+      "count": 27
+    },
+    {
+      "verb": "switch",
+      "count": 27
+    },
+    {
+      "verb": "bend",
+      "count": 26
+    },
+    {
+      "verb": "the",
+      "count": 26
+    },
+    {
+      "verb": "use",
+      "count": 26
+    },
+    {
+      "verb": "keep",
+      "count": 25
+    },
+    {
+      "verb": "lift",
+      "count": 25
+    },
+    {
+      "verb": "pull",
+      "count": 25
+    },
+    {
+      "verb": "when",
+      "count": 25
+    },
+    {
+      "verb": "adjust",
+      "count": 23
+    },
+    {
+      "verb": "attach",
+      "count": 22
+    }
+  ],
+  "leadingVerbsPassthrough": [
+    {
+      "verb": "begin",
+      "count": 188
+    },
+    {
+      "verb": "as",
+      "count": 129
+    },
+    {
+      "verb": "now",
+      "count": 120
+    },
+    {
+      "verb": "lie",
+      "count": 87
+    },
+    {
+      "verb": "while",
+      "count": 84
+    },
+    {
+      "verb": "after",
+      "count": 83
+    },
+    {
+      "verb": "stand",
+      "count": 83
+    },
+    {
+      "verb": "place",
+      "count": 82
+    },
+    {
+      "verb": "to",
+      "count": 75
+    },
+    {
+      "verb": "with",
+      "count": 74
+    },
+    {
+      "verb": "keeping",
+      "count": 72
+    },
+    {
+      "verb": "slowly",
+      "count": 70
+    },
+    {
+      "verb": "lower",
+      "count": 63
+    },
+    {
+      "verb": "hold",
+      "count": 50
+    },
+    {
+      "verb": "return",
+      "count": 49
+    },
+    {
+      "verb": "position",
+      "count": 48
+    },
+    {
+      "verb": "sit",
+      "count": 48
+    },
+    {
+      "verb": "using",
+      "count": 43
+    },
+    {
+      "verb": "repeat",
+      "count": 41
+    },
+    {
+      "verb": "grab",
+      "count": 40
+    },
+    {
+      "verb": "start",
+      "count": 37
+    },
+    {
+      "verb": "continue",
+      "count": 36
+    },
+    {
+      "verb": "pause",
+      "count": 35
+    },
+    {
+      "verb": "at",
+      "count": 33
+    },
+    {
+      "verb": "once",
+      "count": 33
+    },
+    {
+      "verb": "raise",
+      "count": 33
+    },
+    {
+      "verb": "step",
+      "count": 28
+    },
+    {
+      "verb": "bend",
+      "count": 26
+    },
+    {
+      "verb": "clean",
+      "count": 26
+    },
+    {
+      "verb": "keep",
+      "count": 25
+    },
+    {
+      "verb": "the",
+      "count": 24
+    },
+    {
+      "verb": "this",
+      "count": 24
+    },
+    {
+      "verb": "use",
+      "count": 24
+    },
+    {
+      "verb": "adjust",
+      "count": 23
+    },
+    {
+      "verb": "attach",
+      "count": 22
+    },
+    {
+      "verb": "grasp",
+      "count": 22
+    },
+    {
+      "verb": "pull",
+      "count": 22
+    },
+    {
+      "verb": "then",
+      "count": 22
+    },
+    {
+      "verb": "lift",
+      "count": 21
+    },
+    {
+      "verb": "initiate",
+      "count": 20
+    }
+  ],
+  "verbs": [
+    {
+      "verb": "position",
+      "count": 1567
+    },
+    {
+      "verb": "repeat",
+      "count": 478
+    },
+    {
+      "verb": "lower",
+      "count": 428
+    },
+    {
+      "verb": "hold",
+      "count": 388
+    },
+    {
+      "verb": "begin",
+      "count": 386
+    },
+    {
+      "verb": "grip",
+      "count": 331
+    },
+    {
+      "verb": "keep",
+      "count": 328
+    },
+    {
+      "verb": "place",
+      "count": 274
+    },
+    {
+      "verb": "breathe",
+      "count": 269
+    },
+    {
+      "verb": "pull",
+      "count": 216
+    },
+    {
+      "verb": "lift",
+      "count": 210
+    },
+    {
+      "verb": "move",
+      "count": 206
+    },
+    {
+      "verb": "return",
+      "count": 193
+    },
+    {
+      "verb": "bend",
+      "count": 186
+    },
+    {
+      "verb": "exhale",
+      "count": 184
+    },
+    {
+      "verb": "inhale",
+      "count": 173
+    },
+    {
+      "verb": "bring",
+      "count": 167
+    },
+    {
+      "verb": "continue",
+      "count": 167
+    },
+    {
+      "verb": "stand",
+      "count": 156
+    },
+    {
+      "verb": "raise",
+      "count": 145
+    },
+    {
+      "verb": "start",
+      "count": 138
+    },
+    {
+      "verb": "pause",
+      "count": 137
+    },
+    {
+      "verb": "step",
+      "count": 129
+    },
+    {
+      "verb": "lie",
+      "count": 127
+    },
+    {
+      "verb": "grab",
+      "count": 117
+    },
+    {
+      "verb": "extend",
+      "count": 114
+    },
+    {
+      "verb": "push",
+      "count": 108
+    },
+    {
+      "verb": "press",
+      "count": 102
+    },
+    {
+      "verb": "squeeze",
+      "count": 94
+    },
+    {
+      "verb": "sit",
+      "count": 92
+    },
+    {
+      "verb": "rotate",
+      "count": 87
+    },
+    {
+      "verb": "maintain",
+      "count": 83
+    },
+    {
+      "verb": "drive",
+      "count": 82
+    },
+    {
+      "verb": "flex",
+      "count": 74
+    },
+    {
+      "verb": "curl",
+      "count": 70
+    },
+    {
+      "verb": "switch",
+      "count": 61
+    },
+    {
+      "verb": "grasp",
+      "count": 60
+    },
+    {
+      "verb": "reach",
+      "count": 55
+    },
+    {
+      "verb": "lean",
+      "count": 45
+    },
+    {
+      "verb": "stretch",
+      "count": 45
+    },
+    {
+      "verb": "lay",
+      "count": 40
+    },
+    {
+      "verb": "control",
+      "count": 36
+    },
+    {
+      "verb": "contract",
+      "count": 35
+    },
+    {
+      "verb": "jump",
+      "count": 34
+    },
+    {
+      "verb": "secure",
+      "count": 29
+    },
+    {
+      "verb": "swing",
+      "count": 27
+    },
+    {
+      "verb": "arch",
+      "count": 25
+    },
+    {
+      "verb": "descend",
+      "count": 22
+    },
+    {
+      "verb": "relax",
+      "count": 20
+    },
+    {
+      "verb": "land",
+      "count": 19
+    },
+    {
+      "verb": "row",
+      "count": 14
+    },
+    {
+      "verb": "tuck",
+      "count": 12
+    },
+    {
+      "verb": "shrug",
+      "count": 11
+    },
+    {
+      "verb": "alternate",
+      "count": 10
+    },
+    {
+      "verb": "release",
+      "count": 10
+    },
+    {
+      "verb": "twist",
+      "count": 9
+    },
+    {
+      "verb": "explode",
+      "count": 8
+    },
+    {
+      "verb": "hop",
+      "count": 8
+    },
+    {
+      "verb": "finish",
+      "count": 6
+    },
+    {
+      "verb": "walk",
+      "count": 6
+    }
+  ],
+  "anatomy": [
+    {
+      "term": "back",
+      "count": 1040
+    },
+    {
+      "term": "arms",
+      "count": 795
+    },
+    {
+      "term": "shoulder",
+      "count": 470
+    },
+    {
+      "term": "feet",
+      "count": 421
+    },
+    {
+      "term": "torso",
+      "count": 418
+    },
+    {
+      "term": "knees",
+      "count": 410
+    },
+    {
+      "term": "head",
+      "count": 353
+    },
+    {
+      "term": "legs",
+      "count": 348
+    },
+    {
+      "term": "hips",
+      "count": 342
+    },
+    {
+      "term": "elbows",
+      "count": 331
+    },
+    {
+      "term": "hands",
+      "count": 331
+    },
+    {
+      "term": "chest",
+      "count": 300
+    },
+    {
+      "term": "arm",
+      "count": 281
+    },
+    {
+      "term": "hand",
+      "count": 273
+    },
+    {
+      "term": "shoulders",
+      "count": 260
+    },
+    {
+      "term": "leg",
+      "count": 207
+    },
+    {
+      "term": "foot",
+      "count": 156
+    },
+    {
+      "term": "knee",
+      "count": 149
+    },
+    {
+      "term": "forearms",
+      "count": 146
+    },
+    {
+      "term": "elbow",
+      "count": 143
+    },
+    {
+      "term": "biceps",
+      "count": 125
+    },
+    {
+      "term": "heels",
+      "count": 114
+    },
+    {
+      "term": "thighs",
+      "count": 113
+    },
+    {
+      "term": "toes",
+      "count": 111
+    },
+    {
+      "term": "wrist",
+      "count": 81
+    },
+    {
+      "term": "hip",
+      "count": 77
+    },
+    {
+      "term": "triceps",
+      "count": 61
+    },
+    {
+      "term": "forearm",
+      "count": 54
+    },
+    {
+      "term": "wrists",
+      "count": 54
+    },
+    {
+      "term": "ankles",
+      "count": 46
+    },
+    {
+      "term": "hamstrings",
+      "count": 42
+    },
+    {
+      "term": "calves",
+      "count": 40
+    },
+    {
+      "term": "heel",
+      "count": 40
+    },
+    {
+      "term": "glutes",
+      "count": 38
+    },
+    {
+      "term": "neck",
+      "count": 36
+    },
+    {
+      "term": "thigh",
+      "count": 28
+    },
+    {
+      "term": "lats",
+      "count": 27
+    },
+    {
+      "term": "ankle",
+      "count": 25
+    },
+    {
+      "term": "spine",
+      "count": 24
+    },
+    {
+      "term": "abs",
+      "count": 21
+    },
+    {
+      "term": "calf",
+      "count": 21
+    },
+    {
+      "term": "core",
+      "count": 12
+    },
+    {
+      "term": "quadriceps",
+      "count": 11
+    },
+    {
+      "term": "toe",
+      "count": 10
+    },
+    {
+      "term": "traps",
+      "count": 8
+    },
+    {
+      "term": "bicep",
+      "count": 7
+    },
+    {
+      "term": "abdominal",
+      "count": 6
+    },
+    {
+      "term": "lat",
+      "count": 6
+    },
+    {
+      "term": "quad",
+      "count": 4
+    },
+    {
+      "term": "tricep",
+      "count": 4
+    },
+    {
+      "term": "abdomen",
+      "count": 1
+    },
+    {
+      "term": "glute",
+      "count": 1
+    },
+    {
+      "term": "hamstring",
+      "count": 1
+    },
+    {
+      "term": "quads",
+      "count": 1
+    },
+    {
+      "term": "trap",
+      "count": 1
+    }
+  ],
+  "equipment": [
+    {
+      "term": "bar",
+      "count": 978
+    },
+    {
+      "term": "bench",
+      "count": 340
+    },
+    {
+      "term": "dumbbell",
+      "count": 216
+    },
+    {
+      "term": "dumbbells",
+      "count": 198
+    },
+    {
+      "term": "barbell",
+      "count": 197
+    },
+    {
+      "term": "kettlebell",
+      "count": 176
+    },
+    {
+      "term": "rack",
+      "count": 175
+    },
+    {
+      "term": "handles",
+      "count": 148
+    },
+    {
+      "term": "step",
+      "count": 129
+    },
+    {
+      "term": "machine",
+      "count": 109
+    },
+    {
+      "term": "ball",
+      "count": 104
+    },
+    {
+      "term": "pulley",
+      "count": 94
+    },
+    {
+      "term": "handle",
+      "count": 88
+    },
+    {
+      "term": "box",
+      "count": 80
+    },
+    {
+      "term": "rope",
+      "count": 78
+    },
+    {
+      "term": "cable",
+      "count": 74
+    },
+    {
+      "term": "band",
+      "count": 72
+    },
+    {
+      "term": "platform",
+      "count": 66
+    },
+    {
+      "term": "kettlebells",
+      "count": 48
+    },
+    {
+      "term": "plate",
+      "count": 30
+    },
+    {
+      "term": "bands",
+      "count": 26
+    },
+    {
+      "term": "plates",
+      "count": 26
+    },
+    {
+      "term": "sled",
+      "count": 24
+    },
+    {
+      "term": "smith",
+      "count": 21
+    },
+    {
+      "term": "mat",
+      "count": 19
+    },
+    {
+      "term": "chain",
+      "count": 15
+    },
+    {
+      "term": "chains",
+      "count": 14
+    },
+    {
+      "term": "roller",
+      "count": 14
+    },
+    {
+      "term": "cone",
+      "count": 13
+    },
+    {
+      "term": "medicine ball",
+      "count": 13
+    },
+    {
+      "term": "tire",
+      "count": 12
+    },
+    {
+      "term": "exercise ball",
+      "count": 11
+    },
+    {
+      "term": "rings",
+      "count": 6
+    },
+    {
+      "term": "towel",
+      "count": 6
+    },
+    {
+      "term": "collar",
+      "count": 5
+    },
+    {
+      "term": "hurdle",
+      "count": 5
+    },
+    {
+      "term": "suspension",
+      "count": 5
+    },
+    {
+      "term": "bosu",
+      "count": 4
+    },
+    {
+      "term": "collars",
+      "count": 4
+    },
+    {
+      "term": "ez bar",
+      "count": 4
+    },
+    {
+      "term": "foam roller",
+      "count": 4
+    },
+    {
+      "term": "sandbag",
+      "count": 4
+    },
+    {
+      "term": "yoke",
+      "count": 4
+    },
+    {
+      "term": "cones",
+      "count": 3
+    },
+    {
+      "term": "hurdles",
+      "count": 2
+    },
+    {
+      "term": "ez-bar",
+      "count": 1
+    },
+    {
+      "term": "trap bar",
+      "count": 1
+    }
+  ],
+  "technicalTerms": [
+    {
+      "term": "starting position",
+      "count": 998,
+      "note": "posição inicial"
+    },
+    {
+      "term": "kettlebell",
+      "count": 176,
+      "note": "Kettlebell — manter"
+    },
+    {
+      "term": "rack",
+      "count": 175,
+      "note": "Rack — contexto olímpico/suporte"
+    },
+    {
+      "term": "squat",
+      "count": 95,
+      "note": "Squat / Agachamento"
+    },
+    {
+      "term": "clean",
+      "count": 65,
+      "note": "Clean — olímpico UNCHANGED"
+    },
+    {
+      "term": "swing",
+      "count": 27,
+      "note": "Swing — frequentemente mantido"
+    },
+    {
+      "term": "smith",
+      "count": 21,
+      "note": "Smith — máquina Smith"
+    },
+    {
+      "term": "pull-up",
+      "count": 19,
+      "note": "Pull-Up → Barra Fixa (nomes; validar em instruções)"
+    },
+    {
+      "term": "hook grip",
+      "count": 16,
+      "note": "Hook grip — olímpico"
+    },
+    {
+      "term": "lockout",
+      "count": 15,
+      "note": "Lockout — termo técnico"
+    },
+    {
+      "term": "lunge",
+      "count": 11,
+      "note": "Lunge / Afundo"
+    },
+    {
+      "term": "jerk",
+      "count": 10,
+      "note": "Jerk — olímpico UNCHANGED"
+    },
+    {
+      "term": "snatch",
+      "count": 7,
+      "note": "Snatch — olímpico UNCHANGED"
+    },
+    {
+      "term": "chin-up",
+      "count": 6,
+      "note": "Chin-Up → Barra Fixa Supinada"
+    },
+    {
+      "term": "deadlift",
+      "count": 5,
+      "note": "Deadlift / Levantamento Terra"
+    },
+    {
+      "term": "leg press",
+      "count": 5,
+      "note": "Leg Press — manter em inglês"
+    },
+    {
+      "term": "pulldown",
+      "count": 4,
+      "note": "Pulldown — NUNCA traduzir como Puxada"
+    },
+    {
+      "term": "chinup",
+      "count": 1,
+      "note": "Chin-Up → Barra Fixa Supinada"
+    },
+    {
+      "term": "pullup",
+      "count": 1,
+      "note": "Pull-Up → Barra Fixa"
+    }
+  ],
+  "potentialReview": [
+    {
+      "externalId": "Atlas_Stone_Trainer",
+      "originalName": "Atlas Stone Trainer",
+      "instructionIndex": 0,
+      "instruction": "This trainer is effective for developing Atlas Stone strength for those who don't have access to stones, and are typically made from bar ends or heavy pipe.",
+      "motivo": "nome próprio / variação named"
+    },
+    {
+      "externalId": "Atlas_Stones",
+      "originalName": "Atlas Stones",
+      "instructionIndex": 0,
+      "instruction": "Begin with the atlas stone between your feet. Bend at the hips to wrap your arms vertically around the Atlas Stone, attempting to get your fingers underneath the stone. Many stones will have a small flat portion on the bottom, which will make the stone easier to hold.",
+      "motivo": "nome próprio / variação named"
+    },
+    {
+      "externalId": "Backward_Medicine_Ball_Throw",
+      "originalName": "Backward Medicine Ball Throw",
+      "instructionIndex": 0,
+      "instruction": "This exercise is best done with a partner. If you lack a partner, the ball can be thrown and retrieved or thrown against a wall.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Backward_Medicine_Ball_Throw",
+      "originalName": "Backward Medicine Ball Throw",
+      "instructionIndex": 1,
+      "instruction": "Begin standing a few meters in front of your partner, both facing the same direction. Begin holding the ball between your legs.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Backward_Medicine_Ball_Throw",
+      "originalName": "Backward Medicine Ball Throw",
+      "instructionIndex": 2,
+      "instruction": "Squat down and then forcefully reverse direction, coming to full extension and you toss the ball over your head to your partner.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Backward_Medicine_Ball_Throw",
+      "originalName": "Backward Medicine Ball Throw",
+      "instructionIndex": 3,
+      "instruction": "Your partner can then roll the ball back to you. Repeat for the desired number of repetitions.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Barbell_Squat_To_A_Bench",
+      "originalName": "Barbell Squat To A Bench",
+      "instructionIndex": 1,
+      "instruction": "",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "Behind_Head_Chest_Stretch",
+      "originalName": "Behind Head Chest Stretch",
+      "instructionIndex": 0,
+      "instruction": "Sit upright on the floor with your partner behind you.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Behind_Head_Chest_Stretch",
+      "originalName": "Behind Head Chest Stretch",
+      "instructionIndex": 1,
+      "instruction": "Place your hands behind your hand, and push your elbows back as far as you can. Your partner should hold your elbows. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Behind_Head_Chest_Stretch",
+      "originalName": "Behind Head Chest Stretch",
+      "instructionIndex": 2,
+      "instruction": "Gently attempt to pull your elbows forward with your hands still behind your head for 10 or more seconds. Your partner should prevent your elbows from moving.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Behind_Head_Chest_Stretch",
+      "originalName": "Behind Head Chest Stretch",
+      "instructionIndex": 3,
+      "instruction": "Now, relax your muscles and have your partner gently pull the elbows back as far as it comfortable for you. Be sure to let your partner know when the stretch is adequate to prevent overstretching or injury.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Body-Up",
+      "originalName": "Body-Up",
+      "instructionIndex": 3,
+      "instruction": "Repeat.",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "Box_Squat",
+      "originalName": "Box Squat",
+      "instructionIndex": 2,
+      "instruction": "With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips until you are seated on the box. Ideally, your shins should be perpendicular to the ground. Pause when you reach the box, and relax the hip flexors. Never bounce off of a box.",
+      "motivo": "possível erro gramatical na fonte"
+    },
+    {
+      "externalId": "Box_Squat_with_Bands",
+      "originalName": "Box Squat with Bands",
+      "instructionIndex": 2,
+      "instruction": "With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips until you are seated on the box. Ideally, your shins should be perpendicular to the ground. Pause when you reach the box, and relax the hip flexors. Never bounce off of a box.",
+      "motivo": "possível erro gramatical na fonte"
+    },
+    {
+      "externalId": "Box_Squat_with_Chains",
+      "originalName": "Box Squat with Chains",
+      "instructionIndex": 3,
+      "instruction": "With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips until you are seated on the box. Ideally, your shins should be perpendicular to the ground. Pause when you reach the box, and relax the hip flexors. Never bounce off of a box.",
+      "motivo": "possível erro gramatical na fonte"
+    },
+    {
+      "externalId": "Catch_and_Overhead_Throw",
+      "originalName": "Catch and Overhead Throw",
+      "instructionIndex": 0,
+      "instruction": "Begin standing while facing a wall or a partner.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Catch_and_Overhead_Throw",
+      "originalName": "Catch and Overhead Throw",
+      "instructionIndex": 2,
+      "instruction": "Ensure that you follow your throw through, being prepared to receive your rebound from your throw. If you are throwing against the wall, make sure that you stand close enough to the wall to receive the rebound, and aim a little higher than you would with a partner.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Chest_Push_multiple_response",
+      "originalName": "Chest Push (multiple response)",
+      "instructionIndex": 0,
+      "instruction": "Begin in a kneeling position facing a wall or utilize a partner. Hold the ball with both hands tight into the chest.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Clean",
+      "originalName": "Clean",
+      "instructionIndex": 1,
+      "instruction": "",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "Close-Grip_EZ-Bar_Press",
+      "originalName": "Close-Grip EZ-Bar Press",
+      "instructionIndex": 4,
+      "instruction": "Repeat.",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "Decline_Barbell_Bench_Press",
+      "originalName": "Decline Barbell Bench Press",
+      "instructionIndex": 1,
+      "instruction": "Using a medium width grip (a grip that creates a 90-degree angle in the middle of the movement between the forearms and the upper arms), lift the bar from the rack and hold it straight over you with your arms locked. The arms should be perpendicular to the floor. This will be your starting position. Tip: In order to protect your rotator cuff, it is best if you have a spotter help you lift the barbell off the rack.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Decline_Close-Grip_Bench_To_Skull_Crusher",
+      "originalName": "Decline Close-Grip Bench To Skull Crusher",
+      "instructionIndex": 1,
+      "instruction": "Using a close grip (a grip that is slightly less than shoulder width), lift the bar from the rack and hold it straight over you with your arms locked and elbows in. The arms should be perpendicular to the floor. This will be your starting position. Tip: In order to protect your rotator cuff, it is best if you have a spotter help you lift the barbell off the rack.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Decline_EZ_Bar_Triceps_Extension",
+      "originalName": "Decline EZ Bar Triceps Extension",
+      "instructionIndex": 1,
+      "instruction": "Using a close grip (a grip that is slightly less than shoulder width), lift the EZ bar from the rack and hold it straight over you with your arms locked and elbows in. The arms should be perpendicular to the floor. This will be your starting position. Tip: In order to protect your rotator cuff, it is best if you have a spotter help you lift the barbell off the rack.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "EZ-Bar_Skullcrusher",
+      "originalName": "EZ-Bar Skullcrusher",
+      "instructionIndex": 3,
+      "instruction": "Repeat.",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "Handstand_Push-Ups",
+      "originalName": "Handstand Push-Ups",
+      "instructionIndex": 1,
+      "instruction": "Kick yourself up against the wall with your arms straight. Your body should be upside down with the arms and legs fully extended. Keep your whole body as straight as possible. Tip: If doing this for the first time, have a spotter help you. Also, make sure that you keep facing the wall with your head, rather than looking down.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Glute",
+      "originalName": "Lying Glute",
+      "instructionIndex": 0,
+      "instruction": "Lie on your back with your partner kneeling beside you.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Glute",
+      "originalName": "Lying Glute",
+      "instructionIndex": 1,
+      "instruction": "Flex the hip of one leg, raising it off of the floor. Rotate the leg so the foot is over the opposite hip, the lower leg perpendicular to your body. Your partner should hold the knee and ankle in place. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Glute",
+      "originalName": "Lying Glute",
+      "instructionIndex": 2,
+      "instruction": "Attempt to push your leg towards your partner, who should be preventing any actual movement of the leg.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Glute",
+      "originalName": "Lying Glute",
+      "instructionIndex": 3,
+      "instruction": "After 10-20 seconds, completely relax as your partner gently pushes the ankle and knee towards your chest. Be sure to inform your helper when the stretch is adequate to prevent injury or overstretching.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Hamstring",
+      "originalName": "Lying Hamstring",
+      "instructionIndex": 0,
+      "instruction": "Lie on your back with your legs extended. Your partner should be kneeling beside you. Raise one leg up towards the ceiling and have your partner hold the ankle. Your partner can use their shoulder to brace your leg if necessary. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Hamstring",
+      "originalName": "Lying Hamstring",
+      "instructionIndex": 1,
+      "instruction": "With your partner holding your leg in place, attempt to flex the knee, contracting the hamstrings for 10-20 seconds.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Hamstring",
+      "originalName": "Lying Hamstring",
+      "instructionIndex": 2,
+      "instruction": "Then relax your leg, allowing your partner to gently push the leg towards your head. Be sure to inform your helper when the stretch is adequate to prevent injury or overstretching. Switch sides once complete.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Prone_Quadriceps",
+      "originalName": "Lying Prone Quadriceps",
+      "instructionIndex": 0,
+      "instruction": "Lay face down on the floor with your partner kneeling beside you. Flex one knee and raise that leg off the ground, attempting to touch your glutes with your foot. Your partner should hold the knee and ankle. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Prone_Quadriceps",
+      "originalName": "Lying Prone Quadriceps",
+      "instructionIndex": 1,
+      "instruction": "Attempt to extend your knee while your partner prevents any actual movement.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Lying_Prone_Quadriceps",
+      "originalName": "Lying Prone Quadriceps",
+      "instructionIndex": 2,
+      "instruction": "After 10-20 seconds, relax your muscles as your partner gently pushes the foot towards your glutes, further stretching the quadriceps and hip flexors.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Medicine_Ball_Chest_Pass",
+      "originalName": "Medicine Ball Chest Pass",
+      "instructionIndex": 0,
+      "instruction": "You will need a partner for this exercise. Lacking one, this movement can be performed against a wall.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Medicine_Ball_Chest_Pass",
+      "originalName": "Medicine Ball Chest Pass",
+      "instructionIndex": 1,
+      "instruction": "Begin facing your partner holding the medicine ball at your torso with both hands.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Medicine_Ball_Chest_Pass",
+      "originalName": "Medicine Ball Chest Pass",
+      "instructionIndex": 3,
+      "instruction": "Your partner should catch the ball, and throw it back to you.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Medicine_Ball_Full_Twist",
+      "originalName": "Medicine Ball Full Twist",
+      "instructionIndex": 0,
+      "instruction": "For this exercise you will need a medicine ball and a partner. Stand back to back with your partner, spaced 2-3 feet apart. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Medicine_Ball_Full_Twist",
+      "originalName": "Medicine Ball Full Twist",
+      "instructionIndex": 1,
+      "instruction": "Hold the ball in front of the trunk. Open the hips and turn the shoulders at the same time as your partner.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Medicine_Ball_Full_Twist",
+      "originalName": "Medicine Ball Full Twist",
+      "instructionIndex": 2,
+      "instruction": "For full rotation, you and your partner should twist in the same direction, i.e. counter-clockwise.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Medicine_Ball_Full_Twist",
+      "originalName": "Medicine Ball Full Twist",
+      "instructionIndex": 3,
+      "instruction": "Pass the ball to your partner, and both of you can now twist in the opposite direction to repeat the procedure.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Natural_Glute_Ham_Raise",
+      "originalName": "Natural Glute Ham Raise",
+      "instructionIndex": 3,
+      "instruction": "If you are unable to complete a rep, use a band, a partner, or push off of a box to aid in completing a repetition.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "On-Your-Back_Quad_Stretch",
+      "originalName": "On-Your-Back Quad Stretch",
+      "instructionIndex": 3,
+      "instruction": "Switch sides.",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "One-Arm_High-Pulley_Cable_Side_Bends",
+      "originalName": "One-Arm High-Pulley Cable Side Bends",
+      "instructionIndex": 6,
+      "instruction": "Repeat to failure.",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "One_Arm_Floor_Press",
+      "originalName": "One Arm Floor Press",
+      "instructionIndex": 1,
+      "instruction": "Have a partner hand you the bar on one hand. When starting, your arm should be just about fully extended, similar to the starting position of a barbell bench press. However, this time your grip will be neutral (palms facing your torso).",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Overhead_Lat",
+      "originalName": "Overhead Lat",
+      "instructionIndex": 0,
+      "instruction": "Sit upright on the floor with your partner behind you. Raise one arm straight up, and flex the elbow, attempting to touch your hand to your back. Your parner should hold your tricep and wrist. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Overhead_Lat",
+      "originalName": "Overhead Lat",
+      "instructionIndex": 1,
+      "instruction": "Attempt to pull your upper arm to your side as your partner prevents you from doing actually doing so.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Overhead_Lat",
+      "originalName": "Overhead Lat",
+      "instructionIndex": 2,
+      "instruction": "After 10-20 seconds, relax the arm and allow your partner to further stretch the lat by applying gentle pressure to the tricep. Hold for 10-20 seconds, and then switch sides.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Overhead_Triceps",
+      "originalName": "Overhead Triceps",
+      "instructionIndex": 0,
+      "instruction": "Sit upright on the floor with your partner behind you. Raise one arm straight up, and flex the elbow, attempting to touch your hand to your back. Your parner should hold your elbow and wrist. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Overhead_Triceps",
+      "originalName": "Overhead Triceps",
+      "instructionIndex": 1,
+      "instruction": "Attempt to extend the arm straight into the air as your partner prevents you from doing actually doing so.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Overhead_Triceps",
+      "originalName": "Overhead Triceps",
+      "instructionIndex": 2,
+      "instruction": "After 10-20 seconds, relax the arm and allow your partner to further stretch the tricep by applying gentle pressure to the wrist. Hold for 10-20 seconds, and then switch sides.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Pallof_Press_With_Rotation",
+      "originalName": "Pallof Press With Rotation",
+      "instructionIndex": 7,
+      "instruction": "Repeat to failure.",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "Return_Push_from_Stance",
+      "originalName": "Return Push from Stance",
+      "instructionIndex": 0,
+      "instruction": "You will need a partner for this drill.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Return_Push_from_Stance",
+      "originalName": "Return Push from Stance",
+      "instructionIndex": 2,
+      "instruction": "At the signal, move into a position to receive the pass from your partner.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Return_Push_from_Stance",
+      "originalName": "Return Push from Stance",
+      "instructionIndex": 3,
+      "instruction": "Catch the medicine ball with both hands and immediately throw it back to your partner.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Reverse_Band_Box_Squat",
+      "originalName": "Reverse Band Box Squat",
+      "instructionIndex": 2,
+      "instruction": "With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips until you are seated on the box. Ideally, your shins should be perpendicular to the ground. Pause when you reach the box, and relax the hip flexors. Never bounce off of a box.",
+      "motivo": "possível erro gramatical na fonte"
+    },
+    {
+      "externalId": "Reverse_Band_Power_Squat",
+      "originalName": "Reverse Band Power Squat",
+      "instructionIndex": 2,
+      "instruction": "Keep your head facing forward. With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips as much as possible. Ideally, your shins should be perpendicular to the ground. Lower bar position necessitates a greater torso lean to keep the bar over the heels. Continue until you break parallel, which is defined as the crease of the hip being in line with the top of the knee.",
+      "motivo": "possível erro gramatical na fonte"
+    },
+    {
+      "externalId": "Russian_Twist",
+      "originalName": "Russian Twist",
+      "instructionIndex": 0,
+      "instruction": "Lie down on the floor placing your feet either under something that will not move or by having a partner hold them. Your legs should be bent at the knees.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Barbell_Military_Press",
+      "originalName": "Seated Barbell Military Press",
+      "instructionIndex": 0,
+      "instruction": "Sit on a Military Press Bench with a bar behind your head and either have a spotter give you the bar (better on the rotator cuff this way) or pick it up yourself carefully with a pronated grip (palms facing forward). Tip: Your grip should be wider than shoulder width and it should create a 90-degree angle between the forearm and the upper arm as the barbell goes down.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Biceps",
+      "originalName": "Seated Biceps",
+      "instructionIndex": 0,
+      "instruction": "Sit on the floor with your knees bent and your partner standing behind you. Extend your arms straight behind you with your palms facing each other. Your partner will hold your wrists for you. This will be the starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Biceps",
+      "originalName": "Seated Biceps",
+      "instructionIndex": 1,
+      "instruction": "Attempt to flex your elbows, while your partner prevents any actual movement.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Biceps",
+      "originalName": "Seated Biceps",
+      "instructionIndex": 2,
+      "instruction": "After 10-20 seconds, relax your arms while your partner gently pulls your wrists up to stretch your biceps. Be sure to let your partner know when the stretch is appropriate to prevent injury or overstretching.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Front_Deltoid",
+      "originalName": "Seated Front Deltoid",
+      "instructionIndex": 0,
+      "instruction": "Sit upright on the floor with your legs bent, your partner standing behind you. Stick your arms straight out to your sides, with your palms facing the ground. Attempt to move them as far behind you as possible, as your assistant holds your wrists. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Front_Deltoid",
+      "originalName": "Seated Front Deltoid",
+      "instructionIndex": 1,
+      "instruction": "Keeping your elbows straight, attempt to move your arms to the front, with your partner gently restraining you to prevent any actual movement for 10-20 seconds.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Front_Deltoid",
+      "originalName": "Seated Front Deltoid",
+      "instructionIndex": 2,
+      "instruction": "Now, relax your muscles and allow your partner to gently increase the stretch on the shoulders and chest. Hold for 10 to 20 seconds.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Glute",
+      "originalName": "Seated Glute",
+      "instructionIndex": 0,
+      "instruction": "In a seated position with your knees bent, cross one ankle over the opposite knee. Your partner will stand behind you. Now, lean forward as your partner braces your shoulders with their hands. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Glute",
+      "originalName": "Seated Glute",
+      "instructionIndex": 1,
+      "instruction": "Attempt to push your torso back for 10-20 seconds, as your partner prevents any actual movement of your torso.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Glute",
+      "originalName": "Seated Glute",
+      "instructionIndex": 2,
+      "instruction": "Now relax your muscles as your partner increases the stretch by gently pushing your torso forward for 10-20 seconds.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Seated_Good_Mornings",
+      "originalName": "Seated Good Mornings",
+      "instructionIndex": 1,
+      "instruction": "Remove the bar from the rack, creating a tight arch in your lower back. Keep your head facing forward. With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips until you are seated on the box. This will be your starting position.",
+      "motivo": "possível erro gramatical na fonte"
+    },
+    {
+      "externalId": "Sit-Up",
+      "originalName": "Sit-Up",
+      "instructionIndex": 0,
+      "instruction": "Lie down on the floor placing your feet either under something that will not move or by having a partner hold them. Your legs should be bent at the knees.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Squat_with_Bands",
+      "originalName": "Squat with Bands",
+      "instructionIndex": 2,
+      "instruction": "With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips as much as possible. Ideally, your shins should be perpendicular to the ground. Lower bar position necessitates a greater torso lean to keep the bar over the heels. Continue until you break parallel, which is defined as the crease of the hip being in line with the top of the knee.",
+      "motivo": "possível erro gramatical na fonte"
+    },
+    {
+      "externalId": "Squat_with_Chains",
+      "originalName": "Squat with Chains",
+      "instructionIndex": 2,
+      "instruction": "With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips as much as possible. Ideally, your shins should be perpendicular to the ground. Lower bar position necessitates a greater torso lean to keep the bar over the heels. Continue until you break parallel, which is defined as the crease of the hip being in line with the top of the knee.",
+      "motivo": "possível erro gramatical na fonte"
+    },
+    {
+      "externalId": "Standing_Cable_Lift",
+      "originalName": "Standing Cable Lift",
+      "instructionIndex": 6,
+      "instruction": "Repeat to failure.",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "Standing_Cable_Wood_Chop",
+      "originalName": "Standing Cable Wood Chop",
+      "instructionIndex": 6,
+      "instruction": "Repeat to failure.",
+      "motivo": "fragmento/muito curto"
+    },
+    {
+      "externalId": "Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench",
+      "originalName": "Standing One-Arm Dumbbell Curl Over Incline Bench",
+      "instructionIndex": 0,
+      "instruction": "Stand on the back side of an incline bench as if you were going to be a spotter for someone. Have a dumbbell in one hand and rest it across the incline bench with a supinated (palms up) grip.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Standing_Palms-Up_Barbell_Behind_The_Back_Wrist_Curl",
+      "originalName": "Standing Palms-Up Barbell Behind The Back Wrist Curl",
+      "instructionIndex": 5,
+      "instruction": "When finished, lower the barbell down to the squat rack or the floor by bending the knees. Tip: It is easiest to either pick it up from a squat rack or have a partner hand it to you.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Standing_Towel_Triceps_Extension",
+      "originalName": "Standing Towel Triceps Extension",
+      "instructionIndex": 1,
+      "instruction": "Now communicate with your partner so that he/she can grip the other side of the towel to apply resistance. Keeping your upper arms close to your head (elbows in) and perpendicular to the floor, lower the resistance in a semicircular motion behind your head until your forearms touch your biceps. Tip: The upper arms should remain stationary and only the forearms should move. Breathe in as you perform this step.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Standing_Two-Arm_Overhead_Throw",
+      "originalName": "Standing Two-Arm Overhead Throw",
+      "instructionIndex": 2,
+      "instruction": "The medicine ball can be thrown to a partner or to a wall, receiving it as it bounces back.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Supine_Chest_Throw",
+      "originalName": "Supine Chest Throw",
+      "instructionIndex": 0,
+      "instruction": "This drill is great for chest passes when you lack a partner or a wall of sufficient strength. Lay on the ground on your back with your knees bent.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Supine_One-Arm_Overhead_Throw",
+      "originalName": "Supine One-Arm Overhead Throw",
+      "instructionIndex": 2,
+      "instruction": "The ball can be thrown to a partner or bounced off of a wall.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Supine_Two-Arm_Overhead_Throw",
+      "originalName": "Supine Two-Arm Overhead Throw",
+      "instructionIndex": 3,
+      "instruction": "The ball can be thrown to a partner or bounced off of a wall.",
+      "motivo": "depende de parceiro/contexto"
+    },
+    {
+      "externalId": "Weighted_Bench_Dip",
+      "originalName": "Weighted Bench Dip",
+      "instructionIndex": 1,
+      "instruction": "The legs will be extended forward on top of the other bench. Your legs should be parallel to the floor while your torso is to be perpendicular to the floor. Have your partner place the dumbbell on your lap. Note: This exercise is best performed with a partner as placing the weight on your lap can be challenging and cause injury without assistance. This will be your starting position.",
+      "motivo": "depende de parceiro/contexto"
+    }
+  ],
+  "potentialReviewCount": 83,
+  "recommendations": [
+    {
+      "id": "expand-sentence-lookup",
+      "priority": "HIGH",
+      "action": "Expandir SENTENCE_LOOKUP com frases exact-match de alta frequência. Atualmente TRANSLATED_EXISTING=672, PASSTHROUGH_ENGLISH=2767.",
+      "examples": [
+        "Repeat…",
+        "Return to the starting position…",
+        "Lower the safety bars holding the weighted platform in place and press the pl…",
+        "Return your arms back to the starting position as you squeeze your chest musc…",
+        "Slowly return to the starting position…"
+      ]
+    },
+    {
+      "id": "consistent-verb-glossary",
+      "priority": "HIGH",
+      "action": "Definir glossário consistente de verbos de ação para a próxima etapa (Keep→Mantenha, Lower→Abaixe, Raise→Eleve, Return→Retorne, etc.).",
+      "examples": [
+        "position (1567)",
+        "repeat (478)",
+        "lower (428)",
+        "hold (388)",
+        "begin (386)",
+        "grip (331)",
+        "keep (328)",
+        "place (274)",
+        "breathe (269)",
+        "pull (216)",
+        "lift (210)",
+        "move (206)"
+      ]
+    },
+    {
+      "id": "pull-pulldown-rules",
+      "priority": "HIGH",
+      "action": "Validar nas instruções as regras já estabelecidas: Pulldown≠Puxada; Pull-Up→Barra Fixa; Chin-Up→Barra Fixa Supinada; Face Pull permanece Face Pull.",
+      "examples": [
+        "pull-up (19)",
+        "chin-up (6)",
+        "pulldown (4)",
+        "pullup (1)"
+      ]
+    },
+    {
+      "id": "no-partial-substitution",
+      "priority": "HIGH",
+      "action": "Não reativar PHRASE_SUBS/WORD_SUBS parciais — produzem MIXED EN/PT. Preferir exact-match + templates estruturados.",
+      "examples": []
+    },
+    {
+      "id": "next-lookup-candidates",
+      "priority": "MEDIUM",
+      "action": "Próximos candidatos exact-match pelo impacto (ocorrências).",
+      "examples": [
+        "After a brief pause at the top, return the weight just above the start position, keeping tension on the muscles by no…",
+        "Keeping the weight on your heels and pushing your feet and knees out, drive upward as you lead the movement with your…",
+        "Next comes the second pull, the main source of acceleration for the clean. As the bar approaches the mid-thigh positi…",
+        "To begin, step onto the treadmill and select the desired option from the menu. Most treadmills have a manual setting,…",
+        "Adjust the seat to the appropriate height and make your weight selection. Place your upper arms against the pads and …",
+        "Adjust the weight to an appropriate amount and be seated, grasping the handles. Your upper arms should be about 45 de…",
+        "After a second pause, bring the bar back to the starting position as you breathe out and push the bar using your ches…",
+        "After a second pause, bring the bar back to the starting position as you breathe out and push the bar using your ches…",
+        "After a second pause, bring the bar back to the starting position as you breathe out and push the bar using your ches…",
+        "After the bar passes the knees, aggressively pull the bar back, pulling your shoulder blades together as you drive yo…"
+      ]
+    },
+    {
+      "id": "manual-review-queue",
+      "priority": "MEDIUM",
+      "action": "Tratar POTENTIAL_REVIEW separadamente (parceiro, Tip embutido, nomes próprios, fragmentos) — não traduzir em lote cego.",
+      "examples": []
+    },
+    {
+      "id": "keep-english-technical",
+      "priority": "LOW",
+      "action": "Manter termos técnicos já decididos em inglês quando aparecerem nas instruções (Pulldown, Face Pull, Good Morning, Skull Crusher, Clean/Snatch/Jerk) salvo contexto que exija adaptação.",
+      "examples": [
+        "starting position",
+        "kettlebell",
+        "rack",
+        "squat",
+        "clean",
+        "swing",
+        "smith",
+        "pull-up",
+        "hook grip",
+        "lockout"
+      ]
+    }
+  ],
+  "sourceCatalogSha16": "2049d1c649fa9e92"
+}

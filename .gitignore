@@ -21,3 +21,15 @@ captures/
 output.json
 *.hprof
 .kotlin/
+
+# Python tooling (exercise-import pipeline)
+__pycache__/
+*.pyc
+
+# Stage 4.x media acquisition temporaries (not production assets)
+tools/exercise-import/analysis/_media_download_cache_v2_1/
+tools/exercise-import/analysis/_assets_pre_hash_v2_1.json
+
+# Local FEDB image mirror (partial; APK assets are the published media source of truth).
+# Keep exercises.json + schema.json versionable in the same parent directory.
+tools/exercise-import/input/free-exercise-db/exercises/

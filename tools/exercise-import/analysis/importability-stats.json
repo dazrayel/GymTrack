@@ -1,0 +1,37 @@
+{
+  "total": 876,
+  "classification": {
+    "IMPORTABLE": 691,
+    "REJECTED": 99,
+    "IMPORTABLE_WITH_FALLBACK": 86
+  },
+  "sum": 876,
+  "rejectedReasons": {
+    "unmapped_primary": 29,
+    "equipment_null": 70
+  },
+  "fallbackReasons": {
+    "dropped_unmapped_secondary": 38,
+    "equipment_outro": 38,
+    "equipment_barra_ez": 9,
+    "multiple_primary": 1
+  },
+  "overlapKindsAmongAllRows": {
+    "source_string_overlap": 9,
+    "canonical_collapse": 56
+  },
+  "policy": {
+    "REJECTED": [
+      "unmapped primary (neck, abductors, adductors)",
+      "source equipment is null"
+    ],
+    "IMPORTABLE_WITH_FALLBACK": [
+      "medicine ball / exercise ball / foam roll → Outro (importer)",
+      "e-z curl bar → Barra (importer)",
+      "unmapped secondary dropped",
+      "multiple primary reduced"
+    ],
+    "IMPORTABLE": "mapped muscleGroup + mapped equipmentType, no dropped muscles",
+    "REQUIRES_REVIEW": "unused under this policy (count 0)"
+  }
+}

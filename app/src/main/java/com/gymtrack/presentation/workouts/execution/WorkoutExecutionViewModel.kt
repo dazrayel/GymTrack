@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gymtrack.R
+import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
@@ -12,6 +13,7 @@ import com.gymtrack.domain.model.areAllSessionExercisesComplete
 import com.gymtrack.domain.model.elapsedMillis
 import com.gymtrack.domain.model.resolveCurrentExerciseIndex
 import com.gymtrack.domain.model.workoutProgress
+import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,6 +38,7 @@ import kotlin.coroutines.coroutineContext
 class WorkoutExecutionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val workoutSessionRepository: WorkoutSessionRepository,
+    private val exerciseRepository: ExerciseRepository,
     private val timeProvider: TimeProvider,
     private val draftStore: WorkoutExecutionDraftStore,
 ) : ViewModel() {
@@ -45,11 +48,33 @@ class WorkoutExecutionViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(WorkoutExecutionUiState(sessionId = sessionId))
     val uiState: StateFlow<WorkoutExecutionUiState> = _uiState.asStateFlow()
 
+    private val exerciseCatalogue = MutableStateFlow<Map<Long, Exercise>>(emptyMap())
+
     private var restExpiryHandledFor: Long? = null
+    private var restBeepHandledFor: Long? = null
 
     init {
+        observeExerciseCatalogue()
         observeSessionProgress()
         startUiTicker()
+    }
+
+    private fun observeExerciseCatalogue() {
+        viewModelScope.launch {
+            exerciseRepository.getAll()
+                .catch { /* Media is optional; keep empty catalogue. */ }
+                .collect { exercises ->
+                    exerciseCatalogue.value = exercises.associateBy { it.id }
+                    _uiState.update { current ->
+                        current.copy(
+                            mediaExercise = resolveMediaExercise(
+                                current.currentExercise,
+                                exerciseCatalogue.value,
+                            ),
+                        )
+                    }
+                }
+        }
     }
 
     private fun observeSessionProgress() {
@@ -94,10 +119,12 @@ class WorkoutExecutionViewModel @Inject constructor(
             while (coroutineContext.isActive) {
                 delay(1_000)
                 val session = _uiState.value.session
+                val remaining = remainingFrom(session)
                 _uiState.update { current ->
                     current.copy(
                         elapsedMillis = elapsedMillis(current.session, timeProvider.nowMillis()),
-                        restRemainingMillis = remainingFrom(current.session),
+                        restRemainingMillis = remaining,
+                        restBeepEvent = restBeepEventOrNull(session, remaining, current.restBeepEvent),
                     )
                 }
                 maybeExpireRest(session)
@@ -133,14 +160,31 @@ class WorkoutExecutionViewModel @Inject constructor(
         val progress = workoutProgress(exercises, setsByExerciseId)
 
         _uiState.update { current ->
-            val previousExerciseId = current.currentExercise?.id
-            val shouldPrefill = currentExercise != null &&
-                currentExercise.id != previousExerciseId &&
-                phase == WorkoutExecutionPhase.WORKING
+            val workingExercise =
+                if (phase == WorkoutExecutionPhase.WORKING) currentExercise else null
+            val inputsBelongToOther =
+                workingExercise != null && current.inputsExerciseId != workingExercise.id
+            val inputsBlank = current.repsInput.isBlank() || current.weightInput.isBlank()
+            val shouldPrefill = workingExercise != null && (inputsBelongToOther || inputsBlank)
+
+            val nextReps = if (shouldPrefill) {
+                draftStore.get(sessionId, workingExercise.id)?.repsInput
+                    ?: workingExercise.minRepetitions.toString()
+            } else {
+                current.repsInput
+            }
+            val nextWeight = if (shouldPrefill) {
+                draftStore.get(sessionId, workingExercise.id)?.weightInput
+                    ?: formatWeight(workingExercise.plannedWeight)
+            } else {
+                current.weightInput
+            }
+
             current.copy(
                 session = session,
                 exercises = exercises,
                 setsByExerciseId = setsByExerciseId,
+                mediaExercise = resolveMediaExercise(currentExercise, exerciseCatalogue.value),
                 currentExerciseIndex = exerciseIndex,
                 currentSetIndex = setIndex,
                 isWorkoutComplete = isComplete && !isResting,
@@ -150,6 +194,7 @@ class WorkoutExecutionViewModel @Inject constructor(
                 restSessionExerciseId = session?.restSessionExerciseId,
                 restAfterSetIndex = session?.restAfterSetIndex,
                 restRemainingMillis = remaining,
+                restBeepEvent = restBeepEventOrNull(session, remaining, current.restBeepEvent),
                 elapsedMillis = elapsedMillis(session, timeProvider.nowMillis()),
                 completedSets = progress.completedSets,
                 plannedSets = progress.plannedSets,
@@ -157,22 +202,30 @@ class WorkoutExecutionViewModel @Inject constructor(
                 totalExercises = progress.totalExercises,
                 progressPercent = progress.progressPercent,
                 isLoading = false,
-                repsInput = if (shouldPrefill) {
-                    draftStore.get(sessionId, currentExercise.id)?.repsInput
-                        ?: currentExercise.minRepetitions.toString()
-                } else {
-                    current.repsInput
-                },
-                weightInput = if (shouldPrefill) {
-                    draftStore.get(sessionId, currentExercise.id)?.weightInput
-                        ?: formatWeight(currentExercise.plannedWeight)
-                } else {
-                    current.weightInput
-                },
+                repsInput = nextReps,
+                weightInput = nextWeight,
+                inputsExerciseId = workingExercise?.id ?: current.inputsExerciseId,
                 repsError = if (shouldPrefill) null else current.repsError,
                 weightError = if (shouldPrefill) null else current.weightError,
             )
         }
+    }
+
+    /**
+     * Emits a one-shot beep event when rest remaining first hits zero for a given endsAt.
+     * Does not repeat while the UI stays at 00:00.
+     */
+    private fun restBeepEventOrNull(
+        session: WorkoutSession?,
+        remainingMillis: Long,
+        currentEvent: Long?,
+    ): Long? {
+        val endsAt = session?.restEndsAtMillis ?: return currentEvent
+        if (session.restPausedRemainingMillis != null) return currentEvent
+        if (remainingMillis > 0L) return currentEvent
+        if (restBeepHandledFor == endsAt) return currentEvent
+        restBeepHandledFor = endsAt
+        return endsAt
     }
 
     private fun remainingFrom(session: WorkoutSession?): Long {
@@ -180,6 +233,14 @@ class WorkoutExecutionViewModel @Inject constructor(
         if (paused != null) return maxOf(0L, paused)
         val endsAt = session?.restEndsAtMillis ?: return 0L
         return maxOf(0L, endsAt - timeProvider.nowMillis())
+    }
+
+    private fun resolveMediaExercise(
+        sessionExercise: WorkoutSessionExercise?,
+        catalogue: Map<Long, Exercise>,
+    ): Exercise? {
+        val exerciseId = sessionExercise?.exerciseId ?: return null
+        return catalogue[exerciseId]
     }
 
     private fun maybeExpireRest(session: WorkoutSession?) {
@@ -200,12 +261,24 @@ class WorkoutExecutionViewModel @Inject constructor(
     }
 
     fun onRepsChanged(value: String) {
-        _uiState.update { it.copy(repsInput = value, repsError = null) }
+        _uiState.update {
+            it.copy(
+                repsInput = value,
+                repsError = null,
+                inputsExerciseId = it.currentExercise?.id ?: it.inputsExerciseId,
+            )
+        }
         persistCurrentDraft()
     }
 
     fun onWeightChanged(value: String) {
-        _uiState.update { it.copy(weightInput = value, weightError = null) }
+        _uiState.update {
+            it.copy(
+                weightInput = value,
+                weightError = null,
+                inputsExerciseId = it.currentExercise?.id ?: it.inputsExerciseId,
+            )
+        }
         persistCurrentDraft()
     }
 
@@ -250,7 +323,18 @@ class WorkoutExecutionViewModel @Inject constructor(
                     reps = reps,
                     weight = weight,
                 )
-                draftStore.clear(sessionId, exercise.id)
+                val completedSetsAfter = setIndex + 1
+                if (completedSetsAfter < exercise.plannedSets) {
+                    // Keep last entered values as draft for the next set of the same exercise.
+                    draftStore.put(
+                        sessionId = sessionId,
+                        exerciseId = exercise.id,
+                        repsInput = state.repsInput,
+                        weightInput = state.weightInput,
+                    )
+                } else {
+                    draftStore.clear(sessionId, exercise.id)
+                }
                 if (exercise.restSeconds > 0) {
                     workoutSessionRepository.startRest(
                         sessionId = sessionId,
@@ -370,6 +454,10 @@ class WorkoutExecutionViewModel @Inject constructor(
 
     fun consumeSessionFinishedEvent() {
         _uiState.update { it.copy(sessionFinishedEvent = null) }
+    }
+
+    fun consumeRestBeepEvent() {
+        _uiState.update { it.copy(restBeepEvent = null) }
     }
 
     fun clearError() {

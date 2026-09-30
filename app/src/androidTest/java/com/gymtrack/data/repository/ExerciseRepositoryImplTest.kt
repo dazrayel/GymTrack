@@ -222,4 +222,73 @@ class ExerciseRepositoryImplTest {
         val leftover = db.exerciseSecondaryMuscleDao().getAll().first()
         assertTrue(leftover.none { it.exerciseId == id })
     }
+
+    @Test
+    fun save_manualExercise_hasNullExternalIdentity() = runBlocking {
+        val id = repository.save(
+            Exercise(name = "Meu exercício", muscleGroup = "Peitoral", equipmentType = "Barra"),
+        )
+
+        val stored = repository.getById(id).first()!!
+        assertNull(stored.externalSource)
+        assertNull(stored.externalId)
+    }
+
+    @Test
+    fun save_importedExercise_roundTripsExternalIdentity() = runBlocking {
+        val id = repository.save(
+            Exercise(
+                name = "3/4 Sit-Up",
+                muscleGroup = "Abdômen",
+                equipmentType = "Peso corporal",
+                externalSource = "free-exercise-db",
+                externalId = "3_4_Sit-Up",
+            ),
+        )
+
+        val stored = repository.getById(id).first()!!
+        assertEquals("free-exercise-db", stored.externalSource)
+        assertEquals("3_4_Sit-Up", stored.externalId)
+    }
+
+    @Test
+    fun save_updateManual_preservesNullExternalIdentity() = runBlocking {
+        val id = repository.save(
+            Exercise(name = "Push-up", muscleGroup = "Chest", equipmentType = "Bodyweight"),
+        )
+        repository.save(
+            Exercise(
+                id = id,
+                name = "Wide Push-up",
+                muscleGroup = "Shoulders",
+                equipmentType = "Bodyweight",
+            ),
+        )
+
+        val stored = repository.getById(id).first()!!
+        assertEquals(id, stored.id)
+        assertEquals("Wide Push-up", stored.name)
+        assertNull(stored.externalSource)
+        assertNull(stored.externalId)
+    }
+
+    @Test
+    fun save_updateImported_preservesExternalIdentityWhenCopied() = runBlocking {
+        val id = repository.save(
+            Exercise(
+                name = "Sit-Up",
+                muscleGroup = "Abdômen",
+                equipmentType = "Peso corporal",
+                externalSource = "free-exercise-db",
+                externalId = "3_4_Sit-Up",
+            ),
+        )
+        val existing = repository.getById(id).first()!!
+        repository.save(existing.copy(name = "3/4 Sit-Up"))
+
+        val stored = repository.getById(id).first()!!
+        assertEquals("3/4 Sit-Up", stored.name)
+        assertEquals("free-exercise-db", stored.externalSource)
+        assertEquals("3_4_Sit-Up", stored.externalId)
+    }
 }

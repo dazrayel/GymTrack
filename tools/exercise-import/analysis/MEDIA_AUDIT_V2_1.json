@@ -1,0 +1,26 @@
+{
+  "audit": {
+    "selectedExercises": 136,
+    "withBothFrames": 136,
+    "missingFrame0": 0,
+    "missingFrame1": 0,
+    "invalidJpeg": 0,
+    "duplicates": 0,
+    "statusOk": 136,
+    "alteredExistingCount": 0,
+    "sizeBeforeBytes": 12868527,
+    "sizeNewBytes": 4177254,
+    "sizeAfterBytes": 17045781,
+    "sizeBeforeMiB": 12.27,
+    "sizeNewMiB": 3.98,
+    "sizeAfterMiB": 16.26
+  },
+  "acquisition": {
+    "requested": 21,
+    "incorporated": 21,
+    "review": 0,
+    "failed": 0,
+    "sourceOnlyCopiedToApk": 13
+  },
+  "alteredExisting": []
+}

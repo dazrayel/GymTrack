@@ -1,0 +1,45 @@
+{
+  "stage": "4.4.2B",
+  "totalInstructions": 3441,
+  "translated": 672,
+  "unchanged": 0,
+  "review": 2767,
+  "notApplicable": 2,
+  "passthroughEnglish": 2767,
+  "methods": {
+    "empty": 2,
+    "lookup": 672,
+    "passthrough": 2706,
+    "review": 61
+  },
+  "reviewReasons": [
+    {
+      "reason": "passthrough_pending",
+      "count": 2706
+    },
+    {
+      "reason": "partner",
+      "count": 61
+    }
+  ],
+  "lookupSize": 174,
+  "before": {
+    "TRANSLATED_EXISTING": 511,
+    "PASSTHROUGH_ENGLISH": 2928,
+    "PORTUGUESE": 0,
+    "MIXED": 0,
+    "UNKNOWN": 2
+  },
+  "nameStatusUnchanged": {
+    "TRANSLATED": 641,
+    "UNCHANGED": 133,
+    "REVIEW": 3,
+    "NOT_APPLICABLE": 0
+  },
+  "notes": [
+    "Instruction statuses are TRANSLATED / REVIEW / NOT_APPLICABLE (UNCHANGED unused in 4.4.2B).",
+    "Pending English instructions are classified as REVIEW (not forced TRANSLATED).",
+    "Safe compose fallback disabled to avoid unnatural/missing-article Portuguese.",
+    "Pulldown never becomes Puxada; Pull-Up → Barra Fixa in covered sentences."
+  ]
+}

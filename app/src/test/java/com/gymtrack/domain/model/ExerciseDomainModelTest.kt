@@ -19,6 +19,8 @@ class ExerciseDomainModelTest {
         assertEquals("Squat", exercise.name)
         assertEquals("Legs", exercise.muscleGroup)
         assertEquals("Barbell", exercise.equipmentType)
+        assertEquals(null, exercise.externalSource)
+        assertEquals(null, exercise.externalId)
     }
 
     @Test

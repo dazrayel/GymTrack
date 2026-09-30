@@ -6,4 +6,6 @@ data class Exercise(
     val muscleGroup: String,
     val equipmentType: String,
     val secondaryMuscles: List<String> = emptyList(),
+    val externalSource: String? = null,
+    val externalId: String? = null,
 )

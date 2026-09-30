@@ -189,8 +189,10 @@ class WorkoutDetailNavigationTest {
         }
         val session = runBlocking { workoutSessionRepository.observeInProgress().first() }
         assertNotNull(session)
-        // TopAppBar can expose the same title twice in the merged semantics tree.
-        composeTestRule.onAllNodesWithText("Treino em andamento").onFirst().assertIsDisplayed()
+        composeTestRule.waitUntil(5_000) {
+            composeTestRule.onAllNodesWithTag("execution_back_button").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithTag("execution_back_button").assertIsDisplayed()
         composeTestRule.waitUntil(5_000) {
             composeTestRule.onAllNodesWithText(workoutName).fetchSemanticsNodes().isNotEmpty()
         }
@@ -237,9 +239,9 @@ class WorkoutDetailNavigationTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.waitUntil(5_000) {
-            composeTestRule.onAllNodesWithText("Treino em andamento").fetchSemanticsNodes().isNotEmpty()
+            composeTestRule.onAllNodesWithTag("execution_back_button").fetchSemanticsNodes().isNotEmpty()
         }
-        composeTestRule.onAllNodesWithText("Treino em andamento").onFirst().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("execution_back_button").assertIsDisplayed()
         composeTestRule.onNodeWithText(activeName).assertIsDisplayed()
         val session = runBlocking { workoutSessionRepository.observeInProgress().first() }
         assertEquals(sessionA, session!!.id)

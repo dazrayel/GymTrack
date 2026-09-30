@@ -71,6 +71,7 @@ import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutExerciseDetail
+import com.gymtrack.presentation.exercises.ExerciseAnimation
 import com.gymtrack.presentation.theme.GymTrackTheme
 
 @Composable
@@ -522,8 +523,15 @@ private fun ExercisePickerDialog(
     onNavigateToExercises: () -> Unit,
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var previewExercise by remember { mutableStateOf<Exercise?>(null) }
     val filteredExercises = remember(exercises, searchQuery) {
         filterExercisesByName(exercises, searchQuery)
+    }
+    LaunchedEffect(filteredExercises) {
+        val preview = previewExercise
+        if (preview != null && filteredExercises.none { it.id == preview.id }) {
+            previewExercise = null
+        }
     }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -581,16 +589,29 @@ private fun ExercisePickerDialog(
                         )
                     }
                     else -> {
+                        ExerciseAnimation(
+                            exercise = previewExercise,
+                            height = 140.dp,
+                            modifier = Modifier.testTag("picker_exercise_animation"),
+                        )
+                        Spacer(Modifier.height(8.dp))
                         LazyColumn(
-                            modifier = Modifier.heightIn(max = 280.dp),
+                            modifier = Modifier.heightIn(max = 220.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             items(filteredExercises, key = { it.id }) { exercise ->
+                                val selected = previewExercise?.id == exercise.id
                                 Card(
-                                    onClick = { onSelect(exercise) },
-                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = { previewExercise = exercise },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("picker_exercise_${exercise.id}"),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surface,
+                                        containerColor = if (selected) {
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        } else {
+                                            MaterialTheme.colorScheme.surface
+                                        },
                                     ),
                                 ) {
                                     Column(
@@ -629,19 +650,42 @@ private fun ExercisePickerDialog(
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = {
-                    onDismiss()
-                    onNavigateToExercises()
-                },
-                modifier = Modifier.testTag("go_to_exercises"),
-            ) {
-                Text(stringResource(R.string.go_to_exercises))
+            val preview = previewExercise
+            if (preview != null) {
+                TextButton(
+                    onClick = { onSelect(preview) },
+                    modifier = Modifier.testTag("picker_confirm_select"),
+                ) {
+                    Text(stringResource(R.string.pick_exercise_confirm))
+                }
+            } else {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                        onNavigateToExercises()
+                    },
+                    modifier = Modifier.testTag("go_to_exercises"),
+                ) {
+                    Text(stringResource(R.string.go_to_exercises))
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+            Row {
+                if (previewExercise != null) {
+                    TextButton(
+                        onClick = {
+                            onDismiss()
+                            onNavigateToExercises()
+                        },
+                        modifier = Modifier.testTag("go_to_exercises"),
+                    ) {
+                        Text(stringResource(R.string.go_to_exercises))
+                    }
+                }
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cancel))
+                }
             }
         },
     )

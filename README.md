@@ -27,6 +27,29 @@ A interface está em português. O projeto está em desenvolvimento (versão do 
 - Exercícios já no treino continuam no seletor e continuam selecionáveis; a escolha segue para **Configurar exercício**
 - Reordenação de exercícios no treino
 - Campos de texto livre (nome e descrição do treino, nome do exercício, observações) pedem capitalização de frases no teclado; buscas e campos numéricos não
+- Preview animado de demonstração (dois frames JPG locais) quando o exercício importado tem `externalId` com mídia no asset
+
+### Catálogo Free Exercise DB (pack publicado)
+
+O app empacota um catálogo curado a partir do [Free Exercise DB](https://github.com/yuhonas/free-exercise-db):
+
+| Camada | Quantidade |
+| --- | ---: |
+| Dataset original | **876** exercícios |
+| Importáveis (Stage 2.5) | **777** |
+| Rejeitados (Stage 2.5) | **99** |
+| **Publicados no APK (curadoria V2.1)** | **136** |
+
+Cada um dos **136** exercícios publicados inclui dois frames locais:
+
+```text
+app/src/main/assets/exercises/<externalId>/0.jpg
+app/src/main/assets/exercises/<externalId>/1.jpg
+```
+
+Total: **272** imagens JPG. A UI alterna esses dois frames como demonstração animada (não é GIF nem vídeo; não há download em runtime).
+
+Nomes de apresentação estão em pt-BR. A importação para o Room é **explícita** (`ExerciseCatalogImporter`; em builds debug, via Configurações) — sem seed automático na abertura do banco. O arquivo completo de 876 permanece no pipeline offline (`tools/exercise-import/`) para análise e testes, não como asset de produção.
 
 ### Execução da sessão
 
@@ -53,7 +76,7 @@ A interface está em português. O projeto está em desenvolvimento (versão do 
 - Ao confirmar, a linha de `workout_sessions` é removida e os dados da sessão (`workout_session_exercises`, `workout_sets`) saem pelo **CASCADE** já definido no Room — **sem** migration nem mudança de schema
 - Estatísticas por exercício (marcas e evolução a partir das séries gravadas)
 
-A aba **Configurações** existe na navegação, mas a tela atual é apenas um título — não há opções implementadas.
+A aba **Configurações** existe na navegação. Em builds **debug** há importação explícita do catálogo publicado; em release a secção de debug é um no-op.
 
 ## 🏗️ Arquitetura
 
@@ -89,11 +112,12 @@ Confirmado em `gradle/libs.versions.toml` e `app/build.gradle.kts`:
 
 ## 🗄️ Banco de dados
 
-Room, versão **8**, com `exportSchema` em `app/schemas/`.
+Room, versão **9**, com `exportSchema` em `app/schemas/`.
 
 Persistência principal:
 
 - Exercícios e músculos secundários (`exercise_secondary_muscles`, N:N, `ON DELETE CASCADE`)
+- Identidade externa opcional (`externalSource`, `externalId`) para exercícios importados do pack Free Exercise DB
 - Treinos e itens do treino (`workout_exercises`)
 - Sessões (`workout_sessions`) e snapshot dos exercícios (`workout_session_exercises`)
 - Séries realizadas (`workout_sets`)
@@ -106,6 +130,7 @@ Migrations relevantes para o estado atual:
 | --- | --- |
 | **6 → 7** | Cria `exercise_secondary_muscles`; adiciona `secondaryMuscles` (TEXT) no snapshot da sessão; normaliza sinônimos conhecidos de músculo/equipamento (ex.: Peito/Chest → Peitoral, Back → Costas). Valores desconhecidos (ex. Legs) **não** são forçados para o catálogo. |
 | **7 → 8** | Adiciona `status` em `workout_session_exercises` (`TEXT NOT NULL DEFAULT 'PENDING'`). **Não** altera `workout_sets`. |
+| **8 → 9** | Adiciona `externalSource` / `externalId` (nullable) e índice único composto; preserva IDs e relações. |
 
 Atualizar um exercício do catálogo usa `UPDATE` (não `INSERT OR REPLACE` da linha), para não quebrar vínculos de `workout_exercises` por cascade. O snapshot da sessão **não** muda se o catálogo for editado depois.
 
@@ -196,13 +221,13 @@ Testes instrumentados (emulador ligado):
 
 ## 📋 Estado atual
 
-O núcleo de catálogo, montagem de treinos, execução (incluindo skip, ordem livre e rascunhos), persistência Room 8, histórico (incluindo exclusão de sessões concluídas) e estatísticas básicas **está implementado e coberto por testes**.
+O núcleo de catálogo, montagem de treinos, execução (incluindo skip, ordem livre e rascunhos), persistência Room 9 (identidade externa; pack publicado V2.1 com **136** exercícios e **272** JPG; importador explícito do Free Exercise DB, sem seed automático), histórico (incluindo exclusão de sessões concluídas) e estatísticas básicas **está implementado e coberto por testes**.
 
-Ainda é um projeto em evolução: não há conta de utilizador, sincronização remota nem ecrã de definições funcional.
+Ainda é um projeto em evolução: não há conta de utilizador nem sincronização remota.
 
 ## 🗺️ Roadmap
 
-A aba Configurações é um placeholder. Novas funcionalidades poderão ser adicionadas a partir daí ou de outros fluxos; não há um roadmap formal versionado neste repositório.
+A aba Configurações pode receber mais opções no futuro; em debug já existe importação do catálogo. Não há um roadmap formal versionado neste repositório.
 
 ## 👨‍💻 Sobre
 

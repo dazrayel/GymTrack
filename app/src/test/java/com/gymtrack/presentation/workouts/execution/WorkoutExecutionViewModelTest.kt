@@ -3,12 +3,14 @@ package com.gymtrack.presentation.workouts.execution
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.SavedStateHandle
 import com.gymtrack.R
+import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
+import com.gymtrack.domain.repository.ExerciseRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +18,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -43,6 +46,7 @@ class WorkoutExecutionViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var fakeRepo: FakeExecutionSessionRepository
+    private lateinit var fakeExercises: FakeExerciseRepository
     private lateinit var clock: FakeTimeProvider
     private lateinit var draftStore: WorkoutExecutionDraftStore
     private lateinit var viewModel: WorkoutExecutionViewModel
@@ -107,6 +111,7 @@ class WorkoutExecutionViewModelTest {
         Dispatchers.setMain(testDispatcher)
         clock = FakeTimeProvider(now = 1_000_000L)
         fakeRepo = FakeExecutionSessionRepository(clock)
+        fakeExercises = FakeExerciseRepository()
         draftStore = WorkoutExecutionDraftStore()
         buildViewModel()
     }
@@ -120,6 +125,7 @@ class WorkoutExecutionViewModelTest {
         viewModel = WorkoutExecutionViewModel(
             savedStateHandle = SavedStateHandle(mapOf("sessionId" to SESSION_ID)),
             workoutSessionRepository = fakeRepo,
+            exerciseRepository = fakeExercises,
             timeProvider = clock,
             draftStore = draftStore,
         )
@@ -366,7 +372,7 @@ class WorkoutExecutionViewModelTest {
     }
 
     @Test
-    fun completeCurrentSet_clearsDraftForThatExercise() = runTest(testDispatcher) {
+    fun completeCurrentSet_keepsDraftWhenMoreSetsRemain() = runTest(testDispatcher) {
         emitSessionWithExercises()
         viewModel.onRepsChanged("12")
         viewModel.onWeightChanged("80")
@@ -375,7 +381,91 @@ class WorkoutExecutionViewModelTest {
         assertEquals(1, fakeRepo.completeSetCalls.size)
         assertEquals(12, fakeRepo.completeSetCalls.single().reps)
         assertEquals(80.0, fakeRepo.completeSetCalls.single().weight, 0.0)
+        assertEquals(ExerciseInputDraft("12", "80"), draftStore.get(SESSION_ID, exerciseA.id))
+        assertEquals("12", viewModel.uiState.value.repsInput)
+        assertEquals("80", viewModel.uiState.value.weightInput)
+    }
+
+    @Test
+    fun completeCurrentSet_clearsDraftWhenExerciseFinished() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        fakeRepo.emitSets(exerciseA.id, listOf(set(exerciseA.id, 0), set(exerciseA.id, 1)))
+        viewModel.onRepsChanged("12")
+        viewModel.onWeightChanged("80")
+        viewModel.completeCurrentSet()
+
         assertNull(draftStore.get(SESSION_ID, exerciseA.id))
+        assertEquals(exerciseB, viewModel.uiState.value.currentExercise)
+        assertEquals(exerciseB.minRepetitions.toString(), viewModel.uiState.value.repsInput)
+        assertEquals("14.5", viewModel.uiState.value.weightInput)
+    }
+
+    @Test
+    fun afterRest_preservesDraftValuesForSameExercise() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA.copy(restSeconds = 90), exerciseB))
+        viewModel.onRepsChanged("10")
+        viewModel.onWeightChanged("20")
+        viewModel.completeCurrentSet()
+        assertEquals(WorkoutExecutionPhase.RESTING, viewModel.uiState.value.phase)
+
+        // Simulate leaving and returning (new ViewModel) while resting.
+        buildViewModel()
+        assertEquals(WorkoutExecutionPhase.RESTING, viewModel.uiState.value.phase)
+
+        viewModel.skipRest()
+        assertEquals(WorkoutExecutionPhase.WORKING, viewModel.uiState.value.phase)
+        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals("10", viewModel.uiState.value.repsInput)
+        assertEquals("20", viewModel.uiState.value.weightInput)
+    }
+
+    @Test
+    fun afterRest_advancesToNextExerciseAndPrefillsItsDefaults() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(
+            listOf(
+                exerciseA.copy(plannedSets = 1, restSeconds = 90),
+                exerciseB,
+            ),
+        )
+        viewModel.onRepsChanged("10")
+        viewModel.onWeightChanged("20")
+        viewModel.completeCurrentSet()
+        assertEquals(WorkoutExecutionPhase.RESTING, viewModel.uiState.value.phase)
+
+        viewModel.skipRest()
+
+        val state = viewModel.uiState.value
+        assertEquals(WorkoutExecutionPhase.WORKING, state.phase)
+        assertEquals(exerciseB.id, state.currentExercise?.id)
+        assertEquals(exerciseB.exerciseName, state.currentExercise?.exerciseName)
+        assertEquals(exerciseB.minRepetitions.toString(), state.repsInput)
+        assertEquals("14.5", state.weightInput)
+        assertEquals(exerciseB.id, state.inputsExerciseId)
+    }
+
+    @Test
+    fun restBeepEvent_emittedOnceWhenRemainingHitsZero() = runTest(testDispatcher) {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA.copy(restSeconds = 90), exerciseB))
+        viewModel.completeCurrentSet()
+        val endsAt = checkNotNull(viewModel.uiState.value.restEndsAtMillis)
+        assertNull(viewModel.uiState.value.restBeepEvent)
+
+        clock.now = endsAt
+        // StateFlow skips equal values — nudge the session to re-apply progress at remaining=0.
+        val resting = checkNotNull(viewModel.uiState.value.session)
+        fakeRepo.emitSession(resting.copy(workoutDescription = resting.workoutDescription + " "))
+
+        assertEquals(endsAt, viewModel.uiState.value.restBeepEvent)
+        viewModel.consumeRestBeepEvent()
+        assertNull(viewModel.uiState.value.restBeepEvent)
+
+        // Staying at zero must not re-fire.
+        val afterBeep = checkNotNull(viewModel.uiState.value.session)
+        fakeRepo.emitSession(afterBeep.copy(workoutDescription = afterBeep.workoutDescription + " "))
+        assertNull(viewModel.uiState.value.restBeepEvent)
     }
 
     @Test
@@ -1057,6 +1147,30 @@ class WorkoutExecutionViewModelTest {
         assertFalse(viewModel.uiState.value.showFinishConfirmation)
     }
 
+    @Test
+    fun mediaExercise_resolvedFromCatalogueByExerciseId() = runTest(testDispatcher) {
+        val catalogueExercise = Exercise(
+            id = 1L,
+            name = "Supino",
+            muscleGroup = "Peito",
+            equipmentType = "Barra",
+            externalSource = "free-exercise-db",
+            externalId = "Barbell_Bench_Press_-_Medium_Grip",
+        )
+        fakeExercises.emit(listOf(catalogueExercise))
+        emitSessionWithExercises()
+
+        val media = viewModel.uiState.value.mediaExercise
+        assertEquals(catalogueExercise.externalId, media?.externalId)
+        assertEquals(catalogueExercise.externalSource, media?.externalSource)
+    }
+
+    @Test
+    fun mediaExercise_nullWhenCatalogueMissing() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        assertNull(viewModel.uiState.value.mediaExercise)
+    }
+
     private fun set(sessionExerciseId: Long, setIndex: Int) = WorkoutSet(
         id = sessionExerciseId * 10 + setIndex,
         sessionExerciseId = sessionExerciseId,
@@ -1076,6 +1190,26 @@ private data class CompleteSetCall(
 
 private class FakeTimeProvider(var now: Long) : TimeProvider {
     override fun nowMillis(): Long = now
+}
+
+private class FakeExerciseRepository : ExerciseRepository {
+    private val exercises = MutableStateFlow<List<Exercise>>(emptyList())
+
+    fun emit(value: List<Exercise>) {
+        exercises.value = value
+    }
+
+    override fun getAll(): Flow<List<Exercise>> = exercises
+
+    override fun getById(id: Long): Flow<Exercise?> =
+        flowOf(exercises.value.firstOrNull { it.id == id })
+
+    override fun search(query: String): Flow<List<Exercise>> =
+        flowOf(exercises.value.filter { it.name.contains(query, ignoreCase = true) })
+
+    override suspend fun save(exercise: Exercise): Long = exercise.id
+
+    override suspend fun delete(exercise: Exercise) = Unit
 }
 
 private class FakeExecutionSessionRepository(

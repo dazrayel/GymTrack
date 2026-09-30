@@ -417,6 +417,12 @@ private fun AddEditExerciseDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.verticalScroll(rememberScrollState()),
             ) {
+                if (exercise != null) {
+                    ExerciseAnimation(
+                        exercise = exercise,
+                        modifier = Modifier.testTag("exercise_edit_animation"),
+                    )
+                }
                 OutlinedTextField(
                     value = name,
                     onValueChange = {

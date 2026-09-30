@@ -77,6 +77,8 @@ private fun ExerciseEntity.toDomain(secondaryMuscles: List<String>) = Exercise(
     muscleGroup = muscleGroup,
     equipmentType = equipmentType,
     secondaryMuscles = sanitizedSecondaryMuscles(muscleGroup, secondaryMuscles),
+    externalSource = externalSource,
+    externalId = externalId,
 )
 
 private fun Exercise.toEntity() = ExerciseEntity(
@@ -84,4 +86,6 @@ private fun Exercise.toEntity() = ExerciseEntity(
     name = name,
     muscleGroup = muscleGroup,
     equipmentType = equipmentType,
+    externalSource = externalSource,
+    externalId = externalId,
 )

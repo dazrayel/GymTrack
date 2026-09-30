@@ -1,5 +1,6 @@
 package com.gymtrack.presentation.workouts.execution
 
+import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
@@ -10,6 +11,8 @@ data class WorkoutExecutionUiState(
     val session: WorkoutSession? = null,
     val exercises: List<WorkoutSessionExercise> = emptyList(),
     val setsByExerciseId: Map<Long, List<WorkoutSet>> = emptyMap(),
+    /** Library exercise for the current session exercise (media / external identity). */
+    val mediaExercise: Exercise? = null,
     val currentExerciseIndex: Int = 0,
     val currentSetIndex: Int = 0,
     val isWorkoutComplete: Boolean = false,
@@ -29,8 +32,12 @@ data class WorkoutExecutionUiState(
     val finishHasPendingExercises: Boolean = false,
     val showSkipConfirmation: Boolean = false,
     val sessionFinishedEvent: Long? = null,
+    /** One-shot event: rest timer hit zero for this endsAt millis (beep once). */
+    val restBeepEvent: Long? = null,
     val repsInput: String = "",
     val weightInput: String = "",
+    /** Session exercise id that [repsInput]/[weightInput] currently belong to. */
+    val inputsExerciseId: Long? = null,
     val repsError: Int? = null,
     val weightError: Int? = null,
     val isLoading: Boolean = true,
