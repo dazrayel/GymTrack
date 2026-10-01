@@ -46,6 +46,10 @@ interface WorkoutRepository {
      */
     suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long)
 
+    /**
+     * Deletes the block and renumbers remaining blocks in the same workout to consecutive
+     * positions `0..n-1`. Does not recreate exercises; CASCADE removes child rows.
+     */
     suspend fun removeBlock(blockId: Long)
 
     /**

@@ -200,6 +200,87 @@ class WorkoutDetailViewModelTest {
         assertTrue(workoutRepo.removedBlockIds.contains(9L))
         assertNull(viewModel.uiState.value.blockToDelete)
     }
+
+    @Test
+    fun reorderBlocks_moveMiddleUp_persistsConsecutivePositions() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedThreeSingles()
+        advanceUntilIdle()
+        assertEquals(listOf(10L, 20L, 30L), viewModel.uiState.value.blocks.map { it.id })
+
+        viewModel.reorderBlocks(fromIndex = 1, toIndex = 0)
+        advanceUntilIdle()
+
+        assertEquals(mapOf(20L to 0, 10L to 1, 30L to 2), workoutRepo.lastPositionUpdate)
+        assertEquals(listOf(20L, 10L, 30L), viewModel.uiState.value.blocks.map { it.id })
+        assertEquals(listOf(0, 1, 2), viewModel.uiState.value.blocks.map { it.position })
+    }
+
+    @Test
+    fun reorderBlocks_moveMiddleDown_persistsConsecutivePositions() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedThreeSingles()
+        advanceUntilIdle()
+
+        viewModel.reorderBlocks(fromIndex = 1, toIndex = 2)
+        advanceUntilIdle()
+
+        assertEquals(mapOf(10L to 0, 30L to 1, 20L to 2), workoutRepo.lastPositionUpdate)
+        assertEquals(listOf(10L, 30L, 20L), viewModel.uiState.value.blocks.map { it.id })
+        assertEquals(listOf(0, 1, 2), viewModel.uiState.value.blocks.map { it.position })
+    }
+
+    @Test
+    fun reorderBlocks_firstUpAndLastDown_areNoOps() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedThreeSingles()
+        advanceUntilIdle()
+
+        viewModel.reorderBlocks(fromIndex = 0, toIndex = -1)
+        viewModel.reorderBlocks(fromIndex = 2, toIndex = 3)
+        advanceUntilIdle()
+
+        assertNull(workoutRepo.lastPositionUpdate)
+        assertEquals(listOf(10L, 20L, 30L), viewModel.uiState.value.blocks.map { it.id })
+    }
+
+    @Test
+    fun confirmDelete_middleBlock_compactsRemainingPositions() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedThreeSingles()
+        advanceUntilIdle()
+        val middle = viewModel.uiState.value.blocks[1]
+        viewModel.showDeleteConfirmation(middle)
+        viewModel.confirmDelete()
+        advanceUntilIdle()
+
+        assertEquals(listOf(10L, 30L), viewModel.uiState.value.blocks.map { it.id })
+        assertEquals(listOf(0, 1), viewModel.uiState.value.blocks.map { it.position })
+    }
+
+    private fun seedThreeSingles() {
+        exerciseRepo.emit(
+            listOf(
+                Exercise(1, "A", "Peito", "Barra"),
+                Exercise(2, "B", "Costas", "Barra"),
+                Exercise(3, "C", "Pernas", "Barra"),
+            ),
+        )
+        workoutRepo.emitBlocks(
+            listOf(
+                WorkoutBlock(id = 10, workoutId = 1, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                WorkoutBlock(id = 20, workoutId = 1, position = 1, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                WorkoutBlock(id = 30, workoutId = 1, position = 2, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+            ),
+        )
+        workoutRepo.emitExercises(
+            listOf(
+                WorkoutExercise(id = 1, blockId = 10, exerciseId = 1, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 0.0),
+                WorkoutExercise(id = 2, blockId = 20, exerciseId = 2, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 0.0),
+                WorkoutExercise(id = 3, blockId = 30, exerciseId = 3, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 0.0),
+            ),
+        )
+    }
 }
 
 private class FakeWorkoutRepository : WorkoutRepository {
@@ -210,6 +291,7 @@ private class FakeWorkoutRepository : WorkoutRepository {
     val removedBlockIds = mutableListOf<Long>()
     val updatedExercises = mutableListOf<WorkoutExercise>()
     val updatedBlocks = mutableListOf<WorkoutBlock>()
+    var lastPositionUpdate: Map<Long, Int>? = null
 
     fun emitWorkout(workout: Workout?) { workoutFlow.value = workout }
     fun emitBlocks(blocks: List<WorkoutBlock>) { blocksFlow.value = blocks }
@@ -226,7 +308,8 @@ private class FakeWorkoutRepository : WorkoutRepository {
     override suspend fun addBlock(block: WorkoutBlock, exercises: List<WorkoutExercise>): Long {
         addedBlocks += block to exercises
         val id = (addedBlocks.size).toLong()
-        blocksFlow.value = blocksFlow.value + block.copy(id = id)
+        val position = blocksFlow.value.size
+        blocksFlow.value = blocksFlow.value + block.copy(id = id, position = position)
         exercisesFlow.value = exercisesFlow.value + exercises.mapIndexed { i, e -> e.copy(id = i + 1L, blockId = id) }
         return id
     }
@@ -239,8 +322,18 @@ private class FakeWorkoutRepository : WorkoutRepository {
         exercisesFlow.value = exercisesFlow.value.map { if (it.id == exercise.id) exercise else it }
     }
     override suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long) {}
-    override suspend fun removeBlock(blockId: Long) { removedBlockIds += blockId }
-    override suspend fun updateBlockPositions(positions: Map<Long, Int>) {}
+    override suspend fun removeBlock(blockId: Long) {
+        removedBlockIds += blockId
+        val remaining = blocksFlow.value.filter { it.id != blockId }.sortedBy { it.position }
+        blocksFlow.value = remaining.mapIndexed { index, block -> block.copy(position = index) }
+        exercisesFlow.value = exercisesFlow.value.filter { it.blockId != blockId }
+    }
+    override suspend fun updateBlockPositions(positions: Map<Long, Int>) {
+        lastPositionUpdate = positions
+        blocksFlow.value = blocksFlow.value
+            .map { block -> positions[block.id]?.let { block.copy(position = it) } ?: block }
+            .sortedBy { it.position }
+    }
     override suspend fun addExercise(workoutExercise: WorkoutExercise) = error("n/a")
     override suspend fun updateExercise(workoutExercise: WorkoutExercise) {}
     override suspend fun removeExercise(workoutExercise: WorkoutExercise) {}

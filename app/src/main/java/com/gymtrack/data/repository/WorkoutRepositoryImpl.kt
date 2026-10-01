@@ -56,7 +56,12 @@ class WorkoutRepositoryImpl @Inject constructor(
         block.type.validateExerciseCount(exercises.size)
         return withContext(Dispatchers.IO) {
             database.withTransaction {
-                val blockId = workoutBlockDao.insert(block.copy(id = 0).toEntity())
+                // Always append as the next consecutive position so duplicates never occur
+                // even if the caller passes a stale position after deletions.
+                val nextPosition = workoutBlockDao.getByWorkoutIdOnce(block.workoutId).size
+                val blockId = workoutBlockDao.insert(
+                    block.copy(id = 0, position = nextPosition).toEntity(),
+                )
                 exercises.forEachIndexed { index, exercise ->
                     workoutExerciseDao.insert(
                         exercise.copy(id = 0, blockId = blockId, positionInBlock = index).toEntity(),
@@ -94,7 +99,19 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     override suspend fun removeBlock(blockId: Long) {
-        withContext(Dispatchers.IO) { workoutBlockDao.deleteById(blockId) }
+        withContext(Dispatchers.IO) {
+            database.withTransaction {
+                val existing = workoutBlockDao.getByIdOnce(blockId) ?: return@withTransaction
+                val workoutId = existing.workoutId
+                workoutBlockDao.deleteById(blockId)
+                // Compact remaining positions to 0..n-1 so the next addBlock appends safely.
+                workoutBlockDao.getByWorkoutIdOnce(workoutId).forEachIndexed { index, block ->
+                    if (block.position != index) {
+                        workoutBlockDao.updatePosition(block.id, index)
+                    }
+                }
+            }
+        }
     }
 
     override suspend fun updateBlockPositions(positions: Map<Long, Int>) {
@@ -114,10 +131,10 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     override suspend fun removeExerciseById(id: Long) {
-        withContext(Dispatchers.IO) {
-            val entity = workoutExerciseDao.getByIdOnce(id) ?: return@withContext
-            workoutBlockDao.deleteById(entity.blockId)
-        }
+        val blockId = withContext(Dispatchers.IO) {
+            workoutExerciseDao.getByIdOnce(id)?.blockId
+        } ?: return
+        removeBlock(blockId)
     }
 
     override suspend fun updateExercisePositions(positions: Map<Long, Int>) {

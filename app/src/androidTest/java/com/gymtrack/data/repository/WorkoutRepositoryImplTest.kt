@@ -363,6 +363,158 @@ class WorkoutRepositoryImplTest {
         val blocks = repository.getBlocks(workoutId).first()
         assertEquals(b2, blocks[0].id)
         assertEquals(b1, blocks[1].id)
+        assertEquals(0, blocks[0].position)
+        assertEquals(1, blocks[1].position)
+    }
+
+    @Test
+    fun updateBlockPositions_threeBlocks_moveMiddleUp() = runBlocking {
+        val workoutId = repository.save(Workout(name = "ABC"))
+        val e2 = db.exerciseDao().insert(ExerciseEntity(name = "B", muscleGroup = "Test", equipmentType = "None"))
+        val e3 = db.exerciseDao().insert(ExerciseEntity(name = "C", muscleGroup = "Test", equipmentType = "None"))
+        val a = addSingleBlock(workoutId, exerciseId, position = 0)
+        val b = addSingleBlock(workoutId, e2, position = 1)
+        val c = addSingleBlock(workoutId, e3, position = 2)
+
+        // [A, B, C] → move B up → [B, A, C]
+        repository.updateBlockPositions(mapOf(b to 0, a to 1, c to 2))
+
+        val blocks = repository.getBlocks(workoutId).first()
+        assertEquals(listOf(b, a, c), blocks.map { it.id })
+        assertEquals(listOf(0, 1, 2), blocks.map { it.position })
+    }
+
+    @Test
+    fun updateBlockPositions_threeBlocks_moveMiddleDown() = runBlocking {
+        val workoutId = repository.save(Workout(name = "ABC"))
+        val e2 = db.exerciseDao().insert(ExerciseEntity(name = "B", muscleGroup = "Test", equipmentType = "None"))
+        val e3 = db.exerciseDao().insert(ExerciseEntity(name = "C", muscleGroup = "Test", equipmentType = "None"))
+        val a = addSingleBlock(workoutId, exerciseId, position = 0)
+        val b = addSingleBlock(workoutId, e2, position = 1)
+        val c = addSingleBlock(workoutId, e3, position = 2)
+
+        // [A, B, C] → move B down → [A, C, B]
+        repository.updateBlockPositions(mapOf(a to 0, c to 1, b to 2))
+
+        val blocks = repository.getBlocks(workoutId).first()
+        assertEquals(listOf(a, c, b), blocks.map { it.id })
+        assertEquals(listOf(0, 1, 2), blocks.map { it.position })
+    }
+
+    @Test
+    fun removeBlock_middle_compactsPositions() = runBlocking {
+        val workoutId = repository.save(Workout(name = "ABC"))
+        val e2 = db.exerciseDao().insert(ExerciseEntity(name = "B", muscleGroup = "Test", equipmentType = "None"))
+        val e3 = db.exerciseDao().insert(ExerciseEntity(name = "C", muscleGroup = "Test", equipmentType = "None"))
+        val a = addSingleBlock(workoutId, exerciseId, position = 0)
+        val b = addSingleBlock(workoutId, e2, position = 1)
+        val c = addSingleBlock(workoutId, e3, position = 2)
+
+        repository.removeBlock(b)
+
+        val blocks = repository.getBlocks(workoutId).first()
+        assertEquals(listOf(a, c), blocks.map { it.id })
+        assertEquals(listOf(0, 1), blocks.map { it.position })
+    }
+
+    @Test
+    fun removeBlock_thenAddBlock_appendsWithoutDuplicatePosition() = runBlocking {
+        val workoutId = repository.save(Workout(name = "ABC"))
+        val e2 = db.exerciseDao().insert(ExerciseEntity(name = "B", muscleGroup = "Test", equipmentType = "None"))
+        val e3 = db.exerciseDao().insert(ExerciseEntity(name = "C", muscleGroup = "Test", equipmentType = "None"))
+        val e4 = db.exerciseDao().insert(ExerciseEntity(name = "D", muscleGroup = "Test", equipmentType = "None"))
+        val a = addSingleBlock(workoutId, exerciseId, position = 0)
+        val b = addSingleBlock(workoutId, e2, position = 1)
+        val c = addSingleBlock(workoutId, e3, position = 2)
+
+        repository.removeBlock(b)
+        // Caller may still pass a stale position; repository must append as 2.
+        val d = repository.addBlock(
+            WorkoutBlock(workoutId = workoutId, position = 99, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+            listOf(singleExercise(e4, weight = 0.0)),
+        )
+
+        val blocks = repository.getBlocks(workoutId).first()
+        assertEquals(listOf(a, c, d), blocks.map { it.id })
+        assertEquals(listOf(0, 1, 2), blocks.map { it.position })
+        assertEquals(3, blocks.map { it.position }.toSet().size)
+    }
+
+    @Test
+    fun updateBlockPositions_biSetKeepsInternalExercises() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Mix"))
+        val e2 = db.exerciseDao().insert(ExerciseEntity(name = "B", muscleGroup = "Tríceps", equipmentType = "Corda"))
+        val e3 = db.exerciseDao().insert(ExerciseEntity(name = "C", muscleGroup = "Peito", equipmentType = "Barra"))
+        val biSetId = repository.addBlock(
+            WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.BI_SET, rounds = 3, restSeconds = 60),
+            listOf(
+                WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 20.0),
+                WorkoutExercise(blockId = 0, exerciseId = e2, positionInBlock = 1, minRepetitions = 10, maxRepetitions = 12, weight = 15.0),
+            ),
+        )
+        val singleId = addSingleBlock(workoutId, e3, position = 1)
+
+        repository.updateBlockPositions(mapOf(singleId to 0, biSetId to 1))
+
+        val blocks = repository.getBlocks(workoutId).first()
+        assertEquals(listOf(singleId, biSetId), blocks.map { it.id })
+        assertEquals(WorkoutBlockType.BI_SET, blocks[1].type)
+        val biExercises = repository.getExercisesForWorkout(workoutId).first().filter { it.blockId == biSetId }
+        assertEquals(2, biExercises.size)
+        assertEquals(listOf(0, 1), biExercises.map { it.positionInBlock })
+        assertEquals(biSetId, biExercises[0].blockId)
+        assertEquals(biSetId, biExercises[1].blockId)
+        assertEquals(exerciseId, biExercises[0].exerciseId)
+        assertEquals(e2, biExercises[1].exerciseId)
+    }
+
+    @Test
+    fun updateBlockPositions_triSetKeepsInternalExercises() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Mix"))
+        val e2 = db.exerciseDao().insert(ExerciseEntity(name = "B", muscleGroup = "Ombros", equipmentType = "Halteres"))
+        val e3 = db.exerciseDao().insert(ExerciseEntity(name = "C", muscleGroup = "Ombros", equipmentType = "Halteres"))
+        val e4 = db.exerciseDao().insert(ExerciseEntity(name = "D", muscleGroup = "Peito", equipmentType = "Barra"))
+        val triId = repository.addBlock(
+            WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.TRI_SET, rounds = 3, restSeconds = 90),
+            listOf(
+                WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 10, maxRepetitions = 12, weight = 8.0),
+                WorkoutExercise(blockId = 0, exerciseId = e2, positionInBlock = 1, minRepetitions = 8, maxRepetitions = 10, weight = 12.0),
+                WorkoutExercise(blockId = 0, exerciseId = e3, positionInBlock = 2, minRepetitions = 12, maxRepetitions = 15, weight = 6.0),
+            ),
+        )
+        val singleId = addSingleBlock(workoutId, e4, position = 1)
+
+        repository.updateBlockPositions(mapOf(singleId to 0, triId to 1))
+
+        val blocks = repository.getBlocks(workoutId).first()
+        assertEquals(listOf(singleId, triId), blocks.map { it.id })
+        val triExercises = repository.getExercisesForWorkout(workoutId).first().filter { it.blockId == triId }
+        assertEquals(3, triExercises.size)
+        assertEquals(listOf(0, 1, 2), triExercises.map { it.positionInBlock })
+        assertTrue(triExercises.all { it.blockId == triId })
+    }
+
+    @Test
+    fun updateBlockPositions_persistsAfterReload() = runBlocking {
+        val workoutId = repository.save(Workout(name = "Reload"))
+        val e2 = db.exerciseDao().insert(ExerciseEntity(name = "B", muscleGroup = "Test", equipmentType = "None"))
+        val e3 = db.exerciseDao().insert(ExerciseEntity(name = "C", muscleGroup = "Test", equipmentType = "None"))
+        val a = addSingleBlock(workoutId, exerciseId, position = 0)
+        val b = addSingleBlock(workoutId, e2, position = 1)
+        val c = addSingleBlock(workoutId, e3, position = 2)
+
+        // C, A, B
+        repository.updateBlockPositions(mapOf(c to 0, a to 1, b to 2))
+
+        val reopened = WorkoutRepositoryImpl(
+            db,
+            db.workoutDao(),
+            db.workoutBlockDao(),
+            db.workoutExerciseDao(),
+        )
+        val blocks = reopened.getBlocks(workoutId).first()
+        assertEquals(listOf(c, a, b), blocks.map { it.id })
+        assertEquals(listOf(0, 1, 2), blocks.map { it.position })
     }
 
     @Test

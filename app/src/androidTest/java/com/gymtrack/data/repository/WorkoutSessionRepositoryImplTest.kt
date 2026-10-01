@@ -476,6 +476,26 @@ class WorkoutSessionRepositoryImplTest {
     }
 
     @Test
+    fun startSession_snapshotOrderUnchangedWhenTemplateIsReordered() = runBlocking {
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val before = repository.observeSessionExercises(sessionId).first()
+        assertEquals(listOf("Bench Press", "Squat"), before.map { it.exerciseName })
+        assertEquals(listOf(0, 1), before.map { it.blockPosition })
+
+        val blocks = workoutRepository.getBlocks(workoutId).first()
+        workoutRepository.updateBlockPositions(
+            mapOf(blocks[0].id to 1, blocks[1].id to 0),
+        )
+        val templateOrder = workoutRepository.getExercises(workoutId).first().map { it.exerciseId }
+        assertEquals(listOf(squatId, exerciseId), templateOrder)
+
+        val after = repository.observeSessionExercises(sessionId).first()
+        assertEquals(listOf("Bench Press", "Squat"), after.map { it.exerciseName })
+        assertEquals(listOf(0, 1), after.map { it.position })
+        assertEquals(listOf(0, 1), after.map { it.blockPosition })
+    }
+
+    @Test
     fun startSession_snapshotSurvivesExerciseDeletion() = runBlocking {
         val sessionId = repository.startSession(workoutId).requireSessionId()
         exerciseRepository.delete(
