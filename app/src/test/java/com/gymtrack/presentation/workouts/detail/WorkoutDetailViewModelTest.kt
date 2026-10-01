@@ -272,6 +272,332 @@ class WorkoutDetailViewModelTest {
         assertEquals(listOf(0, 1, 2, 3), viewModel.uiState.value.blocks.map { it.position })
     }
 
+    @Test
+    fun startReplaceExercise_opensPickerWithRowId() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedSingleWithConfig()
+        advanceUntilIdle()
+
+        val item = viewModel.uiState.value.blocks.single().items.single()
+        viewModel.startReplaceExercise(item)
+
+        assertTrue(viewModel.uiState.value.showExercisePicker)
+        assertEquals(item.id, viewModel.uiState.value.replacingExerciseRowId)
+        assertNull(viewModel.uiState.value.blockDraftSlotIndex)
+    }
+
+    @Test
+    fun selectExercise_whileReplacing_updatesOnlyExerciseIdAndClearsState() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedSingleWithConfig()
+        advanceUntilIdle()
+
+        val before = workoutRepo.exercisesFlowValue().single()
+        val replacement = Exercise(99, "Supino inclinado", "Peitoral", "Barra")
+        exerciseRepo.emit(
+            listOf(
+                Exercise(1, "Supino reto", "Peitoral", "Barra"),
+                replacement,
+            ),
+        )
+        advanceUntilIdle()
+
+        viewModel.startReplaceExercise(viewModel.uiState.value.blocks.single().items.single())
+        viewModel.selectExercise(replacement)
+        advanceUntilIdle()
+
+        assertEquals(listOf(before.id to 99L), workoutRepo.replacedExercises)
+        assertTrue(workoutRepo.updatedBlocks.isEmpty())
+        assertTrue(workoutRepo.updatedExercises.isEmpty())
+        assertTrue(workoutRepo.addedBlocks.isEmpty())
+        assertNull(viewModel.uiState.value.replacingExerciseRowId)
+        assertFalse(viewModel.uiState.value.showExercisePicker)
+
+        val after = workoutRepo.exercisesFlowValue().single()
+        assertEquals(before.id, after.id)
+        assertEquals(before.blockId, after.blockId)
+        assertEquals(before.positionInBlock, after.positionInBlock)
+        assertEquals(before.minRepetitions, after.minRepetitions)
+        assertEquals(before.maxRepetitions, after.maxRepetitions)
+        assertEquals(before.weight, after.weight, 0.0)
+        assertEquals(before.notes, after.notes)
+        assertEquals(99L, after.exerciseId)
+        assertEquals(1, workoutRepo.blocksFlowValue().size)
+    }
+
+    @Test
+    fun selectExercise_replaceFirstInBiSet_keepsSiblingIntact() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedBiSet()
+        advanceUntilIdle()
+
+        val before = workoutRepo.exercisesFlowValue().sortedBy { it.positionInBlock }
+        val replacement = Exercise(30, "Rosca alternada", "Bíceps", "Halteres")
+        exerciseRepo.emit(
+            listOf(
+                Exercise(1, "Rosca", "Bíceps", "Barra"),
+                Exercise(2, "Tríceps", "Tríceps", "Corda"),
+                replacement,
+            ),
+        )
+        advanceUntilIdle()
+
+        viewModel.startReplaceExercise(viewModel.uiState.value.blocks.single().items[0])
+        viewModel.selectExercise(replacement)
+        advanceUntilIdle()
+
+        val after = workoutRepo.exercisesFlowValue().sortedBy { it.positionInBlock }
+        assertEquals(2, after.size)
+        assertEquals(before[0].id, after[0].id)
+        assertEquals(30L, after[0].exerciseId)
+        assertEquals(before[0].blockId, after[0].blockId)
+        assertEquals(0, after[0].positionInBlock)
+        assertEquals(before[0].weight, after[0].weight, 0.0)
+        assertEquals(before[0].minRepetitions, after[0].minRepetitions)
+        assertEquals(before[0].maxRepetitions, after[0].maxRepetitions)
+        assertEquals(before[0].notes, after[0].notes)
+        assertEquals(before[1], after[1])
+        assertTrue(workoutRepo.updatedBlocks.isEmpty())
+    }
+
+    @Test
+    fun selectExercise_replaceSecondInBiSet_keepsSiblingIntact() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedBiSet()
+        advanceUntilIdle()
+
+        val before = workoutRepo.exercisesFlowValue().sortedBy { it.positionInBlock }
+        val replacement = Exercise(40, "Tríceps testa", "Tríceps", "Barra")
+        exerciseRepo.emit(
+            listOf(
+                Exercise(1, "Rosca", "Bíceps", "Barra"),
+                Exercise(2, "Tríceps", "Tríceps", "Corda"),
+                replacement,
+            ),
+        )
+        advanceUntilIdle()
+
+        viewModel.startReplaceExercise(viewModel.uiState.value.blocks.single().items[1])
+        viewModel.selectExercise(replacement)
+        advanceUntilIdle()
+
+        val after = workoutRepo.exercisesFlowValue().sortedBy { it.positionInBlock }
+        assertEquals(before[0], after[0])
+        assertEquals(40L, after[1].exerciseId)
+        assertEquals(before[1].id, after[1].id)
+        assertEquals(1, after[1].positionInBlock)
+        assertEquals(before[1].weight, after[1].weight, 0.0)
+        assertEquals(before[1].notes, after[1].notes)
+    }
+
+    @Test
+    fun selectExercise_replaceEachTriSetPosition_preservesOthers() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedTriSet()
+        advanceUntilIdle()
+
+        val replacements = listOf(
+            Exercise(10, "X0", "Ombros", "Halteres"),
+            Exercise(20, "X1", "Ombros", "Halteres"),
+            Exercise(30, "X2", "Ombros", "Halteres"),
+        )
+        exerciseRepo.emit(
+            listOf(
+                Exercise(1, "A", "Ombros", "Halteres"),
+                Exercise(2, "B", "Ombros", "Halteres"),
+                Exercise(3, "C", "Ombros", "Halteres"),
+            ) + replacements,
+        )
+        advanceUntilIdle()
+
+        replacements.forEachIndexed { index, replacement ->
+            val before = workoutRepo.exercisesFlowValue().sortedBy { it.positionInBlock }
+            viewModel.startReplaceExercise(viewModel.uiState.value.blocks.single().items[index])
+            viewModel.selectExercise(replacement)
+            advanceUntilIdle()
+
+            val after = workoutRepo.exercisesFlowValue().sortedBy { it.positionInBlock }
+            assertEquals(3, after.size)
+            assertEquals(replacement.id, after[index].exerciseId)
+            assertEquals(before[index].id, after[index].id)
+            assertEquals(before[index].blockId, after[index].blockId)
+            assertEquals(index, after[index].positionInBlock)
+            assertEquals(before[index].weight, after[index].weight, 0.0)
+            assertEquals(before[index].minRepetitions, after[index].minRepetitions)
+            assertEquals(before[index].maxRepetitions, after[index].maxRepetitions)
+            assertEquals(before[index].notes, after[index].notes)
+            before.forEachIndexed { otherIndex, other ->
+                if (otherIndex != index) {
+                    assertEquals(other, after[otherIndex])
+                }
+            }
+        }
+        assertTrue(workoutRepo.updatedBlocks.isEmpty())
+        assertEquals(1, workoutRepo.blocksFlowValue().size)
+        assertEquals(WorkoutBlockType.TRI_SET, workoutRepo.blocksFlowValue().single().type)
+    }
+
+    @Test
+    fun selectExercise_afterReplaceDismiss_stillCreatesSingle() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedSingleWithConfig()
+        advanceUntilIdle()
+
+        viewModel.startReplaceExercise(viewModel.uiState.value.blocks.single().items.single())
+        viewModel.dismissExercisePicker()
+        assertNull(viewModel.uiState.value.replacingExerciseRowId)
+
+        val exercise = Exercise(50, "Remada", "Costas", "Barra")
+        viewModel.chooseAddType(WorkoutBlockType.SINGLE)
+        viewModel.selectExercise(exercise)
+        assertEquals(exercise, viewModel.uiState.value.exerciseToConfigure?.exercise)
+        assertTrue(workoutRepo.replacedExercises.isEmpty())
+    }
+
+    @Test
+    fun showEditExercise_stillOpensConfigurationAfterReplaceAvailable() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedBiSet()
+        advanceUntilIdle()
+
+        val detail = viewModel.uiState.value.blocks.single()
+        viewModel.showEditExercise(detail, detail.items[0])
+        assertEquals(detail.items[0], viewModel.uiState.value.exerciseToConfigure)
+        assertEquals(detail.block, viewModel.uiState.value.configureBlock)
+        assertNull(viewModel.uiState.value.replacingExerciseRowId)
+    }
+
+    private fun seedSingleWithConfig() {
+        exerciseRepo.emit(listOf(Exercise(1, "Supino reto", "Peitoral", "Barra")))
+        workoutRepo.emitBlocks(
+            listOf(
+                WorkoutBlock(
+                    id = 5,
+                    workoutId = 1,
+                    position = 0,
+                    type = WorkoutBlockType.SINGLE,
+                    rounds = 4,
+                    restSeconds = 90,
+                ),
+            ),
+        )
+        workoutRepo.emitExercises(
+            listOf(
+                WorkoutExercise(
+                    id = 11,
+                    blockId = 5,
+                    exerciseId = 1,
+                    positionInBlock = 0,
+                    minRepetitions = 6,
+                    maxRepetitions = 10,
+                    weight = 80.0,
+                    notes = "controle",
+                ),
+            ),
+        )
+    }
+
+    private fun seedBiSet() {
+        exerciseRepo.emit(
+            listOf(
+                Exercise(1, "Rosca", "Bíceps", "Barra"),
+                Exercise(2, "Tríceps", "Tríceps", "Corda"),
+            ),
+        )
+        workoutRepo.emitBlocks(
+            listOf(
+                WorkoutBlock(
+                    id = 5,
+                    workoutId = 1,
+                    position = 0,
+                    type = WorkoutBlockType.BI_SET,
+                    rounds = 3,
+                    restSeconds = 60,
+                ),
+            ),
+        )
+        workoutRepo.emitExercises(
+            listOf(
+                WorkoutExercise(
+                    id = 11,
+                    blockId = 5,
+                    exerciseId = 1,
+                    positionInBlock = 0,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 20.0,
+                    notes = "primeiro",
+                ),
+                WorkoutExercise(
+                    id = 12,
+                    blockId = 5,
+                    exerciseId = 2,
+                    positionInBlock = 1,
+                    minRepetitions = 10,
+                    maxRepetitions = 12,
+                    weight = 15.0,
+                    notes = "segundo",
+                ),
+            ),
+        )
+    }
+
+    private fun seedTriSet() {
+        exerciseRepo.emit(
+            listOf(
+                Exercise(1, "A", "Ombros", "Halteres"),
+                Exercise(2, "B", "Ombros", "Halteres"),
+                Exercise(3, "C", "Ombros", "Halteres"),
+            ),
+        )
+        workoutRepo.emitBlocks(
+            listOf(
+                WorkoutBlock(
+                    id = 7,
+                    workoutId = 1,
+                    position = 0,
+                    type = WorkoutBlockType.TRI_SET,
+                    rounds = 3,
+                    restSeconds = 90,
+                ),
+            ),
+        )
+        workoutRepo.emitExercises(
+            listOf(
+                WorkoutExercise(
+                    id = 21,
+                    blockId = 7,
+                    exerciseId = 1,
+                    positionInBlock = 0,
+                    minRepetitions = 10,
+                    maxRepetitions = 12,
+                    weight = 8.0,
+                    notes = "a",
+                ),
+                WorkoutExercise(
+                    id = 22,
+                    blockId = 7,
+                    exerciseId = 2,
+                    positionInBlock = 1,
+                    minRepetitions = 8,
+                    maxRepetitions = 10,
+                    weight = 12.0,
+                    notes = "b",
+                ),
+                WorkoutExercise(
+                    id = 23,
+                    blockId = 7,
+                    exerciseId = 3,
+                    positionInBlock = 2,
+                    minRepetitions = 12,
+                    maxRepetitions = 15,
+                    weight = 6.0,
+                    notes = "c",
+                ),
+            ),
+        )
+    }
+
     private fun seedThreeSingles() {
         exerciseRepo.emit(
             listOf(
@@ -305,6 +631,7 @@ private class FakeWorkoutRepository : WorkoutRepository {
     val removedBlockIds = mutableListOf<Long>()
     val updatedExercises = mutableListOf<WorkoutExercise>()
     val updatedBlocks = mutableListOf<WorkoutBlock>()
+    val replacedExercises = mutableListOf<Pair<Long, Long>>()
     var lastPositionUpdate: Map<Long, Int>? = null
     val duplicatedBlockIds = mutableListOf<Long>()
     private var nextBlockId = 100L
@@ -313,6 +640,7 @@ private class FakeWorkoutRepository : WorkoutRepository {
     fun emitBlocks(blocks: List<WorkoutBlock>) { blocksFlow.value = blocks }
     fun emitExercises(exercises: List<WorkoutExercise>) { exercisesFlow.value = exercises }
     fun exercisesFlowValue(): List<WorkoutExercise> = exercisesFlow.value
+    fun blocksFlowValue(): List<WorkoutBlock> = blocksFlow.value
 
     override fun getAll() = flowOf(emptyList<Workout>())
     override fun getById(id: Long) = workoutFlow
@@ -353,7 +681,12 @@ private class FakeWorkoutRepository : WorkoutRepository {
         updatedExercises += exercise
         exercisesFlow.value = exercisesFlow.value.map { if (it.id == exercise.id) exercise else it }
     }
-    override suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long) {}
+    override suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long) {
+        replacedExercises += exerciseRowId to newCatalogueExerciseId
+        exercisesFlow.value = exercisesFlow.value.map { exercise ->
+            if (exercise.id == exerciseRowId) exercise.copy(exerciseId = newCatalogueExerciseId) else exercise
+        }
+    }
     override suspend fun removeBlock(blockId: Long) {
         removedBlockIds += blockId
         val remaining = blocksFlow.value.filter { it.id != blockId }.sortedBy { it.position }

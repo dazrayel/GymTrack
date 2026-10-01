@@ -74,6 +74,7 @@
     <!-- Exercise actions -->
     <string name="add_exercise">Adicionar exercício</string>
     <string name="edit_exercise">Editar exercício</string>
+    <string name="replace_exercise">Substituir exercício</string>
     <string name="exercise_view_performance">Ver desempenho</string>
     <string name="delete_exercise">Excluir exercício</string>
     <string name="delete_exercise_confirmation">Tem certeza que deseja excluir o exercício \"%1$s\"?</string>

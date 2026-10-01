@@ -109,6 +109,7 @@ class WorkoutDetailViewModel @Inject constructor(
                         pendingBlockType = WorkoutBlockType.SINGLE,
                         showExercisePicker = true,
                         blockDraftSlotIndex = null,
+                        replacingExerciseRowId = null,
                         showBlockBuilder = false,
                     )
                 }
@@ -122,6 +123,7 @@ class WorkoutDetailViewModel @Inject constructor(
                         blockDraftSlots = slots,
                         showBlockBuilder = true,
                         blockDraftSlotIndex = null,
+                        replacingExerciseRowId = null,
                     )
                 }
             }
@@ -141,7 +143,11 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun pickSlot(index: Int) {
         _uiState.update {
-            it.copy(blockDraftSlotIndex = index, showExercisePicker = true)
+            it.copy(
+                blockDraftSlotIndex = index,
+                showExercisePicker = true,
+                replacingExerciseRowId = null,
+            )
         }
     }
 
@@ -197,11 +203,43 @@ class WorkoutDetailViewModel @Inject constructor(
 
     fun dismissExercisePicker() {
         _uiState.update {
-            it.copy(showExercisePicker = false, blockDraftSlotIndex = null)
+            it.copy(
+                showExercisePicker = false,
+                blockDraftSlotIndex = null,
+                replacingExerciseRowId = null,
+            )
+        }
+    }
+
+    fun startReplaceExercise(item: WorkoutExerciseDetail) {
+        _uiState.update {
+            it.copy(
+                replacingExerciseRowId = item.id,
+                showExercisePicker = true,
+                blockDraftSlotIndex = null,
+            )
         }
     }
 
     fun selectExercise(exercise: Exercise) {
+        val replacingRowId = _uiState.value.replacingExerciseRowId
+        if (replacingRowId != null) {
+            viewModelScope.launch {
+                try {
+                    workoutRepository.replaceBlockExercise(replacingRowId, exercise.id)
+                    _uiState.update {
+                        it.copy(
+                            showExercisePicker = false,
+                            replacingExerciseRowId = null,
+                        )
+                    }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(error = e.message) }
+                }
+            }
+            return
+        }
+
         val slotIndex = _uiState.value.blockDraftSlotIndex
         if (slotIndex != null) {
             _uiState.update { state ->

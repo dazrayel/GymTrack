@@ -25,6 +25,8 @@ data class WorkoutDetailUiState(
     val showBlockBuilder: Boolean = false,
 
     val showExercisePicker: Boolean = false,
+    /** When set, the exercise picker replaces this persisted WorkoutExercise row. */
+    val replacingExerciseRowId: Long? = null,
     val exerciseToConfigure: WorkoutExerciseDetail? = null,
     val configureBlock: WorkoutBlock? = null,
     val configureRounds: Int = 3,

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Delete
@@ -113,6 +114,7 @@ fun WorkoutDetailScreen(
         onDismissExerciseConfiguration = viewModel::dismissExerciseConfiguration,
         onSaveExerciseConfiguration = viewModel::saveExerciseConfiguration,
         onShowEditExercise = viewModel::showEditExercise,
+        onReplaceExercise = viewModel::startReplaceExercise,
         onShowDeleteConfirmation = viewModel::showDeleteConfirmation,
         onDismissDeleteConfirmation = viewModel::dismissDeleteConfirmation,
         onConfirmDelete = viewModel::confirmDelete,
@@ -150,6 +152,7 @@ private fun WorkoutDetailContent(
     onDismissExerciseConfiguration: () -> Unit,
     onSaveExerciseConfiguration: (sets: Int, minReps: Int, maxReps: Int, weight: Double, restSeconds: Int, notes: String) -> Unit,
     onShowEditExercise: (WorkoutBlockDetail, WorkoutExerciseDetail) -> Unit,
+    onReplaceExercise: (WorkoutExerciseDetail) -> Unit,
     onShowDeleteConfirmation: (WorkoutBlockDetail) -> Unit,
     onDismissDeleteConfirmation: () -> Unit,
     onConfirmDelete: () -> Unit,
@@ -227,6 +230,7 @@ private fun WorkoutDetailContent(
                         onMoveUp = { onMoveUp(index) },
                         onMoveDown = { onMoveDown(index) },
                         onEditItem = { item -> onShowEditExercise(block, item) },
+                        onReplaceItem = onReplaceExercise,
                         onDuplicate = { onDuplicateBlock(block.id) },
                         onDelete = { onShowDeleteConfirmation(block) },
                     )
@@ -293,6 +297,7 @@ private fun WorkoutBlockCard(
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
     onEditItem: (WorkoutExerciseDetail) -> Unit,
+    onReplaceItem: (WorkoutExerciseDetail) -> Unit,
     onDuplicate: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -346,6 +351,16 @@ private fun WorkoutBlockCard(
                     }
                     IconButton(onClick = { onEditItem(item) }) {
                         Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_exercise), tint = MaterialTheme.colorScheme.primary)
+                    }
+                    IconButton(
+                        onClick = { onReplaceItem(item) },
+                        modifier = Modifier.testTag("replace_exercise_${item.id}"),
+                    ) {
+                        Icon(
+                            Icons.Filled.SwapHoriz,
+                            contentDescription = stringResource(R.string.replace_exercise),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 }
             }
