@@ -37,6 +37,16 @@ interface WorkoutRepository {
      */
     suspend fun addBlock(block: WorkoutBlock, exercises: List<WorkoutExercise>): Long
 
+    /**
+     * Creates an independent copy of [blockId] inserted immediately after the original
+     * (`position = original.position + 1`), shifting later blocks by +1.
+     * New block and exercise row IDs are generated; catalogue [WorkoutExercise.exerciseId]
+     * references are preserved.
+     *
+     * @return the new block id
+     */
+    suspend fun duplicateBlock(blockId: Long): Long
+
     suspend fun updateBlock(block: WorkoutBlock)
 
     suspend fun updateBlockExercise(exercise: WorkoutExercise)

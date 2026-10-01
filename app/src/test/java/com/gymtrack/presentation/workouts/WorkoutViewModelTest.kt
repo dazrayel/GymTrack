@@ -456,6 +456,7 @@ private class FakeWorkoutRepository : WorkoutRepository {
     override fun getBlocks(workoutId: Long) = emptyFlow<List<WorkoutBlock>>()
     override fun getExercisesForWorkout(workoutId: Long) = emptyFlow<List<WorkoutExercise>>()
     override suspend fun addBlock(block: WorkoutBlock, exercises: List<WorkoutExercise>): Long = 0L
+    override suspend fun duplicateBlock(blockId: Long): Long = 0L
     override suspend fun updateBlock(block: WorkoutBlock) = Unit
     override suspend fun updateBlockExercise(exercise: WorkoutExercise) = Unit
     override suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long) = Unit

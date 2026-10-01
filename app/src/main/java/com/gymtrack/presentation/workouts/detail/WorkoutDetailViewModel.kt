@@ -326,6 +326,16 @@ class WorkoutDetailViewModel @Inject constructor(
         }
     }
 
+    fun duplicateBlock(blockId: Long) {
+        viewModelScope.launch {
+            try {
+                workoutRepository.duplicateBlock(blockId)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
     fun reorderBlocks(fromIndex: Int, toIndex: Int) {
         val current = _uiState.value.blocks
         if (fromIndex == toIndex) return

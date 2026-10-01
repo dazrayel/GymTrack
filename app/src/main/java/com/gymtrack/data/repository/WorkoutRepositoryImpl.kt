@@ -72,6 +72,39 @@ class WorkoutRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun duplicateBlock(blockId: Long): Long = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            val original = workoutBlockDao.getByIdOnce(blockId)
+                ?: throw IllegalArgumentException("Block not found: $blockId")
+            val exercises = workoutExerciseDao.getByBlockIdOnce(blockId)
+            WorkoutBlockType.parse(original.type).validateExerciseCount(exercises.size)
+
+            // Shift later blocks upward first (highest position first) so positions stay unique.
+            workoutBlockDao.getByWorkoutIdOnce(original.workoutId)
+                .filter { it.position > original.position }
+                .sortedByDescending { it.position }
+                .forEach { block ->
+                    workoutBlockDao.updatePosition(block.id, block.position + 1)
+                }
+
+            val newBlockId = workoutBlockDao.insert(
+                original.copy(
+                    id = 0,
+                    position = original.position + 1,
+                ),
+            )
+            exercises.forEach { exercise ->
+                workoutExerciseDao.insert(
+                    exercise.copy(
+                        id = 0,
+                        blockId = newBlockId,
+                    ),
+                )
+            }
+            newBlockId
+        }
+    }
+
     override suspend fun updateBlock(block: WorkoutBlock) {
         withContext(Dispatchers.IO) {
             // Use UPDATE instead of INSERT REPLACE: REPLACE deletes the row first and

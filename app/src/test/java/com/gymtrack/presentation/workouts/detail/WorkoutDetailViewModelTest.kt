@@ -258,6 +258,20 @@ class WorkoutDetailViewModelTest {
         assertEquals(listOf(0, 1), viewModel.uiState.value.blocks.map { it.position })
     }
 
+    @Test
+    fun duplicateBlock_insertsCopyImmediatelyAfterOriginal() = runTest(testDispatcher) {
+        advanceUntilIdle()
+        seedThreeSingles()
+        advanceUntilIdle()
+
+        viewModel.duplicateBlock(20L)
+        advanceUntilIdle()
+
+        assertEquals(listOf(20L), workoutRepo.duplicatedBlockIds)
+        assertEquals(listOf(10L, 20L, 101L, 30L), viewModel.uiState.value.blocks.map { it.id })
+        assertEquals(listOf(0, 1, 2, 3), viewModel.uiState.value.blocks.map { it.position })
+    }
+
     private fun seedThreeSingles() {
         exerciseRepo.emit(
             listOf(
@@ -292,6 +306,8 @@ private class FakeWorkoutRepository : WorkoutRepository {
     val updatedExercises = mutableListOf<WorkoutExercise>()
     val updatedBlocks = mutableListOf<WorkoutBlock>()
     var lastPositionUpdate: Map<Long, Int>? = null
+    val duplicatedBlockIds = mutableListOf<Long>()
+    private var nextBlockId = 100L
 
     fun emitWorkout(workout: Workout?) { workoutFlow.value = workout }
     fun emitBlocks(blocks: List<WorkoutBlock>) { blocksFlow.value = blocks }
@@ -312,6 +328,22 @@ private class FakeWorkoutRepository : WorkoutRepository {
         blocksFlow.value = blocksFlow.value + block.copy(id = id, position = position)
         exercisesFlow.value = exercisesFlow.value + exercises.mapIndexed { i, e -> e.copy(id = i + 1L, blockId = id) }
         return id
+    }
+    override suspend fun duplicateBlock(blockId: Long): Long {
+        duplicatedBlockIds += blockId
+        val original = blocksFlow.value.first { it.id == blockId }
+        val sourceExercises = exercisesFlow.value.filter { it.blockId == blockId }.sortedBy { it.positionInBlock }
+        val shifted = blocksFlow.value.map { block ->
+            if (block.position > original.position) block.copy(position = block.position + 1) else block
+        }
+        val newId = ++nextBlockId
+        val copy = original.copy(id = newId, position = original.position + 1)
+        blocksFlow.value = (shifted + copy).sortedBy { it.position }
+        val baseExerciseId = (exercisesFlow.value.maxOfOrNull { it.id } ?: 0L) + 1
+        exercisesFlow.value = exercisesFlow.value + sourceExercises.mapIndexed { index, exercise ->
+            exercise.copy(id = baseExerciseId + index, blockId = newId)
+        }
+        return newId
     }
     override suspend fun updateBlock(block: WorkoutBlock) {
         updatedBlocks += block

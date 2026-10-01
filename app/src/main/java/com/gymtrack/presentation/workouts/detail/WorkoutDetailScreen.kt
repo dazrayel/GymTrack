@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -115,6 +116,7 @@ fun WorkoutDetailScreen(
         onShowDeleteConfirmation = viewModel::showDeleteConfirmation,
         onDismissDeleteConfirmation = viewModel::dismissDeleteConfirmation,
         onConfirmDelete = viewModel::confirmDelete,
+        onDuplicateBlock = viewModel::duplicateBlock,
         onMoveUp = { index -> viewModel.reorderBlocks(index, index - 1) },
         onMoveDown = { index -> viewModel.reorderBlocks(index, index + 1) },
         onStartWorkout = viewModel::startWorkout,
@@ -151,6 +153,7 @@ private fun WorkoutDetailContent(
     onShowDeleteConfirmation: (WorkoutBlockDetail) -> Unit,
     onDismissDeleteConfirmation: () -> Unit,
     onConfirmDelete: () -> Unit,
+    onDuplicateBlock: (Long) -> Unit,
     onMoveUp: (Int) -> Unit,
     onMoveDown: (Int) -> Unit,
     onStartWorkout: () -> Unit,
@@ -224,6 +227,7 @@ private fun WorkoutDetailContent(
                         onMoveUp = { onMoveUp(index) },
                         onMoveDown = { onMoveDown(index) },
                         onEditItem = { item -> onShowEditExercise(block, item) },
+                        onDuplicate = { onDuplicateBlock(block.id) },
                         onDelete = { onShowDeleteConfirmation(block) },
                     )
                 }
@@ -289,6 +293,7 @@ private fun WorkoutBlockCard(
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
     onEditItem: (WorkoutExerciseDetail) -> Unit,
+    onDuplicate: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Card(
@@ -313,6 +318,15 @@ private fun WorkoutBlockCard(
                 }
                 IconButton(onClick = onMoveUp, enabled = canMoveUp) { Icon(Icons.Filled.KeyboardArrowUp, contentDescription = null) }
                 IconButton(onClick = onMoveDown, enabled = canMoveDown) { Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null) }
+                IconButton(
+                    onClick = onDuplicate,
+                    modifier = Modifier.testTag("duplicate_block_${block.id}"),
+                ) {
+                    Icon(
+                        Icons.Filled.ContentCopy,
+                        contentDescription = stringResource(R.string.duplicate_block),
+                    )
+                }
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete_block), tint = MaterialTheme.colorScheme.error)
                 }
