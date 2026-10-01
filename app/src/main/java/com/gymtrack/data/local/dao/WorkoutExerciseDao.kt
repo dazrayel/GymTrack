@@ -13,6 +13,14 @@ interface WorkoutExerciseDao {
 
     @Query(
         """
+        SELECT DISTINCT wb.workoutId FROM workout_exercises we
+        INNER JOIN workout_blocks wb ON wb.id = we.blockId
+        """,
+    )
+    fun observeWorkoutIdsWithExercises(): Flow<List<Long>>
+
+    @Query(
+        """
         SELECT we.* FROM workout_exercises we
         INNER JOIN workout_blocks wb ON wb.id = we.blockId
         WHERE wb.workoutId = :workoutId

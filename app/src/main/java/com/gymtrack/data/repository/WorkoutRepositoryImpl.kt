@@ -34,6 +34,9 @@ class WorkoutRepositoryImpl @Inject constructor(
     override fun getById(id: Long): Flow<Workout?> =
         workoutDao.getById(id).map { it?.toDomain() }
 
+    override fun observeWorkoutIdsWithExercises(): Flow<Set<Long>> =
+        workoutExerciseDao.observeWorkoutIdsWithExercises().map { it.toSet() }
+
     override suspend fun save(workout: Workout): Long = withContext(Dispatchers.IO) {
         workoutDao.insert(workout.toEntity())
     }

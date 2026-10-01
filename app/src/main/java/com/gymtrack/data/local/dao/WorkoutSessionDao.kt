@@ -34,6 +34,7 @@ interface WorkoutSessionDao {
         """
         SELECT
             s.id AS sessionId,
+            s.workoutId AS workoutId,
             s.workoutName AS workoutName,
             s.startedAtMillis AS startedAtMillis,
             s.endedAtMillis AS endedAtMillis,
@@ -74,6 +75,7 @@ interface WorkoutSessionDao {
         """
         SELECT
             s.id AS sessionId,
+            s.workoutId AS workoutId,
             s.workoutName AS workoutName,
             s.startedAtMillis AS startedAtMillis,
             s.endedAtMillis AS endedAtMillis,

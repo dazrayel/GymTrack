@@ -56,6 +56,7 @@ import com.gymtrack.domain.model.DailyVolume
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
 import com.gymtrack.domain.model.PeriodDashboardStats
+import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.formatVolumeKg
 import com.gymtrack.domain.model.occurredAtMillis
@@ -70,6 +71,7 @@ import java.time.ZoneId
 fun HomeScreen(
     onNavigateToExercises: () -> Unit = {},
     onNavigateToWorkouts: () -> Unit = {},
+    onNavigateToWorkoutDetail: (workoutId: Long) -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
     onRecordClick: (String) -> Unit = {},
     onContinueInProgress: (sessionId: Long) -> Unit = {},
@@ -82,6 +84,7 @@ fun HomeScreen(
         uiState = uiState,
         onNavigateToExercises = onNavigateToExercises,
         onNavigateToWorkouts = onNavigateToWorkouts,
+        onNavigateToWorkoutDetail = onNavigateToWorkoutDetail,
         onSessionClick = onSessionClick,
         onRecordClick = onRecordClick,
         onContinueInProgress = onContinueInProgress,
@@ -100,6 +103,7 @@ fun HomeScreen(
     onNavigateToWorkouts: () -> Unit,
     onSessionClick: (Long) -> Unit,
     onErrorShown: () -> Unit,
+    onNavigateToWorkoutDetail: (workoutId: Long) -> Unit = {},
     onPeriodSelected: (DashboardPeriod) -> Unit = {},
     onRecordClick: (String) -> Unit = {},
     onContinueInProgress: (sessionId: Long) -> Unit = {},
@@ -154,6 +158,13 @@ fun HomeScreen(
                         InProgressResumeCard(
                             workoutName = session.workoutName,
                             onContinue = { onContinueInProgress(session.id) },
+                            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
+                        )
+                    }
+                    uiState.nextWorkout?.let { workout ->
+                        NextWorkoutCard(
+                            workout = workout,
+                            onOpen = { onNavigateToWorkoutDetail(workout.id) },
                             modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
                         )
                     }
@@ -247,6 +258,60 @@ private fun InProgressResumeCard(
                     .testTag("home_continue_in_progress"),
             ) {
                 Text(text = stringResource(R.string.continue_in_progress_workout))
+            }
+        }
+    }
+}
+
+@Composable
+private fun NextWorkoutCard(
+    workout: Workout,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val description = stringResource(R.string.dashboard_next_workout_cd, workout.name)
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.dashboard_next_workout_title),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        Card(
+            onClick = onOpen,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("next_workout_card")
+                .semantics { contentDescription = description },
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = workout.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.testTag("next_workout_title"),
+                    )
+                    Text(
+                        text = stringResource(R.string.dashboard_next_workout_cta),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .testTag("next_workout_open"),
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

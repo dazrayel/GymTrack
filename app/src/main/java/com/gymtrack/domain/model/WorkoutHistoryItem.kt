@@ -2,6 +2,7 @@ package com.gymtrack.domain.model
 
 data class WorkoutHistoryItem(
     val sessionId: Long,
+    val workoutId: Long? = null,
     val workoutName: String,
     val startedAtMillis: Long,
     val endedAtMillis: Long?,

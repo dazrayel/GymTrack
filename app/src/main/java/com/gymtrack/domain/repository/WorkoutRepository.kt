@@ -13,6 +13,12 @@ interface WorkoutRepository {
 
     fun getById(id: Long): Flow<Workout?>
 
+    /**
+     * Ids of workout templates that currently have at least one exercise
+     * (via workout_blocks). Used for next-workout recommendation candidates.
+     */
+    fun observeWorkoutIdsWithExercises(): Flow<Set<Long>>
+
     suspend fun save(workout: Workout): Long
 
     suspend fun update(workout: Workout)

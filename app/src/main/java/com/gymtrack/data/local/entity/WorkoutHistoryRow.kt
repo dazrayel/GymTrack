@@ -6,6 +6,7 @@ package com.gymtrack.data.local.entity
  */
 data class WorkoutHistoryRow(
     val sessionId: Long,
+    val workoutId: Long?,
     val workoutName: String,
     val startedAtMillis: Long,
     val endedAtMillis: Long?,

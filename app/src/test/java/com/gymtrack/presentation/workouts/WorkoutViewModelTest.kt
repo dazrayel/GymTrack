@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -431,6 +432,8 @@ private class FakeWorkoutRepository : WorkoutRepository {
 
     override fun getById(id: Long): Flow<Workout?> =
         _workouts.map { list -> list.find { it.id == id } }
+
+    override fun observeWorkoutIdsWithExercises(): Flow<Set<Long>> = flowOf(emptySet())
 
     override suspend fun save(workout: Workout): Long {
         if (shouldThrowOnSave) throw RuntimeException("Simulated save error")

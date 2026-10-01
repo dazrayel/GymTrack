@@ -544,6 +544,7 @@ class WorkoutSessionDaoTest {
         val result = sessionDao.getCompletedOnce()
         assertEquals(1, result.size)
         assertEquals(completedId, result.single().sessionId)
+        assertEquals(workoutId, result.single().workoutId)
         assertEquals("Done", result.single().workoutName)
     }
 
@@ -614,9 +615,40 @@ class WorkoutSessionDaoTest {
 
         val row = sessionDao.getCompletedOnce().single()
         assertEquals(sessionId, row.sessionId)
+        assertEquals(workoutId, row.workoutId)
         assertEquals(2, row.exerciseCount)
         assertEquals(2, row.completedSetCount)
         assertEquals(5, row.plannedSetCount)
         assertEquals(8 * 60.0 + 5 * 80.0, row.volume, 0.001)
+    }
+
+    @Test
+    fun getCompletedOnce_exposesNullWorkoutId() {
+        val sessionId = sessionDao.insert(
+            WorkoutSessionEntity(
+                workoutId = null,
+                workoutName = "Orphan",
+                workoutDescription = "",
+                startedAtMillis = 10L,
+                endedAtMillis = 20L,
+                status = WorkoutSessionEntity.STATUS_COMPLETED,
+            ),
+        )
+
+        val row = sessionDao.getCompletedOnce().single()
+        assertEquals(sessionId, row.sessionId)
+        assertNull(row.workoutId)
+        assertEquals("Orphan", row.workoutName)
+    }
+
+    @Test
+    fun observeCompleted_exposesWorkoutIdAndPreservesOrder() = runBlocking {
+        val older = sessionDao.insert(completedSession("Older", startedAt = 10L, endedAt = 100L))
+        val newer = sessionDao.insert(completedSession("Newer", startedAt = 20L, endedAt = 300L))
+
+        val observed = sessionDao.observeCompleted().first()
+        assertEquals(listOf(newer, older), observed.map { it.sessionId })
+        assertEquals(listOf(workoutId, workoutId), observed.map { it.workoutId })
+        assertEquals(listOf("Newer", "Older"), observed.map { it.workoutName })
     }
 }

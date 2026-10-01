@@ -4,10 +4,14 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.StartSessionResult
+import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutBlock
+import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSet
+import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +21,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -44,13 +49,15 @@ class HomeViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val zone: ZoneId = ZoneId.systemDefault()
-    private lateinit var fakeRepository: FakeHomeSessionRepository
+    private lateinit var workoutRepository: FakeHomeWorkoutRepository
+    private lateinit var sessionRepository: FakeHomeSessionRepository
     private lateinit var clock: FakeTimeProvider
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        fakeRepository = FakeHomeSessionRepository()
+        workoutRepository = FakeHomeWorkoutRepository()
+        sessionRepository = FakeHomeSessionRepository()
         clock = FakeTimeProvider(now = local("2026-08-26T12:00:00"))
     }
 
@@ -59,25 +66,29 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun createViewModel() = HomeViewModel(workoutRepository, sessionRepository, clock)
+
     @Test
     fun initialState_isLoadingTrue_beforeFirstEmission() {
-        val viewModel = HomeViewModel(fakeRepository, clock)
+        val viewModel = createViewModel()
         assertTrue(viewModel.uiState.value.isLoading)
         assertNull(viewModel.uiState.value.recentWorkout)
+        assertNull(viewModel.uiState.value.nextWorkout)
         assertFalse(viewModel.uiState.value.showEmpty)
         assertNull(viewModel.uiState.value.error)
     }
 
     @Test
     fun afterLoad_emptySessions_showEmpty() = runTest(testDispatcher) {
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(emptyList())
-        fakeRepository.emitSets(emptyList())
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(emptyList())
+        sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
         assertTrue(viewModel.uiState.value.showEmpty)
         assertNull(viewModel.uiState.value.recentWorkout)
+        assertNull(viewModel.uiState.value.nextWorkout)
         assertEquals(DashboardPeriod.WEEK, viewModel.uiState.value.selectedPeriod)
         assertEquals(0, viewModel.uiState.value.periodStats.sessionCount)
         assertTrue(viewModel.uiState.value.dailyVolumeTrend.isEmpty())
@@ -85,7 +96,7 @@ class HomeViewModelTest {
         assertTrue(viewModel.uiState.value.records.isEmpty())
         assertNull(viewModel.uiState.value.error)
         assertNull(viewModel.uiState.value.inProgressSession)
-        assertEquals(0, fakeRepository.startSessionCalls)
+        assertEquals(0, sessionRepository.startSessionCalls)
     }
 
     @Test
@@ -96,9 +107,9 @@ class HomeViewModelTest {
             CompletedSetRecord(20L, local("2026-08-26T10:00:00"), "Supino", 8, 60.0),
             CompletedSetRecord(10L, local("2026-08-25T10:00:00"), "Agachamento", 5, 80.0),
         )
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(listOf(recent, older))
-        fakeRepository.emitSets(sets)
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(recent, older))
+        sessionRepository.emitSets(sets)
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -123,9 +134,9 @@ class HomeViewModelTest {
     fun sessionOutsideCurrentWeek_isExcludedFromWeeklyStats() = runTest(testDispatcher) {
         val inWeek = item(sessionId = 1L, occurredAt = local("2026-08-26T10:00:00"), volume = 50.0)
         val outside = item(sessionId = 2L, occurredAt = local("2026-08-10T10:00:00"), volume = 9_000.0)
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(listOf(inWeek, outside))
-        fakeRepository.emitSets(
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(inWeek, outside))
+        sessionRepository.emitSets(
             listOf(CompletedSetRecord(1L, local("2026-08-26T10:00:00"), "Supino", 8, 50.0)),
         )
         advanceUntilIdle()
@@ -140,9 +151,9 @@ class HomeViewModelTest {
     fun sessionInRollingTrend_butOutsideIsoWeek_isNotCountedInFrequency() = runTest(testDispatcher) {
         clock.now = local("2026-08-31T12:00:00")
         val inTrendOutsideWeek = item(sessionId = 1L, occurredAt = local("2026-08-25T10:00:00"), volume = 40.0)
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(listOf(inTrendOutsideWeek))
-        fakeRepository.emitSets(emptyList())
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(inTrendOutsideWeek))
+        sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
 
         assertEquals(0, viewModel.uiState.value.periodStats.sessionCount)
@@ -157,9 +168,9 @@ class HomeViewModelTest {
     fun records_collapseSameExerciseAndKeepZeroWeight() = runTest(testDispatcher) {
         val first = item(sessionId = 1L, occurredAt = local("2026-08-26T10:00:00"), volume = 10.0)
         val second = item(sessionId = 2L, occurredAt = local("2026-08-25T10:00:00"), volume = 20.0)
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(listOf(first, second))
-        fakeRepository.emitSets(
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(first, second))
+        sessionRepository.emitSets(
             listOf(
                 CompletedSetRecord(1L, local("2026-08-26T10:00:00"), "Supino Snapshot", 8, 80.0),
                 CompletedSetRecord(2L, local("2026-08-25T10:00:00"), "Supino Snapshot", 8, 85.0),
@@ -186,13 +197,13 @@ class HomeViewModelTest {
     @Test
     fun reemittingSets_updatesRecords() = runTest(testDispatcher) {
         val session = item(sessionId = 1L, occurredAt = local("2026-08-26T10:00:00"), volume = 10.0)
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(listOf(session))
-        fakeRepository.emitSets(emptyList())
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(session))
+        sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.records.isEmpty())
 
-        fakeRepository.emitSets(
+        sessionRepository.emitSets(
             listOf(CompletedSetRecord(1L, local("2026-08-26T10:00:00"), "Supino", 8, 80.0)),
         )
         advanceUntilIdle()
@@ -202,14 +213,14 @@ class HomeViewModelTest {
     @Test
     fun reemittingSessions_updatesFrequencyAndTrend() = runTest(testDispatcher) {
         val first = item(sessionId = 1L, occurredAt = local("2026-08-26T10:00:00"), volume = 10.0)
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(listOf(first))
-        fakeRepository.emitSets(emptyList())
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(first))
+        sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
         assertEquals(1, viewModel.uiState.value.trainedDayCount)
 
         val second = item(sessionId = 2L, occurredAt = local("2026-08-25T10:00:00"), volume = 20.0)
-        fakeRepository.emitSessions(listOf(first, second))
+        sessionRepository.emitSessions(listOf(first, second))
         advanceUntilIdle()
         assertEquals(2, viewModel.uiState.value.trainedDayCount)
         assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
@@ -217,9 +228,9 @@ class HomeViewModelTest {
 
     @Test
     fun emptySessions_doNotExposeSevenZeroTrendBars() = runTest(testDispatcher) {
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(emptyList())
-        fakeRepository.emitSets(emptyList())
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(emptyList())
+        sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.showEmpty)
@@ -230,8 +241,8 @@ class HomeViewModelTest {
 
     @Test
     fun whenObserveThrows_errorIsSet() = runTest(testDispatcher) {
-        fakeRepository.shouldThrowOnObserve = true
-        val viewModel = HomeViewModel(fakeRepository, clock)
+        sessionRepository.shouldThrowOnObserve = true
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isLoading)
@@ -240,8 +251,8 @@ class HomeViewModelTest {
 
     @Test
     fun clearError_clearsMessage() = runTest(testDispatcher) {
-        fakeRepository.shouldThrowOnObserve = true
-        val viewModel = HomeViewModel(fakeRepository, clock)
+        sessionRepository.shouldThrowOnObserve = true
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.clearError()
@@ -250,12 +261,12 @@ class HomeViewModelTest {
 
     @Test
     fun startSession_isNotCalledWhenObservingDashboard() = runTest(testDispatcher) {
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(emptyList())
-        fakeRepository.emitSets(emptyList())
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(emptyList())
+        sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
 
-        assertEquals(0, fakeRepository.startSessionCalls)
+        assertEquals(0, sessionRepository.startSessionCalls)
         assertFalse(viewModel.uiState.value.isLoading)
         assertNull(viewModel.uiState.value.inProgressSession)
     }
@@ -263,42 +274,42 @@ class HomeViewModelTest {
     @Test
     fun inProgressSession_isExposedWhenObserved() = runTest(testDispatcher) {
         val active = inProgressSession(id = 77L, name = "Push Day")
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(emptyList())
-        fakeRepository.emitSets(emptyList())
-        fakeRepository.emitInProgress(active)
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(emptyList())
+        sessionRepository.emitSets(emptyList())
+        sessionRepository.emitInProgress(active)
         advanceUntilIdle()
 
         assertEquals(77L, viewModel.uiState.value.inProgressSession?.id)
         assertEquals("Push Day", viewModel.uiState.value.inProgressSession?.workoutName)
         assertTrue(viewModel.uiState.value.showEmpty)
-        assertEquals(0, fakeRepository.startSessionCalls)
+        assertEquals(0, sessionRepository.startSessionCalls)
     }
 
     @Test
     fun inProgressSession_clearsWhenFlowEmitsNull() = runTest(testDispatcher) {
         val active = inProgressSession(id = 77L, name = "Push Day")
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(emptyList())
-        fakeRepository.emitSets(emptyList())
-        fakeRepository.emitInProgress(active)
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(emptyList())
+        sessionRepository.emitSets(emptyList())
+        sessionRepository.emitInProgress(active)
         advanceUntilIdle()
         assertEquals(77L, viewModel.uiState.value.inProgressSession?.id)
 
-        fakeRepository.emitInProgress(null)
+        sessionRepository.emitInProgress(null)
         advanceUntilIdle()
 
         assertNull(viewModel.uiState.value.inProgressSession)
-        assertEquals(0, fakeRepository.startSessionCalls)
+        assertEquals(0, sessionRepository.startSessionCalls)
     }
 
     @Test
     fun initialSelectedPeriod_isWeek() = runTest(testDispatcher) {
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(
             listOf(item(sessionId = 1L, occurredAt = local("2026-08-26T10:00:00"), volume = 10.0)),
         )
-        fakeRepository.emitSets(emptyList())
+        sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
         assertEquals(DashboardPeriod.WEEK, viewModel.uiState.value.selectedPeriod)
         assertEquals(1, viewModel.uiState.value.periodStats.sessionCount)
@@ -308,9 +319,9 @@ class HomeViewModelTest {
     fun selectMonth_includesSessionOutsideWeekButInMonth() = runTest(testDispatcher) {
         val inWeek = item(sessionId = 1L, occurredAt = local("2026-08-26T10:00:00"), volume = 10.0)
         val inMonth = item(sessionId = 2L, occurredAt = local("2026-08-10T10:00:00"), volume = 20.0)
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(listOf(inWeek, inMonth))
-        fakeRepository.emitSets(
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(inWeek, inMonth))
+        sessionRepository.emitSets(
             listOf(
                 CompletedSetRecord(1L, local("2026-08-26T10:00:00"), "Supino", 8, 10.0),
                 CompletedSetRecord(2L, local("2026-08-10T10:00:00"), "Agachamento", 5, 20.0),
@@ -341,9 +352,9 @@ class HomeViewModelTest {
     fun selectAll_includesSessionsOutsideMonth() = runTest(testDispatcher) {
         val inWeek = item(sessionId = 1L, occurredAt = local("2026-08-26T10:00:00"), volume = 10.0)
         val outsideMonth = item(sessionId = 2L, occurredAt = local("2026-07-01T10:00:00"), volume = 40.0)
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(listOf(inWeek, outsideMonth))
-        fakeRepository.emitSets(emptyList())
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(inWeek, outsideMonth))
+        sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
         assertEquals(1, viewModel.uiState.value.periodStats.sessionCount)
 
@@ -362,9 +373,9 @@ class HomeViewModelTest {
     fun emptyMonth_withHistory_doesNotShowEmpty() = runTest(testDispatcher) {
         clock.now = local("2026-09-15T12:00:00")
         val augustOnly = item(sessionId = 1L, occurredAt = local("2026-08-10T10:00:00"), volume = 80.0)
-        val viewModel = HomeViewModel(fakeRepository, clock)
-        fakeRepository.emitSessions(listOf(augustOnly))
-        fakeRepository.emitSets(
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(augustOnly))
+        sessionRepository.emitSets(
             listOf(CompletedSetRecord(1L, local("2026-08-10T10:00:00"), "Supino", 8, 80.0)),
         )
         advanceUntilIdle()
@@ -379,6 +390,152 @@ class HomeViewModelTest {
         assertEquals(listOf("Supino"), viewModel.uiState.value.records.map { it.exerciseName })
     }
 
+    @Test
+    fun nextWorkout_noWorkouts_isNull() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(emptyList())
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+        assertNull(viewModel.uiState.value.nextWorkout)
+    }
+
+    @Test
+    fun nextWorkout_singleWorkoutWithoutHistory_returnsThatWorkout() = runTest(testDispatcher) {
+        val workoutA = Workout(id = 1, name = "A")
+        workoutRepository.emit(listOf(workoutA))
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(emptyList())
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+        assertEquals(workoutA, viewModel.uiState.value.nextWorkout)
+    }
+
+    @Test
+    fun nextWorkout_multipleWithoutHistory_returnsFirstByIdAsc() = runTest(testDispatcher) {
+        val workoutA = Workout(id = 1, name = "A")
+        val workoutB = Workout(id = 2, name = "B")
+        val workoutC = Workout(id = 3, name = "C")
+        workoutRepository.emit(listOf(workoutC, workoutA, workoutB))
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(emptyList())
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+        assertEquals(workoutA, viewModel.uiState.value.nextWorkout)
+    }
+
+    @Test
+    fun nextWorkout_lastCompletedIsA_returnsB() = runTest(testDispatcher) {
+        val workoutA = Workout(id = 1, name = "A")
+        val workoutB = Workout(id = 2, name = "B")
+        val workoutC = Workout(id = 3, name = "C")
+        workoutRepository.emit(listOf(workoutA, workoutB, workoutC))
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(
+            listOf(item(sessionId = 10, workoutId = 1, occurredAt = local("2026-08-26T10:00:00"))),
+        )
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+        assertEquals(workoutB, viewModel.uiState.value.nextWorkout)
+    }
+
+    @Test
+    fun nextWorkout_lastCompletedIsC_rotatesToA() = runTest(testDispatcher) {
+        val workoutA = Workout(id = 1, name = "A")
+        val workoutB = Workout(id = 2, name = "B")
+        val workoutC = Workout(id = 3, name = "C")
+        workoutRepository.emit(listOf(workoutA, workoutB, workoutC))
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(
+            listOf(
+                item(sessionId = 30, workoutId = 3, occurredAt = local("2026-08-26T12:00:00")),
+                item(sessionId = 20, workoutId = 2, occurredAt = local("2026-08-26T11:00:00")),
+                item(sessionId = 10, workoutId = 1, occurredAt = local("2026-08-26T10:00:00")),
+            ),
+        )
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+        assertEquals(workoutA, viewModel.uiState.value.nextWorkout)
+    }
+
+    @Test
+    fun nextWorkout_neverCompletedPreferred() = runTest(testDispatcher) {
+        val workoutA = Workout(id = 1, name = "A")
+        val workoutB = Workout(id = 2, name = "B")
+        val workoutC = Workout(id = 3, name = "C")
+        workoutRepository.emit(listOf(workoutA, workoutB, workoutC))
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(
+            listOf(
+                item(sessionId = 20, workoutId = 2, occurredAt = local("2026-08-26T11:00:00")),
+                item(sessionId = 10, workoutId = 1, occurredAt = local("2026-08-26T10:00:00")),
+            ),
+        )
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+        assertEquals(workoutC, viewModel.uiState.value.nextWorkout)
+    }
+
+    @Test
+    fun nextWorkout_inProgressDoesNotChangeRecommendation() = runTest(testDispatcher) {
+        val workoutA = Workout(id = 1, name = "A")
+        val workoutB = Workout(id = 2, name = "B")
+        workoutRepository.emit(listOf(workoutA, workoutB))
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(
+            listOf(item(sessionId = 10, workoutId = 1, occurredAt = local("2026-08-26T10:00:00"))),
+        )
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+        assertEquals(workoutB, viewModel.uiState.value.nextWorkout)
+
+        sessionRepository.emitInProgress(inProgressSession(id = 99, name = "A"))
+        advanceUntilIdle()
+        assertEquals(workoutB, viewModel.uiState.value.nextWorkout)
+        assertEquals(99L, viewModel.uiState.value.inProgressSession?.id)
+    }
+
+    @Test
+    fun nextWorkout_nullOrMissingWorkoutIdDoesNotBreak() = runTest(testDispatcher) {
+        val workoutA = Workout(id = 1, name = "A")
+        val workoutB = Workout(id = 2, name = "B")
+        workoutRepository.emit(listOf(workoutA, workoutB))
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(
+            listOf(
+                item(sessionId = 30, workoutId = null, occurredAt = local("2026-08-26T12:00:00")),
+                item(sessionId = 20, workoutId = 99, occurredAt = local("2026-08-26T11:00:00")),
+            ),
+        )
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+        assertEquals(workoutA, viewModel.uiState.value.nextWorkout)
+    }
+
+    @Test
+    fun nextWorkout_preservesExistingDashboardFields() = runTest(testDispatcher) {
+        val workoutA = Workout(id = 1, name = "A")
+        workoutRepository.emit(listOf(workoutA))
+        val recent = item(
+            sessionId = 20L,
+            workoutId = 1L,
+            name = "A",
+            occurredAt = local("2026-08-26T10:00:00"),
+            volume = 200.0,
+        )
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(recent))
+        sessionRepository.emitSets(
+            listOf(CompletedSetRecord(20L, local("2026-08-26T10:00:00"), "Supino", 8, 60.0)),
+        )
+        advanceUntilIdle()
+
+        assertEquals(workoutA, viewModel.uiState.value.nextWorkout)
+        assertEquals(20L, viewModel.uiState.value.recentWorkout?.sessionId)
+        assertEquals(1, viewModel.uiState.value.periodStats.sessionCount)
+        assertEquals(listOf("Supino"), viewModel.uiState.value.records.map { it.exerciseName })
+        assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
+    }
+
     private fun local(dateTime: String): Long =
         LocalDateTime.parse(dateTime).atZone(zone).toInstant().toEpochMilli()
 
@@ -387,8 +544,10 @@ class HomeViewModelTest {
         name: String = "Treino",
         occurredAt: Long,
         volume: Double = 100.0,
+        workoutId: Long? = null,
     ) = WorkoutHistoryItem(
         sessionId = sessionId,
+        workoutId = workoutId,
         workoutName = name,
         startedAtMillis = occurredAt,
         endedAtMillis = occurredAt,
@@ -414,6 +573,38 @@ private class FakeTimeProvider(var now: Long) : TimeProvider {
         lastReadNow = now
         return now
     }
+}
+
+private class FakeHomeWorkoutRepository : WorkoutRepository {
+    private val workouts = MutableStateFlow<List<Workout>>(emptyList())
+    private val executableIds = MutableStateFlow<Set<Long>>(emptySet())
+
+    fun emit(list: List<Workout>, withExercises: Set<Long> = list.map { it.id }.toSet()) {
+        executableIds.value = withExercises
+        workouts.value = list
+    }
+
+    override fun getAll(): Flow<List<Workout>> = workouts
+    override fun getById(id: Long): Flow<Workout?> =
+        flowOf(workouts.value.find { it.id == id })
+    override fun observeWorkoutIdsWithExercises(): Flow<Set<Long>> = executableIds
+    override suspend fun save(workout: Workout): Long = workout.id
+    override suspend fun update(workout: Workout) = Unit
+    override suspend fun delete(workout: Workout) = Unit
+    override fun getBlocks(workoutId: Long) = emptyFlow<List<WorkoutBlock>>()
+    override fun getExercisesForWorkout(workoutId: Long) = emptyFlow<List<WorkoutExercise>>()
+    override suspend fun addBlock(block: WorkoutBlock, exercises: List<WorkoutExercise>): Long = 0L
+    override suspend fun duplicateBlock(blockId: Long): Long = 0L
+    override suspend fun updateBlock(block: WorkoutBlock) = Unit
+    override suspend fun updateBlockExercise(exercise: WorkoutExercise) = Unit
+    override suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long) = Unit
+    override suspend fun removeBlock(blockId: Long) = Unit
+    override suspend fun updateBlockPositions(positions: Map<Long, Int>) = Unit
+    override suspend fun addExercise(workoutExercise: WorkoutExercise): Long = 0L
+    override suspend fun updateExercise(workoutExercise: WorkoutExercise) = Unit
+    override suspend fun removeExercise(workoutExercise: WorkoutExercise) = Unit
+    override suspend fun removeExerciseById(id: Long) = Unit
+    override suspend fun updateExercisePositions(positions: Map<Long, Int>) = Unit
 }
 
 private class FakeHomeSessionRepository : WorkoutSessionRepository {

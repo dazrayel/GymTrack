@@ -18,6 +18,7 @@ import com.gymtrack.domain.model.DailyVolume
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
 import com.gymtrack.domain.model.PeriodDashboardStats
+import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionStatus
@@ -31,6 +32,7 @@ import com.gymtrack.presentation.theme.GymTrackTheme
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -60,6 +62,7 @@ class HomeScreenTest {
         completedSetCount = 12,
         plannedSetCount = 12,
     )
+    private val nextWorkout = Workout(id = 9L, name = "Push")
     private val activeSession = WorkoutSession(
         id = 77L,
         workoutId = 9L,
@@ -93,6 +96,7 @@ class HomeScreenTest {
         uiState: HomeUiState,
         onSessionClick: (Long) -> Unit = {},
         onNavigateToWorkouts: () -> Unit = {},
+        onNavigateToWorkoutDetail: (Long) -> Unit = {},
         onPeriodSelected: (DashboardPeriod) -> Unit = {},
         onRecordClick: (String) -> Unit = {},
         onContinueInProgress: (Long) -> Unit = {},
@@ -103,6 +107,7 @@ class HomeScreenTest {
                     uiState = uiState,
                     onNavigateToExercises = {},
                     onNavigateToWorkouts = onNavigateToWorkouts,
+                    onNavigateToWorkoutDetail = onNavigateToWorkoutDetail,
                     onSessionClick = onSessionClick,
                     onRecordClick = onRecordClick,
                     onContinueInProgress = onContinueInProgress,
@@ -451,6 +456,78 @@ class HomeScreenTest {
         composeTestRule.onNodeWithTag("home_continue_in_progress").performClick()
         composeTestRule.waitForIdle()
         assertEquals(77L, continuedId)
+    }
+
+    @Test
+    fun nextWorkout_isDisplayedWithName() {
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                recentWorkout = sampleItem,
+                nextWorkout = nextWorkout,
+            ),
+        )
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Próximo treino")
+        composeTestRule.onNodeWithTag("next_workout_card").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("next_workout_title", useUnmergedTree = true)
+            .assertTextEquals("Push")
+        composeTestRule.onNodeWithTag("next_workout_open", useUnmergedTree = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun nextWorkout_null_hidesCard() {
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                recentWorkout = sampleItem,
+                nextWorkout = null,
+            ),
+        )
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Treino recente")
+        assertTrue(composeTestRule.onAllNodesWithTag("next_workout_card").fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun nextWorkout_click_reportsWorkoutId() {
+        var openedId: Long? = null
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                recentWorkout = sampleItem,
+                nextWorkout = nextWorkout,
+            ),
+            onNavigateToWorkoutDetail = { openedId = it },
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("next_workout_card").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(9L, openedId)
+    }
+
+    @Test
+    fun nextWorkout_withInProgress_keepsContinueWorking() {
+        var continuedId: Long? = null
+        var openedId: Long? = null
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                recentWorkout = sampleItem,
+                nextWorkout = nextWorkout,
+                inProgressSession = activeSession,
+            ),
+            onContinueInProgress = { continuedId = it },
+            onNavigateToWorkoutDetail = { openedId = it },
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_in_progress").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("next_workout_card").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_continue_in_progress").performClick()
+        composeTestRule.waitForIdle()
+        assertEquals(77L, continuedId)
+        assertEquals(null, openedId)
     }
 
     private fun sevenZeroDays(): List<DailyVolume> {

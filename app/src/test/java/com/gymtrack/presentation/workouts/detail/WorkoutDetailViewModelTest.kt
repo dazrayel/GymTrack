@@ -644,6 +644,10 @@ private class FakeWorkoutRepository : WorkoutRepository {
 
     override fun getAll() = flowOf(emptyList<Workout>())
     override fun getById(id: Long) = workoutFlow
+    override fun observeWorkoutIdsWithExercises() = exercisesFlow.map { exercises ->
+        val blockIds = exercises.map { it.blockId }.toSet()
+        blocksFlow.value.filter { it.id in blockIds }.map { it.workoutId }.toSet()
+    }
     override suspend fun save(workout: Workout) = 1L
     override suspend fun update(workout: Workout) {}
     override suspend fun delete(workout: Workout) {}

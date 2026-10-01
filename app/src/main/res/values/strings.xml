@@ -25,6 +25,9 @@
     <string name="home_quick_access">Acesso rápido</string>
     <string name="home_exercises_description">Gerencie sua biblioteca de exercícios</string>
     <string name="dashboard_recent_title">Treino recente</string>
+    <string name="dashboard_next_workout_title">Próximo treino</string>
+    <string name="dashboard_next_workout_cta">Ver treino</string>
+    <string name="dashboard_next_workout_cd">Próximo treino %1$s</string>
     <string name="dashboard_this_week">Esta semana</string>
     <string name="dashboard_this_month">Este mês</string>
     <string name="dashboard_all_time">Todo o histórico</string>

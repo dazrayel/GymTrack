@@ -83,11 +83,11 @@ class WorkoutSessionRepositoryImplTest {
             )
             workoutId = workoutRepository.save(Workout(name = "Push Day", description = "Chest focus"))
             workoutRepository.addBlock(
-                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 90),
                 listOf(WorkoutExercise(blockId = 0, exerciseId = exerciseId, positionInBlock = 0, minRepetitions = 8, maxRepetitions = 12, weight = 60.0, notes = "pause")),
             )
             workoutRepository.addBlock(
-                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 3, restSeconds = 60),
+                WorkoutBlock(workoutId = workoutId, position = 0, type = WorkoutBlockType.SINGLE, rounds = 4, restSeconds = 60),
                 listOf(WorkoutExercise(blockId = 0, exerciseId = squatId, positionInBlock = 0, minRepetitions = 6, maxRepetitions = 10, weight = 80.0, notes = "")),
             )
         }
@@ -708,6 +708,7 @@ class WorkoutSessionRepositoryImplTest {
         val item = repository.observeCompletedSessions().first().single()
         val session = repository.getSession(sessionId)!!
         assertEquals(sessionId, item.sessionId)
+        assertEquals(workoutId, item.workoutId)
         assertEquals("Push Day", item.workoutName)
         assertEquals(session.startedAtMillis, item.startedAtMillis)
         assertEquals(session.endedAtMillis, item.endedAtMillis)
@@ -731,10 +732,29 @@ class WorkoutSessionRepositoryImplTest {
         val secondId = repository.startSession(otherWorkout).requireSessionId()
         repository.finishSession(secondId)
 
-        val ids = repository.observeCompletedSessions().first().map { it.sessionId }
-        assertEquals(listOf(secondId, firstId), ids)
-        assertEquals("Other", repository.observeCompletedSessions().first()[0].workoutName)
-        assertEquals("Push Day", repository.observeCompletedSessions().first()[1].workoutName)
+        val items = repository.observeCompletedSessions().first()
+        assertEquals(listOf(secondId, firstId), items.map { it.sessionId })
+        assertEquals(listOf(otherWorkout, workoutId), items.map { it.workoutId })
+        assertEquals("Other", items[0].workoutName)
+        assertEquals("Push Day", items[1].workoutName)
+    }
+
+    @Test
+    fun observeCompletedSessions_nullWorkoutIdAfterTemplateDeleted() = runBlocking {
+        val sessionId = repository.startSession(workoutId).requireSessionId()
+        val exerciseId = repository.observeSessionExercises(sessionId).first()[0].id
+        repository.completeSet(exerciseId, setIndex = 0, reps = 8, weight = 60.0)
+        repository.finishSession(sessionId)
+        workoutRepository.delete(Workout(id = workoutId, name = "Push Day", description = "Chest focus"))
+
+        val item = repository.observeCompletedSessions().first().single()
+        assertEquals(sessionId, item.sessionId)
+        assertNull(item.workoutId)
+        assertEquals("Push Day", item.workoutName)
+        assertEquals(8 * 60.0, item.volume, 0.001)
+        assertEquals(2, item.exerciseCount)
+        assertEquals(1, item.completedSetCount)
+        assertEquals(7, item.plannedSetCount)
     }
 
     @Test
@@ -792,7 +812,9 @@ class WorkoutSessionRepositoryImplTest {
         assertEquals(8 * 60.0, items.getValue(firstId).volume, 0.001)
         assertEquals(5 * 40.0, items.getValue(secondId).volume, 0.001)
         assertEquals(7, items.getValue(firstId).plannedSetCount)
-        assertEquals(2, items.getValue(secondId).plannedSetCount)
+        assertEquals(3, items.getValue(secondId).plannedSetCount)
+        assertEquals(workoutId, items.getValue(firstId).workoutId)
+        assertEquals(otherWorkout, items.getValue(secondId).workoutId)
     }
 
     @Test

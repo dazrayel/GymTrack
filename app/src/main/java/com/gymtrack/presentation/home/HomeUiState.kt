@@ -4,11 +4,13 @@ import com.gymtrack.domain.model.DailyVolume
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
 import com.gymtrack.domain.model.PeriodDashboardStats
+import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 
 data class HomeUiState(
     val recentWorkout: WorkoutHistoryItem? = null,
+    val nextWorkout: Workout? = null,
     val inProgressSession: WorkoutSession? = null,
     val selectedPeriod: DashboardPeriod = DashboardPeriod.WEEK,
     val periodStats: PeriodDashboardStats = PeriodDashboardStats.Empty,

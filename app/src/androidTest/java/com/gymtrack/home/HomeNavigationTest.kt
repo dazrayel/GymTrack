@@ -142,16 +142,35 @@ class HomeNavigationTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.waitUntil(8_000) {
-            composeTestRule.onAllNodesWithText("Treino em andamento")
+            composeTestRule.onAllNodesWithTag("session_exercises_button")
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
+        composeTestRule.onNodeWithTag("session_exercises_button").assertIsDisplayed()
         val active = runBlocking { workoutSessionRepository.observeInProgress().first() }
         assertEquals(activeId, active!!.id)
         assertEquals(WorkoutSessionStatus.IN_PROGRESS, active.status)
         assertEquals(workoutName, active.workoutName)
         val session = runBlocking { workoutSessionRepository.getSession(activeId) }!!
         assertEquals(WorkoutSessionStatus.IN_PROGRESS, session.status)
+    }
+
+    @Test
+    fun nextWorkoutCard_opensWorkoutDetail() {
+        composeTestRule.onNode(hasText("Início") and hasClickAction()).performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithTag("next_workout_card").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule.onNodeWithTag("next_workout_title", useUnmergedTree = true).assertIsDisplayed()
+        composeTestRule.onNodeWithTag("next_workout_card").performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.waitUntil(8_000) {
+            composeTestRule.onAllNodesWithText("Iniciar treino").fetchSemanticsNodes().isNotEmpty()
+        }
+        waitUntilTextIsDisplayed(workoutName)
+        composeTestRule.onNodeWithText("Iniciar treino").assertIsDisplayed()
     }
 
     @Test
@@ -167,11 +186,11 @@ class HomeNavigationTest {
         composeTestRule.onNodeWithText("Iniciar treino").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.waitUntil(8_000) {
-            composeTestRule.onAllNodesWithText("Treino em andamento")
+            composeTestRule.onAllNodesWithTag("session_exercises_button")
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
-        composeTestRule.onAllNodesWithText("Treino em andamento").onFirst().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("session_exercises_button").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Voltar").assertIsDisplayed()
 
         val started = runBlocking { workoutSessionRepository.observeInProgress().first() }!!
@@ -194,11 +213,11 @@ class HomeNavigationTest {
         composeTestRule.onNodeWithTag("home_continue_in_progress").performClick()
         composeTestRule.waitForIdle()
         composeTestRule.waitUntil(8_000) {
-            composeTestRule.onAllNodesWithText("Treino em andamento")
+            composeTestRule.onAllNodesWithTag("session_exercises_button")
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
-        composeTestRule.onAllNodesWithText("Treino em andamento").onFirst().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("session_exercises_button").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Voltar").assertIsDisplayed()
         composeTestRule.onNodeWithTag("home_continue_in_progress").assertDoesNotExist()
 

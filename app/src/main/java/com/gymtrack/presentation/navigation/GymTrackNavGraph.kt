@@ -106,6 +106,11 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                             restoreState = true
                         }
                     },
+                    onNavigateToWorkoutDetail = { workoutId ->
+                        navController.navigate(routeWorkoutDetail(workoutId)) {
+                            launchSingleTop = true
+                        }
+                    },
                     onSessionClick = { sessionId ->
                         navController.navigate(routeWorkoutSessionSummary(sessionId)) {
                             launchSingleTop = true

@@ -2,13 +2,20 @@ package com.gymtrack.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.PeriodDashboardStats
+import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutHistoryItem
+import com.gymtrack.domain.model.WorkoutSession
+import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.dailyVolumeTrend
 import com.gymtrack.domain.model.dashboardPeriodStats
 import com.gymtrack.domain.model.historicalPersonalRecords
 import com.gymtrack.domain.model.periodBounds
+import com.gymtrack.domain.model.recommendNextWorkout
 import com.gymtrack.domain.model.trainedDayCount
+import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +31,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    private val workoutRepository: WorkoutRepository,
     private val sessionRepository: WorkoutSessionRepository,
     private val timeProvider: TimeProvider,
 ) : ViewModel() {
@@ -44,45 +52,59 @@ class HomeViewModel @Inject constructor(
     private fun observeDashboard() {
         viewModelScope.launch {
             combine(
+                workoutRepository.getAll(),
+                workoutRepository.observeWorkoutIdsWithExercises(),
                 sessionRepository.observeCompletedSessions(),
                 sessionRepository.observeCompletedSetHistory(),
                 selectedPeriod,
-            ) { sessions, sets, period ->
-                Triple(sessions, sets, period)
+            ) { workouts, executableIds, sessions, sets, period ->
+                HomeDashboardEmission(
+                    workouts = workouts,
+                    executableWorkoutIds = executableIds,
+                    sessions = sessions,
+                    sets = sets,
+                    period = period,
+                )
             }
                 .catch { e ->
                     _uiState.update {
                         it.copy(isLoading = false, error = e.message)
                     }
                 }
-                .collect { (sessions, sets, period) ->
+                .collect { emission ->
                     val nowMillis = timeProvider.nowMillis()
                     val zoneId = ZoneId.systemDefault()
-                    val bounds = periodBounds(period, nowMillis, zoneId)
-                    val emptyHistory = sessions.isEmpty()
+                    val bounds = periodBounds(emission.period, nowMillis, zoneId)
+                    val emptyHistory = emission.sessions.isEmpty()
+                    val nextWorkout = recommendNextWorkout(
+                        workouts = emission.workouts,
+                        sessions = emission.sessions.map { it.toCompletedSession() },
+                        workoutIdsWithExercises = emission.executableWorkoutIds,
+                    )
                     _uiState.update {
                         it.copy(
-                            recentWorkout = sessions.firstOrNull(),
-                            selectedPeriod = period,
+                            recentWorkout = emission.sessions.firstOrNull(),
+                            nextWorkout = nextWorkout,
+                            selectedPeriod = emission.period,
                             periodStats = if (emptyHistory) {
                                 PeriodDashboardStats.Empty
                             } else {
-                                dashboardPeriodStats(sessions, sets, bounds)
+                                dashboardPeriodStats(emission.sessions, emission.sets, bounds)
                             },
                             trainedDayCount = if (emptyHistory) {
                                 0
                             } else {
-                                trainedDayCount(sessions, bounds, zoneId)
+                                trainedDayCount(emission.sessions, bounds, zoneId)
                             },
                             dailyVolumeTrend = if (emptyHistory) {
                                 emptyList()
                             } else {
-                                dailyVolumeTrend(sessions, nowMillis, zoneId)
+                                dailyVolumeTrend(emission.sessions, nowMillis, zoneId)
                             },
                             records = if (emptyHistory) {
                                 emptyList()
                             } else {
-                                historicalPersonalRecords(sets)
+                                historicalPersonalRecords(emission.sets)
                             },
                             isLoading = false,
                             error = null,
@@ -110,3 +132,20 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(error = null) }
     }
 }
+
+private data class HomeDashboardEmission(
+    val workouts: List<Workout>,
+    val executableWorkoutIds: Set<Long>,
+    val sessions: List<WorkoutHistoryItem>,
+    val sets: List<CompletedSetRecord>,
+    val period: DashboardPeriod,
+)
+
+private fun WorkoutHistoryItem.toCompletedSession(): WorkoutSession = WorkoutSession(
+    id = sessionId,
+    workoutId = workoutId,
+    workoutName = workoutName,
+    startedAtMillis = startedAtMillis,
+    endedAtMillis = endedAtMillis,
+    status = WorkoutSessionStatus.COMPLETED,
+)

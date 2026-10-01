@@ -334,6 +334,7 @@ private fun WorkoutHistoryRow.toHistoryItem(): WorkoutHistoryItem {
     val duration = elapsedMillis(
         session = WorkoutSession(
             id = sessionId,
+            workoutId = workoutId,
             workoutName = workoutName,
             startedAtMillis = startedAtMillis,
             endedAtMillis = endedAtMillis,
@@ -343,6 +344,7 @@ private fun WorkoutHistoryRow.toHistoryItem(): WorkoutHistoryItem {
     )
     return WorkoutHistoryItem(
         sessionId = sessionId,
+        workoutId = workoutId,
         workoutName = workoutName,
         startedAtMillis = startedAtMillis,
         endedAtMillis = endedAtMillis,
