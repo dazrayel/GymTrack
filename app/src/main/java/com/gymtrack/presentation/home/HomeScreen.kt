@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
+import com.gymtrack.domain.model.AchievementCatalog
 import com.gymtrack.domain.model.DailyVolume
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
@@ -72,6 +74,7 @@ fun HomeScreen(
     onNavigateToExercises: () -> Unit = {},
     onNavigateToWorkouts: () -> Unit = {},
     onNavigateToWorkoutDetail: (workoutId: Long) -> Unit = {},
+    onNavigateToAchievements: () -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
     onRecordClick: (String) -> Unit = {},
     onContinueInProgress: (sessionId: Long) -> Unit = {},
@@ -85,6 +88,7 @@ fun HomeScreen(
         onNavigateToExercises = onNavigateToExercises,
         onNavigateToWorkouts = onNavigateToWorkouts,
         onNavigateToWorkoutDetail = onNavigateToWorkoutDetail,
+        onNavigateToAchievements = onNavigateToAchievements,
         onSessionClick = onSessionClick,
         onRecordClick = onRecordClick,
         onContinueInProgress = onContinueInProgress,
@@ -104,6 +108,7 @@ fun HomeScreen(
     onSessionClick: (Long) -> Unit,
     onErrorShown: () -> Unit,
     onNavigateToWorkoutDetail: (workoutId: Long) -> Unit = {},
+    onNavigateToAchievements: () -> Unit = {},
     onPeriodSelected: (DashboardPeriod) -> Unit = {},
     onRecordClick: (String) -> Unit = {},
     onContinueInProgress: (sessionId: Long) -> Unit = {},
@@ -168,6 +173,12 @@ fun HomeScreen(
                             modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
                         )
                     }
+                    AchievementsCard(
+                        unlockedCount = uiState.unlockedAchievementCount,
+                        totalCount = uiState.totalAchievementCount,
+                        onOpen = onNavigateToAchievements,
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
+                    )
                     if (uiState.showEmpty) {
                         EmptyDashboardContent(
                             onNavigateToWorkouts = onNavigateToWorkouts,
@@ -690,6 +701,67 @@ private fun PeriodStat(
 }
 
 @Composable
+private fun AchievementsCard(
+    unlockedCount: Int,
+    totalCount: Int,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val summary = stringResource(R.string.home_achievements_summary, unlockedCount, totalCount)
+    val description = stringResource(R.string.home_achievements_cd, unlockedCount, totalCount)
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.achievements_title),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        Card(
+            onClick = onOpen,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("home_achievements")
+                .semantics { contentDescription = description },
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.EmojiEvents,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(28.dp),
+                )
+                Spacer(Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.achievements_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = summary,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        modifier = Modifier.testTag("home_achievements_summary"),
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun QuickAccessCard(
     onNavigateToExercises: () -> Unit,
     modifier: Modifier = Modifier,
@@ -821,6 +893,8 @@ private fun HomeScreenPreview() {
                     DailyVolume(1_756_598_400_000L, 0.0),
                     DailyVolume(1_756_684_800_000L, 80.0),
                 ),
+                unlockedAchievementCount = 1,
+                totalAchievementCount = AchievementCatalog.size,
             ),
             onNavigateToExercises = {},
             onNavigateToWorkouts = {},

@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -18,6 +19,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.gymtrack.presentation.achievements.AchievementScreen
 import com.gymtrack.presentation.exercises.ExercisesScreen
 import com.gymtrack.presentation.history.HistoryScreen
 import com.gymtrack.presentation.home.HomeScreen
@@ -27,6 +29,8 @@ import com.gymtrack.presentation.workouts.WorkoutsScreen
 import com.gymtrack.presentation.workouts.detail.WorkoutDetailScreen
 import com.gymtrack.presentation.workouts.execution.WorkoutExecutionScreen
 import com.gymtrack.presentation.workouts.summary.WorkoutSessionSummaryScreen
+
+internal const val ROUTE_ACHIEVEMENTS = "achievements"
 
 private const val ROUTE_EXERCISES = "exercises"
 private const val ROUTE_WORKOUT_DETAIL = "workout_detail/{workoutId}"
@@ -40,8 +44,10 @@ private fun routeExerciseStats(exerciseName: String) =
     "exercise_stats/${Uri.encode(exerciseName)}"
 
 @Composable
-fun GymTrackNavGraph(modifier: Modifier = Modifier) {
-    val navController = rememberNavController()
+fun GymTrackNavGraph(
+    modifier: Modifier = Modifier,
+    navController: NavHostController = rememberNavController(),
+) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
@@ -111,6 +117,11 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToAchievements = {
+                        navController.navigate(ROUTE_ACHIEVEMENTS) {
+                            launchSingleTop = true
+                        }
+                    },
                     onSessionClick = { sessionId ->
                         navController.navigate(routeWorkoutSessionSummary(sessionId)) {
                             launchSingleTop = true
@@ -161,6 +172,12 @@ fun GymTrackNavGraph(modifier: Modifier = Modifier) {
                             launchSingleTop = true
                         }
                     },
+                )
+            }
+            composable(ROUTE_ACHIEVEMENTS) {
+                AchievementScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    contentPadding = innerPadding,
                 )
             }
             composable(

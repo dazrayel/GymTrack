@@ -11,6 +11,7 @@ import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.dailyVolumeTrend
 import com.gymtrack.domain.model.dashboardPeriodStats
+import com.gymtrack.domain.model.evaluateAchievements
 import com.gymtrack.domain.model.historicalPersonalRecords
 import com.gymtrack.domain.model.periodBounds
 import com.gymtrack.domain.model.recommendNextWorkout
@@ -81,6 +82,11 @@ class HomeViewModel @Inject constructor(
                         sessions = emission.sessions.map { it.toCompletedSession() },
                         workoutIdsWithExercises = emission.executableWorkoutIds,
                     )
+                    val achievements = evaluateAchievements(
+                        sessions = emission.sessions,
+                        completedSets = emission.sets,
+                        zoneId = zoneId,
+                    )
                     _uiState.update {
                         it.copy(
                             recentWorkout = emission.sessions.firstOrNull(),
@@ -106,6 +112,8 @@ class HomeViewModel @Inject constructor(
                             } else {
                                 historicalPersonalRecords(emission.sets)
                             },
+                            unlockedAchievementCount = achievements.count { it.unlocked },
+                            totalAchievementCount = achievements.size,
                             isLoading = false,
                             error = null,
                         )

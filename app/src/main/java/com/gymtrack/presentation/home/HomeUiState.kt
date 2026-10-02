@@ -1,5 +1,6 @@
 package com.gymtrack.presentation.home
 
+import com.gymtrack.domain.model.AchievementCatalog
 import com.gymtrack.domain.model.DailyVolume
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
@@ -17,6 +18,8 @@ data class HomeUiState(
     val trainedDayCount: Int = 0,
     val dailyVolumeTrend: List<DailyVolume> = emptyList(),
     val records: List<ExercisePersonalRecords> = emptyList(),
+    val unlockedAchievementCount: Int = 0,
+    val totalAchievementCount: Int = AchievementCatalog.size,
     val isLoading: Boolean = true,
     val error: String? = null,
 ) {

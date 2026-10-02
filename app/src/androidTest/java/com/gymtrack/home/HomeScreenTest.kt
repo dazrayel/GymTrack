@@ -97,6 +97,7 @@ class HomeScreenTest {
         onSessionClick: (Long) -> Unit = {},
         onNavigateToWorkouts: () -> Unit = {},
         onNavigateToWorkoutDetail: (Long) -> Unit = {},
+        onNavigateToAchievements: () -> Unit = {},
         onPeriodSelected: (DashboardPeriod) -> Unit = {},
         onRecordClick: (String) -> Unit = {},
         onContinueInProgress: (Long) -> Unit = {},
@@ -108,6 +109,7 @@ class HomeScreenTest {
                     onNavigateToExercises = {},
                     onNavigateToWorkouts = onNavigateToWorkouts,
                     onNavigateToWorkoutDetail = onNavigateToWorkoutDetail,
+                    onNavigateToAchievements = onNavigateToAchievements,
                     onSessionClick = onSessionClick,
                     onRecordClick = onRecordClick,
                     onContinueInProgress = onContinueInProgress,
@@ -528,6 +530,61 @@ class HomeScreenTest {
         composeTestRule.waitForIdle()
         assertEquals(77L, continuedId)
         assertEquals(null, openedId)
+    }
+
+    @Test
+    fun achievementsEntry_isDisplayedWithZeroUnlocked() {
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                unlockedAchievementCount = 0,
+                totalAchievementCount = 18,
+            ),
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_achievements").assertIsDisplayed()
+        waitUntilTextIsDisplayed("0 de 18 desbloqueadas")
+        composeTestRule.onNodeWithTag("home_empty").assertIsDisplayed()
+    }
+
+    @Test
+    fun achievementsEntry_showsUnlockedCount() {
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                recentWorkout = sampleItem,
+                unlockedAchievementCount = 3,
+                totalAchievementCount = 18,
+            ),
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_achievements").assertIsDisplayed()
+        waitUntilTextIsDisplayed("3 de 18 desbloqueadas")
+    }
+
+    @Test
+    fun achievementsEntry_click_reportsNavigation() {
+        var opened = false
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                unlockedAchievementCount = 0,
+                totalAchievementCount = 18,
+            ),
+            onNavigateToAchievements = { opened = true },
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_achievements").performClick()
+        composeTestRule.waitForIdle()
+        assertTrue(opened)
+    }
+
+    @Test
+    fun loadingState_doesNotShowAchievementsEntry() {
+        setContent(HomeUiState(isLoading = true))
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_loading").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_achievements").assertDoesNotExist()
     }
 
     private fun sevenZeroDays(): List<DailyVolume> {

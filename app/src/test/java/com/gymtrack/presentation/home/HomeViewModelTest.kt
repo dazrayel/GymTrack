@@ -97,6 +97,8 @@ class HomeViewModelTest {
         assertNull(viewModel.uiState.value.error)
         assertNull(viewModel.uiState.value.inProgressSession)
         assertEquals(0, sessionRepository.startSessionCalls)
+        assertEquals(0, viewModel.uiState.value.unlockedAchievementCount)
+        assertEquals(18, viewModel.uiState.value.totalAchievementCount)
     }
 
     @Test
@@ -128,6 +130,21 @@ class HomeViewModelTest {
         assertEquals(80.0, viewModel.uiState.value.records.single { it.exerciseName == "Agachamento" }.bestWeight, 0.001)
         assertEquals(60.0, viewModel.uiState.value.records.single { it.exerciseName == "Supino" }.bestWeight, 0.001)
         assertEquals(clock.now, clock.lastReadNow)
+        assertTrue(viewModel.uiState.value.unlockedAchievementCount >= 1)
+        assertEquals(18, viewModel.uiState.value.totalAchievementCount)
+    }
+
+    @Test
+    fun achievementsSummary_unlocksFirstWorkoutWithOneSession() = runTest(testDispatcher) {
+        val session = item(sessionId = 1L, occurredAt = local("2026-08-26T10:00:00"), volume = 100.0)
+        val sets = listOf(CompletedSetRecord(1L, local("2026-08-26T10:00:00"), "Supino", 8, 40.0))
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(session))
+        sessionRepository.emitSets(sets)
+        advanceUntilIdle()
+
+        assertEquals(18, viewModel.uiState.value.totalAchievementCount)
+        assertTrue(viewModel.uiState.value.unlockedAchievementCount >= 1)
     }
 
     @Test

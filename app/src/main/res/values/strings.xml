@@ -214,6 +214,53 @@
     <string name="move_exercise_up">Mover %1$s para cima</string>
     <string name="move_exercise_down">Mover %1$s para baixo</string>
 
+    <!-- Achievements -->
+    <string name="achievements_title">Conquistas</string>
+    <string name="achievements_summary">%1$d de %2$d conquistas desbloqueadas</string>
+    <string name="home_achievements_summary">%1$d de %2$d desbloqueadas</string>
+    <string name="home_achievements_cd">Conquistas, %1$d de %2$d desbloqueadas</string>
+    <string name="achievement_progress">%1$d / %2$d</string>
+    <string name="achievement_progress_volume">%1$s / %2$s</string>
+    <string name="achievement_unlocked_cd">Conquista desbloqueada: %1$s</string>
+    <string name="achievement_locked_cd">Conquista bloqueada: %1$s</string>
+
+    <string name="achievement_first_workout_name">Primeiro treino</string>
+    <string name="achievement_first_workout_description">Conclua sua primeira sessão de treino.</string>
+    <string name="achievement_workouts_10_name">10 treinos</string>
+    <string name="achievement_workouts_10_description">Conclua 10 sessões de treino.</string>
+    <string name="achievement_workouts_25_name">25 treinos</string>
+    <string name="achievement_workouts_25_description">Conclua 25 sessões de treino.</string>
+    <string name="achievement_workouts_50_name">50 treinos</string>
+    <string name="achievement_workouts_50_description">Conclua 50 sessões de treino.</string>
+    <string name="achievement_volume_10000_name">10 toneladas</string>
+    <string name="achievement_volume_10000_description">Acumule 10.000 kg de volume.</string>
+    <string name="achievement_volume_50000_name">50 toneladas</string>
+    <string name="achievement_volume_50000_description">Acumule 50.000 kg de volume.</string>
+    <string name="achievement_volume_100000_name">100 toneladas</string>
+    <string name="achievement_volume_100000_description">Acumule 100.000 kg de volume.</string>
+    <string name="achievement_sets_100_name">100 séries</string>
+    <string name="achievement_sets_100_description">Conclua 100 séries.</string>
+    <string name="achievement_sets_500_name">500 séries</string>
+    <string name="achievement_sets_500_description">Conclua 500 séries.</string>
+    <string name="achievement_sets_1000_name">1.000 séries</string>
+    <string name="achievement_sets_1000_description">Conclua 1.000 séries.</string>
+    <string name="achievement_exercises_5_name">5 exercícios</string>
+    <string name="achievement_exercises_5_description">Realize 5 exercícios diferentes.</string>
+    <string name="achievement_exercises_10_name">10 exercícios</string>
+    <string name="achievement_exercises_10_description">Realize 10 exercícios diferentes.</string>
+    <string name="achievement_exercises_25_name">25 exercícios</string>
+    <string name="achievement_exercises_25_description">Realize 25 exercícios diferentes.</string>
+    <string name="achievement_pr_first_name">Primeiro recorde</string>
+    <string name="achievement_pr_first_description">Registre um recorde pessoal.</string>
+    <string name="achievement_pr_exercises_5_name">5 recordes</string>
+    <string name="achievement_pr_exercises_5_description">Tenha recordes pessoais em 5 exercícios.</string>
+    <string name="achievement_pr_exercises_10_name">10 recordes</string>
+    <string name="achievement_pr_exercises_10_description">Tenha recordes pessoais em 10 exercícios.</string>
+    <string name="achievement_trained_days_5_name">5 dias de treino</string>
+    <string name="achievement_trained_days_5_description">Treine em 5 dias diferentes.</string>
+    <string name="achievement_trained_days_20_name">20 dias de treino</string>
+    <string name="achievement_trained_days_20_description">Treine em 20 dias diferentes.</string>
+
     <!-- Common actions -->
     <string name="save">Salvar</string>
     <string name="cancel">Cancelar</string>
