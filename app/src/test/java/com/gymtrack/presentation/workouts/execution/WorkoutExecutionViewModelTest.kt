@@ -3,14 +3,21 @@ package com.gymtrack.presentation.workouts.execution
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.SavedStateHandle
 import com.gymtrack.R
+import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.ProgressionAction
 import com.gymtrack.domain.model.StartSessionResult
+import com.gymtrack.domain.model.Workout
+import com.gymtrack.domain.model.WorkoutBlock
+import com.gymtrack.domain.model.WorkoutBlockType
+import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
 import com.gymtrack.domain.repository.ExerciseRepository
+import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -46,6 +54,7 @@ class WorkoutExecutionViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var fakeRepo: FakeExecutionSessionRepository
+    private lateinit var fakeWorkoutRepo: FakeExecutionWorkoutRepository
     private lateinit var fakeExercises: FakeExerciseRepository
     private lateinit var clock: FakeTimeProvider
     private lateinit var draftStore: WorkoutExecutionDraftStore
@@ -117,6 +126,7 @@ class WorkoutExecutionViewModelTest {
         Dispatchers.setMain(testDispatcher)
         clock = FakeTimeProvider(now = 1_000_000L)
         fakeRepo = FakeExecutionSessionRepository(clock)
+        fakeWorkoutRepo = FakeExecutionWorkoutRepository()
         fakeExercises = FakeExerciseRepository()
         draftStore = WorkoutExecutionDraftStore()
         buildViewModel()
@@ -131,6 +141,7 @@ class WorkoutExecutionViewModelTest {
         viewModel = WorkoutExecutionViewModel(
             savedStateHandle = SavedStateHandle(mapOf("sessionId" to SESSION_ID)),
             workoutSessionRepository = fakeRepo,
+            workoutRepository = fakeWorkoutRepo,
             exerciseRepository = fakeExercises,
             timeProvider = clock,
             draftStore = draftStore,
@@ -140,6 +151,93 @@ class WorkoutExecutionViewModelTest {
     private fun emitSessionWithExercises() {
         fakeRepo.emitSession(session)
         fakeRepo.emitExercises(listOf(exerciseA, exerciseB))
+    }
+
+    private fun seedTemplate(
+        workoutId: Long = 1L,
+        blocks: List<WorkoutBlock> = listOf(
+            WorkoutBlock(
+                id = 10L,
+                workoutId = workoutId,
+                position = 0,
+                type = WorkoutBlockType.SINGLE,
+                rounds = 3,
+                restSeconds = 60,
+            ),
+            WorkoutBlock(
+                id = 20L,
+                workoutId = workoutId,
+                position = 1,
+                type = WorkoutBlockType.SINGLE,
+                rounds = 2,
+                restSeconds = 60,
+            ),
+        ),
+        exercises: List<WorkoutExercise> = listOf(
+            WorkoutExercise(
+                id = 100L,
+                blockId = 10L,
+                exerciseId = 1L,
+                positionInBlock = 0,
+                minRepetitions = 8,
+                maxRepetitions = 12,
+                weight = 80.0,
+                notes = "template-a",
+            ),
+            WorkoutExercise(
+                id = 200L,
+                blockId = 20L,
+                exerciseId = 2L,
+                positionInBlock = 0,
+                minRepetitions = 10,
+                maxRepetitions = 12,
+                weight = 14.5,
+                notes = "template-b",
+            ),
+        ),
+    ) {
+        fakeWorkoutRepo.emitTemplate(workoutId, blocks, exercises)
+    }
+
+    private fun setupIncreaseWeightScenario(
+        plannedWeight: Double = 80.0,
+        templateWeight: Double = 80.0,
+    ) {
+        val target = exerciseA.copy(
+            plannedWeight = plannedWeight,
+            minRepetitions = 8,
+            maxRepetitions = 12,
+            plannedSets = 3,
+        )
+        seedTemplate(
+            exercises = listOf(
+                WorkoutExercise(
+                    id = 100L,
+                    blockId = 10L,
+                    exerciseId = 1L,
+                    positionInBlock = 0,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = templateWeight,
+                    notes = "template-a",
+                ),
+                WorkoutExercise(
+                    id = 200L,
+                    blockId = 20L,
+                    exerciseId = 2L,
+                    positionInBlock = 0,
+                    minRepetitions = 10,
+                    maxRepetitions = 12,
+                    weight = 14.5,
+                    notes = "template-b",
+                ),
+            ),
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
     }
 
     @Test
@@ -1177,6 +1275,819 @@ class WorkoutExecutionViewModelTest {
         assertNull(viewModel.uiState.value.mediaExercise)
     }
 
+    @Test
+    fun progression_noHistory_returnsNoHistory() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(emptyList())
+
+        val suggestion = viewModel.uiState.value.progressionSuggestion
+        assertEquals(ProgressionAction.NO_HISTORY, suggestion!!.action)
+        assertNull(suggestion.suggestedWeight)
+    }
+
+    @Test
+    fun progression_lastSessionAllMax_increasesWeight() {
+        val target = exerciseA.copy(plannedWeight = 80.0, minRepetitions = 8, maxRepetitions = 12, plannedSets = 3)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(
+                sessionId = 50L,
+                occurredAt = 5_000L,
+                name = "Supino",
+                reps = listOf(12, 12, 12),
+                weight = 80.0,
+            ),
+        )
+
+        val suggestion = viewModel.uiState.value.progressionSuggestion!!
+        assertEquals(ProgressionAction.INCREASE_WEIGHT, suggestion.action)
+        assertEquals(82.5, suggestion.suggestedWeight!!, 0.001)
+        assertEquals(80.0, suggestion.plannedWeight, 0.001)
+    }
+
+    @Test
+    fun progression_lastSessionMidRange_increasesReps() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(8, 9, 9), 80.0),
+        )
+
+        val suggestion = viewModel.uiState.value.progressionSuggestion!!
+        assertEquals(ProgressionAction.INCREASE_REPS, suggestion.action)
+        assertNull(suggestion.suggestedWeight)
+    }
+
+    @Test
+    fun progression_lastSessionBelowMin_maintains() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(8, 8, 7), 80.0),
+        )
+
+        assertEquals(
+            ProgressionAction.MAINTAIN,
+            viewModel.uiState.value.progressionSuggestion!!.action,
+        )
+    }
+
+    @Test
+    fun progression_usesMostRecentCompletedSessionOnly() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(40L, 4_000L, "Supino", listOf(12, 12, 12), 70.0) +
+                historySets(50L, 5_000L, "Supino", listOf(8, 9, 9), 80.0),
+        )
+
+        val suggestion = viewModel.uiState.value.progressionSuggestion!!
+        assertEquals(ProgressionAction.INCREASE_REPS, suggestion.action)
+        assertNull(suggestion.suggestedWeight)
+    }
+
+    @Test
+    fun progression_ignoresInProgressHistoryBecauseCompletedFlowOmitsIt() {
+        // observeCompletedSetHistory only exposes COMPLETED sessions; an IN_PROGRESS
+        // session must never appear in this list even if it is more recent.
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        assertEquals(
+            ProgressionAction.INCREASE_WEIGHT,
+            viewModel.uiState.value.progressionSuggestion!!.action,
+        )
+    }
+
+    @Test
+    fun progression_biSet_evaluatesEachExerciseIndependently() {
+        val bench = exerciseA.copy(
+            plannedWeight = 80.0,
+            plannedSets = 3,
+            blockPosition = 0,
+            positionInBlock = 0,
+        )
+        val fly = exerciseB.copy(
+            plannedWeight = 40.0,
+            plannedSets = 3,
+            minRepetitions = 8,
+            maxRepetitions = 12,
+            blockPosition = 0,
+            positionInBlock = 1,
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(bench, fly))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        assertEquals(
+            ProgressionAction.INCREASE_WEIGHT,
+            viewModel.uiState.value.progressionSuggestion!!.action,
+        )
+
+        fakeRepo.emitSets(
+            bench.id,
+            listOf(set(bench.id, 0), set(bench.id, 1), set(bench.id, 2)),
+        )
+
+        val flySuggestion = viewModel.uiState.value.progressionSuggestion!!
+        assertEquals(fly, viewModel.uiState.value.currentExercise)
+        assertEquals(ProgressionAction.NO_HISTORY, flySuggestion.action)
+    }
+
+    @Test
+    fun progression_replacedExercise_usesOnlyNewExerciseHistory() {
+        val replaced = exerciseA.copy(
+            exerciseId = 99L,
+            exerciseName = "Supino Inclinado",
+            plannedWeight = 80.0,
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(replaced, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        assertEquals(
+            ProgressionAction.NO_HISTORY,
+            viewModel.uiState.value.progressionSuggestion!!.action,
+        )
+
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0) +
+                historySets(51L, 6_000L, "Supino Inclinado", listOf(8, 9, 9), 80.0),
+        )
+
+        assertEquals(
+            ProgressionAction.INCREASE_REPS,
+            viewModel.uiState.value.progressionSuggestion!!.action,
+        )
+    }
+
+    @Test
+    fun progression_usesSessionSnapshotNotTemplateMutation() {
+        // Snapshot already started with 80 kg / 8–12; a later template edit is irrelevant.
+        val snapshot = exerciseA.copy(
+            plannedWeight = 80.0,
+            minRepetitions = 8,
+            maxRepetitions = 12,
+            plannedSets = 3,
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(snapshot, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        val suggestion = viewModel.uiState.value.progressionSuggestion!!
+        assertEquals(80.0, suggestion.plannedWeight, 0.001)
+        assertEquals(8, suggestion.minRepetitions)
+        assertEquals(12, suggestion.maxRepetitions)
+        assertEquals(3, suggestion.plannedSets)
+        assertEquals(ProgressionAction.INCREASE_WEIGHT, suggestion.action)
+        assertEquals(82.5, suggestion.suggestedWeight!!, 0.001)
+    }
+
+    @Test
+    fun progression_currentSessionSetsAreNotUsedAsHistory() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(8, 8, 7), 80.0),
+        )
+        // Current IN_PROGRESS sets look like a perfect session, but must not affect suggestion.
+        fakeRepo.emitSets(
+            target.id,
+            listOf(
+                WorkoutSet(1, target.id, 0, 12, 80.0, 1L),
+                WorkoutSet(2, target.id, 1, 12, 80.0, 1L),
+            ),
+        )
+
+        assertEquals(
+            ProgressionAction.MAINTAIN,
+            viewModel.uiState.value.progressionSuggestion!!.action,
+        )
+    }
+
+    @Test
+    fun prefill_increaseWeight_usesSuggestedWeight() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        assertEquals(ProgressionAction.INCREASE_WEIGHT, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals(82.5, viewModel.uiState.value.progressionSuggestion!!.suggestedWeight!!, 0.001)
+        assertEquals("82.5", viewModel.uiState.value.weightInput)
+        assertEquals("8", viewModel.uiState.value.repsInput)
+        // Prefill alone must not create a draft or mutate the snapshot/template values.
+        assertNull(draftStore.get(SESSION_ID, target.id))
+        assertEquals(80.0, target.plannedWeight, 0.0)
+        assertEquals(8, target.minRepetitions)
+        assertEquals(12, target.maxRepetitions)
+    }
+
+    @Test
+    fun prefill_increaseReps_keepsPlannedWeightAndMinReps() {
+        val target = exerciseA.copy(plannedWeight = 80.0, plannedSets = 3)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(8, 9, 9), 80.0),
+        )
+
+        val state = viewModel.uiState.value
+        assertEquals(ProgressionAction.INCREASE_REPS, state.progressionSuggestion!!.action)
+        assertEquals("80", state.weightInput)
+        assertEquals(target.minRepetitions.toString(), state.repsInput)
+        assertEquals(3, state.currentExercise!!.plannedSets)
+        assertNull(draftStore.get(SESSION_ID, target.id))
+    }
+
+    @Test
+    fun prefill_maintain_keepsPlannedValues() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(8, 8, 7), 80.0),
+        )
+
+        assertEquals(ProgressionAction.MAINTAIN, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals("80", viewModel.uiState.value.weightInput)
+        assertEquals("8", viewModel.uiState.value.repsInput)
+        assertNull(draftStore.get(SESSION_ID, target.id))
+    }
+
+    @Test
+    fun prefill_noHistory_keepsPlannedValues() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(emptyList())
+
+        assertEquals(ProgressionAction.NO_HISTORY, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals("80", viewModel.uiState.value.weightInput)
+        assertEquals("8", viewModel.uiState.value.repsInput)
+        assertNull(draftStore.get(SESSION_ID, target.id))
+    }
+
+    @Test
+    fun prefill_userEdit_isNotOverwrittenByProgression() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+        assertEquals("82.5", viewModel.uiState.value.weightInput)
+        assertNull(draftStore.get(SESSION_ID, target.id))
+
+        viewModel.onWeightChanged("85")
+        assertEquals("85", viewModel.uiState.value.weightInput)
+        assertEquals("85", draftStore.get(SESSION_ID, target.id)?.weightInput)
+
+        // Completing a set / refreshing sets must not revert the manual edit.
+        fakeRepo.emitSets(target.id, listOf(set(target.id, 0)))
+        assertEquals("85", viewModel.uiState.value.weightInput)
+
+        // History refresh also must not overwrite.
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+        assertEquals("85", viewModel.uiState.value.weightInput)
+
+        // Session re-emission / progression recompute must not overwrite.
+        fakeRepo.emitSession(session.copy(startedAtMillis = session.startedAtMillis))
+        assertEquals("85", viewModel.uiState.value.weightInput)
+        assertEquals(
+            ProgressionAction.INCREASE_WEIGHT,
+            viewModel.uiState.value.progressionSuggestion!!.action,
+        )
+        assertEquals(82.5, viewModel.uiState.value.progressionSuggestion!!.suggestedWeight!!, 0.001)
+    }
+
+    @Test
+    fun prefill_historyArrivesLater_upgradesOnceUntilUserEdits() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        // No completed history yet → planned weight.
+        assertEquals(ProgressionAction.NO_HISTORY, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals("80", viewModel.uiState.value.weightInput)
+        assertNull(draftStore.get(SESSION_ID, target.id))
+
+        // History arrives with INCREASE_WEIGHT and no draft → single upgrade.
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+        assertEquals(ProgressionAction.INCREASE_WEIGHT, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals("82.5", viewModel.uiState.value.weightInput)
+        assertNull(draftStore.get(SESSION_ID, target.id))
+
+        // After manual edit, further history/progress updates must not upgrade again.
+        viewModel.onWeightChanged("85")
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0) +
+                historySets(51L, 6_000L, "Supino", listOf(12, 12, 12), 82.5),
+        )
+        assertEquals("85", viewModel.uiState.value.weightInput)
+        assertEquals("85", draftStore.get(SESSION_ID, target.id)?.weightInput)
+    }
+
+    @Test
+    fun prefill_existingDraft_winsOverIncreaseWeightSuggestion() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        draftStore.put(SESSION_ID, target.id, repsInput = "8", weightInput = "85")
+
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        assertEquals(ProgressionAction.INCREASE_WEIGHT, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals(82.5, viewModel.uiState.value.progressionSuggestion!!.suggestedWeight!!, 0.001)
+        assertEquals("85", viewModel.uiState.value.weightInput)
+        assertEquals("8", viewModel.uiState.value.repsInput)
+        assertEquals(ExerciseInputDraft("8", "85"), draftStore.get(SESSION_ID, target.id))
+    }
+
+    @Test
+    fun prefill_biSet_onlyIncreaseWeightExerciseGetsSuggestedLoad() {
+        val bench = exerciseA.copy(
+            plannedWeight = 80.0,
+            plannedSets = 3,
+            blockPosition = 0,
+            positionInBlock = 0,
+        )
+        val fly = exerciseB.copy(
+            plannedWeight = 40.0,
+            plannedSets = 3,
+            minRepetitions = 8,
+            maxRepetitions = 12,
+            blockPosition = 0,
+            positionInBlock = 1,
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(bench, fly))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        assertEquals("82.5", viewModel.uiState.value.weightInput)
+        assertNull(draftStore.get(SESSION_ID, fly.id))
+
+        fakeRepo.emitSets(
+            bench.id,
+            listOf(set(bench.id, 0), set(bench.id, 1), set(bench.id, 2)),
+        )
+
+        assertEquals(fly, viewModel.uiState.value.currentExercise)
+        assertEquals(ProgressionAction.NO_HISTORY, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals("40", viewModel.uiState.value.weightInput)
+        assertEquals(fly.minRepetitions.toString(), viewModel.uiState.value.repsInput)
+        assertNull(draftStore.get(SESSION_ID, fly.id))
+    }
+
+    @Test
+    fun prefill_triSet_appliesSuggestionPerExercise() {
+        val curl = exerciseA.copy(
+            id = 10L,
+            exerciseName = "Rosca",
+            plannedWeight = 20.0,
+            plannedSets = 3,
+            minRepetitions = 10,
+            maxRepetitions = 12,
+            blockPosition = 0,
+            positionInBlock = 0,
+        )
+        val kickback = exerciseB.copy(
+            id = 20L,
+            exerciseName = "Kickback",
+            plannedWeight = 12.5,
+            plannedSets = 3,
+            minRepetitions = 10,
+            maxRepetitions = 15,
+            blockPosition = 0,
+            positionInBlock = 1,
+        )
+        val press = exerciseC.copy(
+            id = 30L,
+            exerciseName = "Tríceps",
+            plannedWeight = 30.0,
+            plannedSets = 3,
+            minRepetitions = 8,
+            maxRepetitions = 10,
+            blockPosition = 0,
+            positionInBlock = 2,
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(curl, kickback, press))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Rosca", listOf(12, 12, 12), 20.0) +
+                historySets(50L, 5_000L, "Kickback", listOf(10, 11, 10), 12.5) +
+                historySets(50L, 5_000L, "Tríceps", listOf(8, 7, 8), 30.0),
+        )
+
+        assertEquals(ProgressionAction.INCREASE_WEIGHT, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals("22.5", viewModel.uiState.value.weightInput)
+
+        fakeRepo.emitSets(curl.id, listOf(set(curl.id, 0), set(curl.id, 1), set(curl.id, 2)))
+        assertEquals(ProgressionAction.INCREASE_REPS, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals("12.5", viewModel.uiState.value.weightInput)
+        assertEquals("10", viewModel.uiState.value.repsInput)
+        assertNull(draftStore.get(SESSION_ID, kickback.id))
+
+        fakeRepo.emitSets(
+            kickback.id,
+            listOf(set(kickback.id, 0), set(kickback.id, 1), set(kickback.id, 2)),
+        )
+        assertEquals(ProgressionAction.MAINTAIN, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals("30", viewModel.uiState.value.weightInput)
+        assertEquals("8", viewModel.uiState.value.repsInput)
+        assertNull(draftStore.get(SESSION_ID, press.id))
+    }
+
+    @Test
+    fun prefill_replacedExerciseWithoutHistory_doesNotReusePreviousSuggestion() {
+        val replaced = exerciseA.copy(
+            exerciseId = 99L,
+            exerciseName = "Supino Inclinado",
+            plannedWeight = 80.0,
+            minRepetitions = 8,
+            maxRepetitions = 12,
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(replaced, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        assertEquals(ProgressionAction.NO_HISTORY, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertEquals("80", viewModel.uiState.value.weightInput)
+        assertEquals("8", viewModel.uiState.value.repsInput)
+        assertEquals(80.0, replaced.plannedWeight, 0.0)
+        assertEquals(8, replaced.minRepetitions)
+        assertEquals(12, replaced.maxRepetitions)
+    }
+
+    @Test
+    fun prefill_currentSessionSetsDoNotChangePrefillSource() {
+        val target = exerciseA.copy(plannedWeight = 80.0)
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+        assertEquals("82.5", viewModel.uiState.value.weightInput)
+
+        // Performing sets in the current session must not recalculate prefill from those sets.
+        viewModel.onWeightChanged("82.5")
+        fakeRepo.emitSets(
+            target.id,
+            listOf(
+                WorkoutSet(1, target.id, 0, 12, 82.5, 1L),
+                WorkoutSet(2, target.id, 1, 12, 82.5, 1L),
+            ),
+        )
+        assertEquals("82.5", viewModel.uiState.value.weightInput)
+        assertEquals(
+            ProgressionAction.INCREASE_WEIGHT,
+            viewModel.uiState.value.progressionSuggestion!!.action,
+        )
+        assertEquals(82.5, viewModel.uiState.value.progressionSuggestion!!.suggestedWeight!!, 0.001)
+    }
+
+    @Test
+    fun prefill_doesNotMutateSessionExerciseSnapshotFields() {
+        val target = exerciseA.copy(
+            plannedWeight = 80.0,
+            minRepetitions = 8,
+            maxRepetitions = 12,
+            plannedSets = 3,
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+        viewModel.onWeightChanged("85")
+        fakeRepo.emitSets(target.id, listOf(set(target.id, 0)))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        val current = viewModel.uiState.value.exercises.first { it.id == target.id }
+        assertEquals(80.0, current.plannedWeight, 0.0)
+        assertEquals(8, current.minRepetitions)
+        assertEquals(12, current.maxRepetitions)
+        assertEquals(3, current.plannedSets)
+        assertEquals(80.0, target.plannedWeight, 0.0)
+        assertEquals(8, target.minRepetitions)
+        assertEquals(12, target.maxRepetitions)
+        assertEquals("85", viewModel.uiState.value.weightInput)
+    }
+
+    @Test
+    fun applyProgression_availableOnlyForIncreaseWeight() {
+        setupIncreaseWeightScenario()
+        assertTrue(viewModel.uiState.value.canApplyProgressionToTemplate)
+        assertEquals(
+            ProgressionAction.INCREASE_WEIGHT,
+            viewModel.uiState.value.progressionSuggestion!!.action,
+        )
+    }
+
+    @Test
+    fun applyProgression_notAvailableForIncreaseReps() {
+        seedTemplate()
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA.copy(plannedWeight = 80.0), exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(8, 9, 9), 80.0),
+        )
+        assertEquals(ProgressionAction.INCREASE_REPS, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertFalse(viewModel.uiState.value.canApplyProgressionToTemplate)
+    }
+
+    @Test
+    fun applyProgression_notAvailableForMaintain() {
+        seedTemplate()
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA.copy(plannedWeight = 80.0), exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(8, 8, 7), 80.0),
+        )
+        assertEquals(ProgressionAction.MAINTAIN, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertFalse(viewModel.uiState.value.canApplyProgressionToTemplate)
+    }
+
+    @Test
+    fun applyProgression_notAvailableForNoHistory() {
+        seedTemplate()
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA.copy(plannedWeight = 80.0), exerciseB))
+        fakeRepo.emitCompletedHistory(emptyList())
+        assertEquals(ProgressionAction.NO_HISTORY, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertFalse(viewModel.uiState.value.canApplyProgressionToTemplate)
+    }
+
+    @Test
+    fun applyProgression_notAvailableWhenSuggestionNull() {
+        seedTemplate()
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(emptyList())
+        assertNull(viewModel.uiState.value.progressionSuggestion)
+        assertFalse(viewModel.uiState.value.canApplyProgressionToTemplate)
+    }
+
+    @Test
+    fun applyProgression_requestShowsDialogWithoutMutatingTemplate() {
+        setupIncreaseWeightScenario()
+        val weightBefore = viewModel.uiState.value.weightInput
+
+        viewModel.requestApplyProgressionSuggestion()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.showApplyProgressionConfirmation)
+        assertEquals(80.0, state.applyProgressionFromWeight!!, 0.0)
+        assertEquals(82.5, state.applyProgressionToWeight!!, 0.0)
+        assertTrue(fakeWorkoutRepo.updateBlockExerciseCalls.isEmpty())
+        assertEquals(80.0, fakeWorkoutRepo.exercise(100L)!!.weight, 0.0)
+        assertEquals(weightBefore, state.weightInput)
+    }
+
+    @Test
+    fun applyProgression_cancelKeepsTemplateAndSessionIntact() {
+        setupIncreaseWeightScenario()
+        val weightBefore = viewModel.uiState.value.weightInput
+        val repsBefore = viewModel.uiState.value.repsInput
+
+        viewModel.requestApplyProgressionSuggestion()
+        viewModel.dismissApplyProgressionConfirmation()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.showApplyProgressionConfirmation)
+        assertNull(state.applyProgressionFromWeight)
+        assertNull(state.applyProgressionToWeight)
+        assertTrue(fakeWorkoutRepo.updateBlockExerciseCalls.isEmpty())
+        assertEquals(80.0, fakeWorkoutRepo.exercise(100L)!!.weight, 0.0)
+        assertEquals(weightBefore, state.weightInput)
+        assertEquals(repsBefore, state.repsInput)
+        assertEquals(80.0, state.exercises.first { it.id == exerciseA.id }.plannedWeight, 0.0)
+    }
+
+    @Test
+    fun applyProgression_confirmUpdatesOnlyTemplateWeight() {
+        setupIncreaseWeightScenario()
+        val weightBefore = viewModel.uiState.value.weightInput
+        val repsBefore = viewModel.uiState.value.repsInput
+        val sessionBefore = viewModel.uiState.value.exercises.first { it.id == exerciseA.id }
+
+        viewModel.requestApplyProgressionSuggestion()
+        viewModel.confirmApplyProgressionSuggestion()
+
+        val updated = fakeWorkoutRepo.exercise(100L)!!
+        assertEquals(82.5, updated.weight, 0.0)
+        assertEquals(8, updated.minRepetitions)
+        assertEquals(12, updated.maxRepetitions)
+        assertEquals("template-a", updated.notes)
+        assertEquals(1L, updated.exerciseId)
+        assertEquals(10L, updated.blockId)
+        assertEquals(0, updated.positionInBlock)
+        assertEquals(1, fakeWorkoutRepo.updateBlockExerciseCalls.size)
+
+        val state = viewModel.uiState.value
+        assertFalse(state.showApplyProgressionConfirmation)
+        assertFalse(state.canApplyProgressionToTemplate)
+        assertEquals(R.string.progression_applied, state.infoMessageResId)
+        assertEquals(weightBefore, state.weightInput)
+        assertEquals(repsBefore, state.repsInput)
+        assertEquals(sessionBefore.plannedWeight, state.exercises.first { it.id == exerciseA.id }.plannedWeight, 0.0)
+        assertEquals(sessionBefore.minRepetitions, state.exercises.first { it.id == exerciseA.id }.minRepetitions)
+        assertEquals(sessionBefore.maxRepetitions, state.exercises.first { it.id == exerciseA.id }.maxRepetitions)
+        assertNull(state.error)
+    }
+
+    @Test
+    fun applyProgression_persistsAfterReload() {
+        setupIncreaseWeightScenario()
+        viewModel.requestApplyProgressionSuggestion()
+        viewModel.confirmApplyProgressionSuggestion()
+        assertEquals(82.5, fakeWorkoutRepo.exercise(100L)!!.weight, 0.0)
+
+        // Simulate reloading template observation from repository state.
+        val reloaded = fakeWorkoutRepo.exercisesFor(1L)
+        assertEquals(82.5, reloaded.first { it.id == 100L }.weight, 0.0)
+    }
+
+    @Test
+    fun applyProgression_biSetUpdatesOnlyTargetSlot() {
+        val blocks = listOf(
+            WorkoutBlock(
+                id = 10L,
+                workoutId = 1L,
+                position = 0,
+                type = WorkoutBlockType.BI_SET,
+                rounds = 3,
+                restSeconds = 60,
+            ),
+        )
+        val templateA = WorkoutExercise(
+            id = 100L,
+            blockId = 10L,
+            exerciseId = 1L,
+            positionInBlock = 0,
+            minRepetitions = 8,
+            maxRepetitions = 12,
+            weight = 80.0,
+            notes = "a",
+        )
+        val templateB = WorkoutExercise(
+            id = 101L,
+            blockId = 10L,
+            exerciseId = 2L,
+            positionInBlock = 1,
+            minRepetitions = 10,
+            maxRepetitions = 12,
+            weight = 40.0,
+            notes = "b",
+        )
+        seedTemplate(blocks = blocks, exercises = listOf(templateA, templateB))
+
+        val sessionA = exerciseA.copy(
+            plannedWeight = 80.0,
+            blockPosition = 0,
+            positionInBlock = 0,
+            exerciseName = "Supino",
+        )
+        val sessionB = exerciseB.copy(
+            id = 20L,
+            plannedWeight = 40.0,
+            blockPosition = 0,
+            positionInBlock = 1,
+            exerciseName = "Remada",
+            plannedSets = 3,
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(sessionA, sessionB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(12, 12, 12), 80.0),
+        )
+
+        assertTrue(viewModel.uiState.value.canApplyProgressionToTemplate)
+        viewModel.requestApplyProgressionSuggestion()
+        viewModel.confirmApplyProgressionSuggestion()
+
+        assertEquals(82.5, fakeWorkoutRepo.exercise(100L)!!.weight, 0.0)
+        assertEquals(40.0, fakeWorkoutRepo.exercise(101L)!!.weight, 0.0)
+        assertEquals("b", fakeWorkoutRepo.exercise(101L)!!.notes)
+    }
+
+    @Test
+    fun applyProgression_substitutionUsesSlotNotCatalogueOrName() {
+        // Template was substituted: catalogue id no longer matches session snapshot.
+        seedTemplate(
+            exercises = listOf(
+                WorkoutExercise(
+                    id = 100L,
+                    blockId = 10L,
+                    exerciseId = 99L, // replaced catalogue id
+                    positionInBlock = 0,
+                    minRepetitions = 8,
+                    maxRepetitions = 12,
+                    weight = 80.0,
+                    notes = "slot",
+                ),
+                WorkoutExercise(
+                    id = 200L,
+                    blockId = 20L,
+                    exerciseId = 2L,
+                    positionInBlock = 0,
+                    minRepetitions = 10,
+                    maxRepetitions = 12,
+                    weight = 14.5,
+                ),
+            ),
+        )
+        val target = exerciseA.copy(
+            plannedWeight = 80.0,
+            exerciseId = 1L, // stale snapshot catalogue id
+            exerciseName = "Supino Antigo",
+            blockPosition = 0,
+            positionInBlock = 0,
+        )
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(target, exerciseB))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino Antigo", listOf(12, 12, 12), 80.0),
+        )
+
+        viewModel.requestApplyProgressionSuggestion()
+        viewModel.confirmApplyProgressionSuggestion()
+
+        val updated = fakeWorkoutRepo.updateBlockExerciseCalls.single()
+        assertEquals(100L, updated.id)
+        assertEquals(99L, updated.exerciseId)
+        assertEquals(82.5, updated.weight, 0.0)
+        assertEquals(14.5, fakeWorkoutRepo.exercise(200L)!!.weight, 0.0)
+    }
+
+    @Test
+    fun applyProgression_errorSurfacesWithoutSuccessMessage() {
+        setupIncreaseWeightScenario()
+        fakeWorkoutRepo.shouldThrowOnUpdate = true
+
+        viewModel.requestApplyProgressionSuggestion()
+        viewModel.confirmApplyProgressionSuggestion()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.showApplyProgressionConfirmation)
+        assertNull(state.infoMessageResId)
+        assertEquals("update failed", state.error)
+        assertEquals(80.0, fakeWorkoutRepo.exercise(100L)!!.weight, 0.0)
+        assertEquals("82.5", state.weightInput)
+    }
+
+    @Test
+    fun applyProgression_hiddenWhenTemplateAlreadyHasSuggestedWeight() {
+        setupIncreaseWeightScenario(templateWeight = 82.5)
+        assertEquals(ProgressionAction.INCREASE_WEIGHT, viewModel.uiState.value.progressionSuggestion!!.action)
+        assertFalse(viewModel.uiState.value.canApplyProgressionToTemplate)
+    }
+
+    private fun historySets(
+        sessionId: Long,
+        occurredAt: Long,
+        name: String,
+        reps: List<Int>,
+        weight: Double,
+    ): List<CompletedSetRecord> = reps.map { rep ->
+        CompletedSetRecord(
+            sessionId = sessionId,
+            occurredAtMillis = occurredAt,
+            exerciseName = name,
+            reps = rep,
+            weight = weight,
+        )
+    }
+
     private fun set(sessionExerciseId: Long, setIndex: Int) = WorkoutSet(
         id = sessionExerciseId * 10 + setIndex,
         sessionExerciseId = sessionExerciseId,
@@ -1196,6 +2107,62 @@ private data class CompleteSetCall(
 
 private class FakeTimeProvider(var now: Long) : TimeProvider {
     override fun nowMillis(): Long = now
+}
+
+private class FakeExecutionWorkoutRepository : WorkoutRepository {
+    private val blocksByWorkout = MutableStateFlow<Map<Long, List<WorkoutBlock>>>(emptyMap())
+    private val exercisesByWorkout = MutableStateFlow<Map<Long, List<WorkoutExercise>>>(emptyMap())
+    val updateBlockExerciseCalls = mutableListOf<WorkoutExercise>()
+    var shouldThrowOnUpdate = false
+
+    fun emitTemplate(
+        workoutId: Long,
+        blocks: List<WorkoutBlock>,
+        exercises: List<WorkoutExercise>,
+    ) {
+        blocksByWorkout.value = blocksByWorkout.value + (workoutId to blocks)
+        exercisesByWorkout.value = exercisesByWorkout.value + (workoutId to exercises)
+    }
+
+    fun exercise(id: Long): WorkoutExercise? =
+        exercisesByWorkout.value.values.flatten().firstOrNull { it.id == id }
+
+    fun exercisesFor(workoutId: Long): List<WorkoutExercise> =
+        exercisesByWorkout.value[workoutId].orEmpty()
+
+    override fun getAll(): Flow<List<Workout>> = flowOf(emptyList())
+    override fun getById(id: Long): Flow<Workout?> = flowOf(null)
+    override fun observeWorkoutIdsWithExercises(): Flow<Set<Long>> = flowOf(emptySet())
+    override suspend fun save(workout: Workout): Long = 0L
+    override suspend fun update(workout: Workout) = Unit
+    override suspend fun delete(workout: Workout) = Unit
+
+    override fun getBlocks(workoutId: Long): Flow<List<WorkoutBlock>> =
+        blocksByWorkout.map { it[workoutId].orEmpty() }
+
+    override fun getExercisesForWorkout(workoutId: Long): Flow<List<WorkoutExercise>> =
+        exercisesByWorkout.map { it[workoutId].orEmpty() }
+
+    override suspend fun addBlock(block: WorkoutBlock, exercises: List<WorkoutExercise>): Long = 0L
+    override suspend fun duplicateBlock(blockId: Long): Long = 0L
+    override suspend fun updateBlock(block: WorkoutBlock) = Unit
+
+    override suspend fun updateBlockExercise(exercise: WorkoutExercise) {
+        if (shouldThrowOnUpdate) throw RuntimeException("update failed")
+        updateBlockExerciseCalls += exercise
+        exercisesByWorkout.value = exercisesByWorkout.value.mapValues { (_, list) ->
+            list.map { if (it.id == exercise.id) exercise else it }
+        }
+    }
+
+    override suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long) = Unit
+    override suspend fun removeBlock(blockId: Long) = Unit
+    override suspend fun updateBlockPositions(positions: Map<Long, Int>) = Unit
+    override suspend fun addExercise(workoutExercise: WorkoutExercise): Long = 0L
+    override suspend fun updateExercise(workoutExercise: WorkoutExercise) = Unit
+    override suspend fun removeExercise(workoutExercise: WorkoutExercise) = Unit
+    override suspend fun removeExerciseById(id: Long) = Unit
+    override suspend fun updateExercisePositions(positions: Map<Long, Int>) = Unit
 }
 
 private class FakeExerciseRepository : ExerciseRepository {
@@ -1230,6 +2197,8 @@ private class FakeExecutionSessionRepository(
 
     private val sessionFlow = MutableStateFlow<WorkoutSession?>(null)
     private val exercisesFlow = MutableStateFlow<List<WorkoutSessionExercise>>(emptyList())
+    private val completedHistoryFlow =
+        MutableStateFlow<List<com.gymtrack.domain.model.CompletedSetRecord>>(emptyList())
     private val setsFlows = mutableMapOf<Long, MutableStateFlow<List<WorkoutSet>>>()
     private var nextSetId = 1_000L
 
@@ -1248,6 +2217,10 @@ private class FakeExecutionSessionRepository(
         setsFlows.getOrPut(sessionExerciseId) { MutableStateFlow(emptyList()) }.value = sets
     }
 
+    fun emitCompletedHistory(records: List<com.gymtrack.domain.model.CompletedSetRecord>) {
+        completedHistoryFlow.value = records
+    }
+
     override suspend fun startSession(workoutId: Long): StartSessionResult =
         StartSessionResult.Created(0L)
 
@@ -1257,7 +2230,8 @@ private class FakeExecutionSessionRepository(
 
     override fun observeInProgress(): Flow<WorkoutSession?> = emptyFlow()
     override fun observeCompletedSessions(): Flow<List<com.gymtrack.domain.model.WorkoutHistoryItem>> = emptyFlow()
-    override fun observeCompletedSetHistory(): Flow<List<com.gymtrack.domain.model.CompletedSetRecord>> = emptyFlow()
+    override fun observeCompletedSetHistory(): Flow<List<com.gymtrack.domain.model.CompletedSetRecord>> =
+        completedHistoryFlow
 
     override fun observeSessionExercises(sessionId: Long): Flow<List<WorkoutSessionExercise>> =
         exercisesFlow

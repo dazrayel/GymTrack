@@ -1,6 +1,7 @@
 package com.gymtrack.presentation.workouts.execution
 
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.ProgressionSuggestion
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
@@ -13,6 +14,18 @@ data class WorkoutExecutionUiState(
     val setsByExerciseId: Map<Long, List<WorkoutSet>> = emptyMap(),
     /** Library exercise for the current session exercise (media / external identity). */
     val mediaExercise: Exercise? = null,
+    /** Load/rep suggestion for the current exercise from the last COMPLETED session only. */
+    val progressionSuggestion: ProgressionSuggestion? = null,
+    /**
+     * True when [progressionSuggestion] is [com.gymtrack.domain.model.ProgressionAction.INCREASE_WEIGHT]
+     * and the template [com.gymtrack.domain.model.WorkoutExercise.weight] still differs from the suggestion.
+     */
+    val canApplyProgressionToTemplate: Boolean = false,
+    val showApplyProgressionConfirmation: Boolean = false,
+    val applyProgressionFromWeight: Double? = null,
+    val applyProgressionToWeight: Double? = null,
+    /** One-shot snackbar message (string resource) after a successful template update. */
+    val infoMessageResId: Int? = null,
     val currentExerciseIndex: Int = 0,
     val currentSetIndex: Int = 0,
     val isWorkoutComplete: Boolean = false,

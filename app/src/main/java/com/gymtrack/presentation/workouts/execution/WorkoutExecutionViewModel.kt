@@ -4,22 +4,31 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gymtrack.R
+import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.ProgressionAction
+import com.gymtrack.domain.model.ProgressionSuggestion
+import com.gymtrack.domain.model.WorkoutBlock
+import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
 import com.gymtrack.domain.model.areAllSessionExercisesComplete
 import com.gymtrack.domain.model.elapsedMillis
+import com.gymtrack.domain.model.evaluateLoadProgression
+import com.gymtrack.domain.model.lastCompletedSessionSetsForExercise
 import com.gymtrack.domain.model.resolveCurrentExerciseIndex
 import com.gymtrack.domain.model.shouldRestAfterCompletingSet
 import com.gymtrack.domain.model.workoutProgress
 import com.gymtrack.domain.repository.ExerciseRepository
+import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,12 +42,14 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
+import kotlin.math.abs
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class WorkoutExecutionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val workoutSessionRepository: WorkoutSessionRepository,
+    private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
     private val timeProvider: TimeProvider,
     private val draftStore: WorkoutExecutionDraftStore,
@@ -50,9 +61,16 @@ class WorkoutExecutionViewModel @Inject constructor(
     val uiState: StateFlow<WorkoutExecutionUiState> = _uiState.asStateFlow()
 
     private val exerciseCatalogue = MutableStateFlow<Map<Long, Exercise>>(emptyMap())
+    private val templateBlocks = MutableStateFlow<List<WorkoutBlock>>(emptyList())
+    private val templateExercises = MutableStateFlow<List<WorkoutExercise>>(emptyList())
+
+    /** Avoids re-evaluating progression when the current exercise/history snapshot is unchanged. */
+    private var lastProgressionExerciseKey: String? = null
 
     private var restExpiryHandledFor: Long? = null
     private var restBeepHandledFor: Long? = null
+    private var observingWorkoutId: Long? = null
+    private var templateObservationJob: Job? = null
 
     init {
         observeExerciseCatalogue()
@@ -83,15 +101,21 @@ class WorkoutExecutionViewModel @Inject constructor(
             combine(
                 workoutSessionRepository.observeSession(sessionId),
                 observeExercisesWithSets(),
-            ) { session, exercisesWithSets ->
-                session to exercisesWithSets
+                workoutSessionRepository.observeCompletedSetHistory(),
+            ) { session, exercisesWithSets, completedHistory ->
+                Triple(session, exercisesWithSets, completedHistory)
             }
                 .catch { e ->
                     _uiState.update { it.copy(isLoading = false, error = e.message) }
                 }
-                .collect { (session, exercisesWithSets) ->
+                .collect { (session, exercisesWithSets, completedHistory) ->
                     val (exercises, setsByExerciseId) = exercisesWithSets
-                    applyPersistedProgress(session, exercises, setsByExerciseId)
+                    applyPersistedProgress(
+                        session = session,
+                        exercises = exercises,
+                        setsByExerciseId = setsByExerciseId,
+                        completedHistory = completedHistory,
+                    )
                     maybeExpireRest(session)
                 }
         }
@@ -137,6 +161,7 @@ class WorkoutExecutionViewModel @Inject constructor(
         session: WorkoutSession?,
         exercises: List<WorkoutSessionExercise>,
         setsByExerciseId: Map<Long, List<WorkoutSet>>,
+        completedHistory: List<CompletedSetRecord>,
     ) {
         val pendingIndex = resolveCurrentExerciseIndex(exercises, setsByExerciseId)
         val isComplete = areAllSessionExercisesComplete(exercises, setsByExerciseId)
@@ -159,6 +184,7 @@ class WorkoutExecutionViewModel @Inject constructor(
             else -> WorkoutExecutionPhase.WORKING
         }
         val progress = workoutProgress(exercises, setsByExerciseId)
+        ensureTemplateObservation(session?.workoutId)
 
         _uiState.update { current ->
             val workingExercise =
@@ -167,25 +193,39 @@ class WorkoutExecutionViewModel @Inject constructor(
                 workingExercise != null && current.inputsExerciseId != workingExercise.id
             val inputsBlank = current.repsInput.isBlank() || current.weightInput.isBlank()
             val shouldPrefill = workingExercise != null && (inputsBelongToOther || inputsBlank)
+            val draft = workingExercise?.let { draftStore.get(sessionId, it.id) }
+            val progressionSuggestion = progressionSuggestionFor(
+                exercise = currentExercise,
+                completedHistory = completedHistory,
+                previous = current.progressionSuggestion,
+            )
+            val canApply = canApplyProgressionToTemplate(
+                sessionExercise = workingExercise,
+                suggestion = progressionSuggestion,
+                blocks = templateBlocks.value,
+                exercises = templateExercises.value,
+            )
 
             val nextReps = if (shouldPrefill) {
-                draftStore.get(sessionId, workingExercise.id)?.repsInput
-                    ?: workingExercise.minRepetitions.toString()
+                draft?.repsInput ?: workingExercise.minRepetitions.toString()
             } else {
                 current.repsInput
             }
-            val nextWeight = if (shouldPrefill) {
-                draftStore.get(sessionId, workingExercise.id)?.weightInput
-                    ?: formatWeight(workingExercise.plannedWeight)
-            } else {
-                current.weightInput
-            }
+            val nextWeight = resolveWeightInput(
+                workingExercise = workingExercise,
+                current = current,
+                draft = draft,
+                shouldPrefill = shouldPrefill,
+                suggestion = progressionSuggestion,
+            )
 
             current.copy(
                 session = session,
                 exercises = exercises,
                 setsByExerciseId = setsByExerciseId,
                 mediaExercise = resolveMediaExercise(currentExercise, exerciseCatalogue.value),
+                progressionSuggestion = progressionSuggestion,
+                canApplyProgressionToTemplate = canApply,
                 currentExerciseIndex = exerciseIndex,
                 currentSetIndex = setIndex,
                 isWorkoutComplete = isComplete && !isResting,
@@ -210,6 +250,234 @@ class WorkoutExecutionViewModel @Inject constructor(
                 weightError = if (shouldPrefill) null else current.weightError,
             )
         }
+    }
+
+    /**
+     * Prefills weight only when there is no draft for this exercise.
+     * [ProgressionAction.INCREASE_WEIGHT] uses [ProgressionSuggestion.suggestedWeight];
+     * other actions keep [WorkoutSessionExercise.plannedWeight].
+     *
+     * If history arrives after an initial planned-weight prefill and the user has not edited
+     * (no draft, weight still equals planned), upgrades once to the suggested weight.
+     */
+    private fun resolveWeightInput(
+        workingExercise: WorkoutSessionExercise?,
+        current: WorkoutExecutionUiState,
+        draft: ExerciseInputDraft?,
+        shouldPrefill: Boolean,
+        suggestion: ProgressionSuggestion?,
+    ): String {
+        if (workingExercise == null) return current.weightInput
+        if (draft != null) {
+            return if (shouldPrefill) draft.weightInput else current.weightInput
+        }
+        val progressionDefault = defaultWeightPrefill(workingExercise, suggestion)
+        if (shouldPrefill) return progressionDefault
+
+        val plannedText = formatWeight(workingExercise.plannedWeight)
+        val canUpgradeFromPlannedPrefill =
+            current.inputsExerciseId == workingExercise.id &&
+                current.weightInput == plannedText &&
+                progressionDefault != plannedText
+        return if (canUpgradeFromPlannedPrefill) progressionDefault else current.weightInput
+    }
+
+    private fun defaultWeightPrefill(
+        exercise: WorkoutSessionExercise,
+        suggestion: ProgressionSuggestion?,
+    ): String {
+        val suggested = suggestion
+            ?.takeIf { it.action == ProgressionAction.INCREASE_WEIGHT }
+            ?.suggestedWeight
+        return formatWeight(suggested ?: exercise.plannedWeight)
+    }
+
+    private fun progressionSuggestionFor(
+        exercise: WorkoutSessionExercise?,
+        completedHistory: List<CompletedSetRecord>,
+        previous: ProgressionSuggestion?,
+    ): ProgressionSuggestion? {
+        if (exercise == null) {
+            lastProgressionExerciseKey = null
+            return null
+        }
+        val key = progressionCacheKey(exercise, completedHistory)
+        if (key == lastProgressionExerciseKey && previous != null) {
+            return previous
+        }
+        lastProgressionExerciseKey = key
+        return evaluateLoadProgression(
+            plannedWeight = exercise.plannedWeight,
+            minRepetitions = exercise.minRepetitions,
+            maxRepetitions = exercise.maxRepetitions,
+            plannedSets = exercise.plannedSets,
+            lastSessionSets = lastCompletedSessionSetsForExercise(
+                history = completedHistory,
+                exerciseName = exercise.exerciseName,
+                excludeSessionId = sessionId,
+            ),
+        )
+    }
+
+    private fun progressionCacheKey(
+        exercise: WorkoutSessionExercise,
+        completedHistory: List<CompletedSetRecord>,
+    ): String {
+        val historyFingerprint = completedHistory
+            .asSequence()
+            .filter { it.exerciseName == exercise.exerciseName && it.sessionId != sessionId }
+            .map { "${it.sessionId}:${it.occurredAtMillis}:${it.reps}:${it.weight}" }
+            .joinToString("|")
+        return listOf(
+            exercise.id.toString(),
+            exercise.exerciseName,
+            exercise.plannedWeight.toString(),
+            exercise.minRepetitions.toString(),
+            exercise.maxRepetitions.toString(),
+            exercise.plannedSets.toString(),
+            historyFingerprint,
+        ).joinToString("#")
+    }
+
+    private fun ensureTemplateObservation(workoutId: Long?) {
+        if (workoutId == observingWorkoutId) return
+        templateObservationJob?.cancel()
+        observingWorkoutId = workoutId
+        templateBlocks.value = emptyList()
+        templateExercises.value = emptyList()
+        if (workoutId == null) {
+            _uiState.update { it.copy(canApplyProgressionToTemplate = false) }
+            return
+        }
+        templateObservationJob = viewModelScope.launch {
+            combine(
+                workoutRepository.getBlocks(workoutId),
+                workoutRepository.getExercisesForWorkout(workoutId),
+            ) { blocks, exercises -> blocks to exercises }
+                .collect { (blocks, exercises) ->
+                    templateBlocks.value = blocks
+                    templateExercises.value = exercises
+                    _uiState.update { current ->
+                        current.copy(
+                            canApplyProgressionToTemplate = canApplyProgressionToTemplate(
+                                sessionExercise = current.currentExercise
+                                    ?.takeIf { current.phase == WorkoutExecutionPhase.WORKING },
+                                suggestion = current.progressionSuggestion,
+                                blocks = blocks,
+                                exercises = exercises,
+                            ),
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun canApplyProgressionToTemplate(
+        sessionExercise: WorkoutSessionExercise?,
+        suggestion: ProgressionSuggestion?,
+        blocks: List<WorkoutBlock>,
+        exercises: List<WorkoutExercise>,
+    ): Boolean {
+        if (suggestion?.action != ProgressionAction.INCREASE_WEIGHT) return false
+        val suggested = suggestion.suggestedWeight ?: return false
+        val template = resolveTemplateExercise(sessionExercise, blocks, exercises) ?: return false
+        return abs(template.weight - suggested) >= 0.001
+    }
+
+    /**
+     * Resolves the template slot by block position + positionInBlock (stable WorkoutExercise row),
+     * not by catalogue id or exercise name.
+     */
+    private fun resolveTemplateExercise(
+        sessionExercise: WorkoutSessionExercise?,
+        blocks: List<WorkoutBlock>,
+        exercises: List<WorkoutExercise>,
+    ): WorkoutExercise? {
+        if (sessionExercise == null) return null
+        val block = blocks.firstOrNull { it.position == sessionExercise.blockPosition } ?: return null
+        return exercises.firstOrNull {
+            it.blockId == block.id && it.positionInBlock == sessionExercise.positionInBlock
+        }
+    }
+
+    fun requestApplyProgressionSuggestion() {
+        val state = _uiState.value
+        if (state.phase != WorkoutExecutionPhase.WORKING) return
+        if (!state.canApplyProgressionToTemplate) return
+        val suggestion = state.progressionSuggestion ?: return
+        val suggested = suggestion.suggestedWeight ?: return
+        if (suggestion.action != ProgressionAction.INCREASE_WEIGHT) return
+        val template = resolveTemplateExercise(
+            sessionExercise = state.currentExercise,
+            blocks = templateBlocks.value,
+            exercises = templateExercises.value,
+        ) ?: return
+        _uiState.update {
+            it.copy(
+                showApplyProgressionConfirmation = true,
+                applyProgressionFromWeight = template.weight,
+                applyProgressionToWeight = suggested,
+            )
+        }
+    }
+
+    fun dismissApplyProgressionConfirmation() {
+        _uiState.update {
+            it.copy(
+                showApplyProgressionConfirmation = false,
+                applyProgressionFromWeight = null,
+                applyProgressionToWeight = null,
+            )
+        }
+    }
+
+    fun confirmApplyProgressionSuggestion() {
+        val state = _uiState.value
+        if (!state.showApplyProgressionConfirmation) return
+        val suggestion = state.progressionSuggestion ?: return
+        val suggested = suggestion.suggestedWeight ?: return
+        if (suggestion.action != ProgressionAction.INCREASE_WEIGHT) return
+        val template = resolveTemplateExercise(
+            sessionExercise = state.currentExercise,
+            blocks = templateBlocks.value,
+            exercises = templateExercises.value,
+        ) ?: run {
+            _uiState.update {
+                it.copy(
+                    showApplyProgressionConfirmation = false,
+                    applyProgressionFromWeight = null,
+                    applyProgressionToWeight = null,
+                    error = "Exercício do treino não encontrado",
+                )
+            }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                workoutRepository.updateBlockExercise(template.copy(weight = suggested))
+                _uiState.update {
+                    it.copy(
+                        showApplyProgressionConfirmation = false,
+                        applyProgressionFromWeight = null,
+                        applyProgressionToWeight = null,
+                        infoMessageResId = R.string.progression_applied,
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        showApplyProgressionConfirmation = false,
+                        applyProgressionFromWeight = null,
+                        applyProgressionToWeight = null,
+                        error = e.message,
+                    )
+                }
+            }
+        }
+    }
+
+    fun clearInfoMessage() {
+        _uiState.update { it.copy(infoMessageResId = null) }
     }
 
     /**

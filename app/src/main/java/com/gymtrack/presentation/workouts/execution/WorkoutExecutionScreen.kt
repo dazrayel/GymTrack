@@ -26,9 +26,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,9 +66,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.domain.model.ProgressionAction
+import com.gymtrack.domain.model.ProgressionSuggestion
 import com.gymtrack.domain.model.WorkoutBlockType
 import com.gymtrack.domain.model.WorkoutSessionExercise
+import com.gymtrack.domain.model.formatProgressionRepsSequence
 import com.gymtrack.domain.model.formatRepetitionTarget
+import com.gymtrack.domain.model.formatVolumeKg
 import com.gymtrack.domain.time.formatElapsedMillis
 import com.gymtrack.presentation.exercises.ExerciseAnimation
 import kotlinx.coroutines.Dispatchers
@@ -96,7 +103,7 @@ fun WorkoutExecutionScreen(
         viewModel.consumeRestBeepEvent()
     }
 
-    WorkoutExecutionContent(
+    WorkoutExecutionScreen(
         uiState = uiState,
         contentPadding = contentPadding,
         onNavigateBack = onNavigateBack,
@@ -113,7 +120,62 @@ fun WorkoutExecutionScreen(
         onRequestFinish = viewModel::requestFinish,
         onDismissFinishConfirmation = viewModel::dismissFinishConfirmation,
         onConfirmFinish = viewModel::confirmFinish,
+        onRequestApplyProgressionSuggestion = viewModel::requestApplyProgressionSuggestion,
+        onDismissApplyProgressionConfirmation = viewModel::dismissApplyProgressionConfirmation,
+        onConfirmApplyProgressionSuggestion = viewModel::confirmApplyProgressionSuggestion,
         onErrorShown = viewModel::clearError,
+        onInfoMessageShown = viewModel::clearInfoMessage,
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun WorkoutExecutionScreen(
+    uiState: WorkoutExecutionUiState,
+    onNavigateBack: () -> Unit,
+    onRepsChanged: (String) -> Unit = {},
+    onWeightChanged: (String) -> Unit = {},
+    onCompleteSet: () -> Unit = {},
+    onPauseRest: () -> Unit = {},
+    onResumeRest: () -> Unit = {},
+    onSkipRest: () -> Unit = {},
+    onRequestSkip: () -> Unit = {},
+    onDismissSkipConfirmation: () -> Unit = {},
+    onConfirmSkip: () -> Unit = {},
+    onResumeExercise: (Long) -> Unit = {},
+    onRequestFinish: () -> Unit = {},
+    onDismissFinishConfirmation: () -> Unit = {},
+    onConfirmFinish: () -> Unit = {},
+    onRequestApplyProgressionSuggestion: () -> Unit = {},
+    onDismissApplyProgressionConfirmation: () -> Unit = {},
+    onConfirmApplyProgressionSuggestion: () -> Unit = {},
+    onErrorShown: () -> Unit = {},
+    onInfoMessageShown: () -> Unit = {},
+    contentPadding: PaddingValues = PaddingValues(),
+    modifier: Modifier = Modifier,
+) {
+    WorkoutExecutionContent(
+        uiState = uiState,
+        contentPadding = contentPadding,
+        onNavigateBack = onNavigateBack,
+        onRepsChanged = onRepsChanged,
+        onWeightChanged = onWeightChanged,
+        onCompleteSet = onCompleteSet,
+        onPauseRest = onPauseRest,
+        onResumeRest = onResumeRest,
+        onSkipRest = onSkipRest,
+        onRequestSkip = onRequestSkip,
+        onDismissSkipConfirmation = onDismissSkipConfirmation,
+        onConfirmSkip = onConfirmSkip,
+        onResumeExercise = onResumeExercise,
+        onRequestFinish = onRequestFinish,
+        onDismissFinishConfirmation = onDismissFinishConfirmation,
+        onConfirmFinish = onConfirmFinish,
+        onRequestApplyProgressionSuggestion = onRequestApplyProgressionSuggestion,
+        onDismissApplyProgressionConfirmation = onDismissApplyProgressionConfirmation,
+        onConfirmApplyProgressionSuggestion = onConfirmApplyProgressionSuggestion,
+        onErrorShown = onErrorShown,
+        onInfoMessageShown = onInfoMessageShown,
         modifier = modifier,
     )
 }
@@ -137,7 +199,11 @@ private fun WorkoutExecutionContent(
     onRequestFinish: () -> Unit,
     onDismissFinishConfirmation: () -> Unit,
     onConfirmFinish: () -> Unit,
+    onRequestApplyProgressionSuggestion: () -> Unit,
+    onDismissApplyProgressionConfirmation: () -> Unit,
+    onConfirmApplyProgressionSuggestion: () -> Unit,
     onErrorShown: () -> Unit,
+    onInfoMessageShown: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -147,6 +213,13 @@ private fun WorkoutExecutionContent(
         val message = uiState.error ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(message = message)
         onErrorShown()
+    }
+
+    val infoMessage = uiState.infoMessageResId?.let { stringResource(it) }
+    LaunchedEffect(infoMessage) {
+        val message = infoMessage ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(message = message)
+        onInfoMessageShown()
     }
 
     Scaffold(
@@ -258,6 +331,8 @@ private fun WorkoutExecutionContent(
                                     muscleGroup = exercise.muscleGroup,
                                     notes = exercise.notes,
                                     mediaExercise = uiState.mediaExercise,
+                                    progressionSuggestion = uiState.progressionSuggestion,
+                                    canApplyProgressionToTemplate = uiState.canApplyProgressionToTemplate,
                                     currentSetNumber = uiState.currentSetIndex + 1,
                                     plannedSets = exercise.plannedSets,
                                     slotIndex = exercise.positionInBlock + 1,
@@ -273,6 +348,7 @@ private fun WorkoutExecutionContent(
                                     onCompleteSet = onCompleteSet,
                                     onRequestSkip = onRequestSkip,
                                     onOpenSessionExercises = { showSessionExercises = true },
+                                    onRequestApplyProgressionSuggestion = onRequestApplyProgressionSuggestion,
                                     modifier = Modifier.weight(1f),
                                 )
                             }
@@ -372,6 +448,43 @@ private fun WorkoutExecutionContent(
                     Text(stringResource(R.string.cancel))
                 }
             },
+        )
+    }
+
+    if (uiState.showApplyProgressionConfirmation) {
+        val fromWeight = uiState.applyProgressionFromWeight
+        val toWeight = uiState.applyProgressionToWeight
+        AlertDialog(
+            onDismissRequest = onDismissApplyProgressionConfirmation,
+            title = { Text(stringResource(R.string.apply_progression_title)) },
+            text = {
+                if (fromWeight != null && toWeight != null) {
+                    Text(
+                        stringResource(
+                            R.string.apply_progression_message,
+                            formatVolumeKg(fromWeight),
+                            formatVolumeKg(toWeight),
+                        ),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = onConfirmApplyProgressionSuggestion,
+                    modifier = Modifier.testTag("confirm_apply_progression_button"),
+                ) {
+                    Text(stringResource(R.string.apply_progression))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = onDismissApplyProgressionConfirmation,
+                    modifier = Modifier.testTag("cancel_apply_progression_button"),
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            modifier = Modifier.testTag("apply_progression_dialog"),
         )
     }
 }
@@ -480,6 +593,8 @@ private fun ActiveSetContent(
     muscleGroup: String,
     notes: String,
     mediaExercise: Exercise?,
+    progressionSuggestion: ProgressionSuggestion?,
+    canApplyProgressionToTemplate: Boolean,
     currentSetNumber: Int,
     plannedSets: Int,
     slotIndex: Int,
@@ -495,8 +610,11 @@ private fun ActiveSetContent(
     onCompleteSet: () -> Unit,
     onRequestSkip: () -> Unit,
     onOpenSessionExercises: () -> Unit,
+    onRequestApplyProgressionSuggestion: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -526,11 +644,43 @@ private fun ActiveSetContent(
                 )
             }
         }
-        Text(
-            text = exerciseName,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = exerciseName,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            if (canApplyProgressionToTemplate) {
+                Box {
+                    IconButton(
+                        onClick = { menuExpanded = true },
+                        modifier = Modifier.testTag("exercise_actions_menu"),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = stringResource(R.string.exercise_actions_menu),
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.apply_progression_menu)) },
+                            onClick = {
+                                menuExpanded = false
+                                onRequestApplyProgressionSuggestion()
+                            },
+                            modifier = Modifier.testTag("apply_progression_menu_item"),
+                        )
+                    }
+                }
+            }
+        }
         if (muscleGroup.isNotBlank()) {
             Text(
                 text = muscleGroup,
@@ -563,6 +713,12 @@ private fun ActiveSetContent(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
         }
+        ProgressionSuggestionInfo(
+            suggestion = progressionSuggestion,
+            canApplyProgressionToTemplate = canApplyProgressionToTemplate,
+            onRequestApplyProgressionSuggestion = onRequestApplyProgressionSuggestion,
+            modifier = Modifier.fillMaxWidth(),
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -615,6 +771,74 @@ private fun ActiveSetContent(
                 .testTag("skip_exercise_button"),
         ) {
             Text(stringResource(R.string.skip_exercise))
+        }
+    }
+}
+
+@Composable
+private fun ProgressionSuggestionInfo(
+    suggestion: ProgressionSuggestion?,
+    canApplyProgressionToTemplate: Boolean,
+    onRequestApplyProgressionSuggestion: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (suggestion == null) return
+
+    val title = when (suggestion.action) {
+        ProgressionAction.NO_HISTORY -> stringResource(R.string.progression_title)
+        else -> stringResource(R.string.progression_suggested_title)
+    }
+    val lastSessionLine = suggestion.lastSessionSets.takeIf { it.isNotEmpty() }?.let { sets ->
+        stringResource(
+            R.string.progression_last_session,
+            formatProgressionRepsSequence(sets),
+            formatVolumeKg(sets.first().weight),
+        )
+    }
+    val guidance = when (suggestion.action) {
+        ProgressionAction.INCREASE_WEIGHT -> {
+            val weight = suggestion.suggestedWeight
+            if (weight != null) {
+                stringResource(R.string.progression_try_weight, formatVolumeKg(weight))
+            } else {
+                stringResource(R.string.progression_maintain)
+            }
+        }
+        ProgressionAction.INCREASE_REPS -> stringResource(R.string.progression_increase_reps)
+        ProgressionAction.MAINTAIN -> stringResource(R.string.progression_maintain)
+        ProgressionAction.NO_HISTORY -> stringResource(R.string.progression_no_history)
+    }
+
+    Column(
+        modifier = modifier.testTag("progression_suggestion"),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        )
+        if (lastSessionLine != null) {
+            Text(
+                text = lastSessionLine,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                modifier = Modifier.testTag("progression_last_session"),
+            )
+        }
+        Text(
+            text = guidance,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.testTag("progression_guidance"),
+        )
+        if (canApplyProgressionToTemplate) {
+            TextButton(
+                onClick = onRequestApplyProgressionSuggestion,
+                modifier = Modifier.testTag("apply_progression_button"),
+            ) {
+                Text(stringResource(R.string.apply_progression_to_workout))
+            }
         }
     }
 }
