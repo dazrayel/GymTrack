@@ -237,7 +237,7 @@ Testes instrumentados (emulador ligado):
 
 O núcleo de catálogo, montagem de treinos, execução (incluindo skip, ordem livre e rascunhos), persistência Room 9 (identidade externa; pack publicado V2.1 com **136** exercícios e **272** JPG; importador explícito do Free Exercise DB, sem seed automático), histórico (incluindo exclusão de sessões concluídas) e estatísticas básicas **está implementado e coberto por testes**.
 
-Ainda é um projeto em evolução: não há sincronização remota; a conta Google é opcional e só para personalização local (o Dashboard futuro poderá usar o mesmo nome em memória).
+Ainda é um projeto em evolução: não há sincronização remota; a conta Google é opcional e só para personalização local. O **Painel** (Dashboard) reutiliza estatísticas, conquistas, PRs e recomendações já existentes, sem persistência adicional.
 
 ## 🗺️ Roadmap
 

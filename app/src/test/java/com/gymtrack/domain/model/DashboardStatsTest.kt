@@ -517,6 +517,90 @@ class DashboardStatsTest {
         assertEquals(1, trainedDayCount(listOf(crossing), september, zone))
     }
 
+    @Test
+    fun previousIsoWeekBounds_isContiguousWithCurrentWeek() {
+        val now = local("2026-08-26T12:00:00")
+        val current = isoWeekBounds(now, zone)
+        val previous = previousIsoWeekBounds(now, zone)
+        assertEquals(previous.endMillis, current.startMillis)
+        assertEquals(current.endMillis - current.startMillis, previous.endMillis - previous.startMillis)
+    }
+
+    @Test
+    fun dashboardPeriodTotals_sumsSetsAndVolumeInWeek() {
+        val bounds = isoWeekBounds(local("2026-08-26T12:00:00"), zone)
+        val inWeek = item(
+            sessionId = 1L,
+            occurredAt = local("2026-08-25T10:00:00"),
+            volume = 200.0,
+            completedSetCount = 5,
+        )
+        val outWeek = item(
+            sessionId = 2L,
+            occurredAt = local("2026-08-17T10:00:00"),
+            volume = 999.0,
+            completedSetCount = 20,
+        )
+        val totals = dashboardPeriodTotals(listOf(inWeek, outWeek), bounds)
+        assertEquals(1, totals.sessionCount)
+        assertEquals(5, totals.completedSetCount)
+        assertEquals(200.0, totals.volume, 0.001)
+    }
+
+    @Test
+    fun rollingDayBounds_includesTodayAndExcludesDayBeforeWindow() {
+        val now = local("2026-08-26T15:00:00")
+        val bounds = rollingDayBounds(now, zone, dayCount = 30)
+        assertTrue(bounds.contains(local("2026-08-26T23:00:00")))
+        assertTrue(bounds.contains(local("2026-07-28T00:00:00")))
+        assertFalse(bounds.contains(local("2026-07-27T23:00:00")))
+        assertFalse(bounds.contains(local("2026-08-27T00:00:00")))
+    }
+
+    @Test
+    fun absoluteMetricChange_handlesIncreaseDecreaseNewAndUnchanged() {
+        assertEquals(MetricChange.Absolute(1), absoluteMetricChange(4, 3))
+        assertEquals(MetricChange.Absolute(-2), absoluteMetricChange(1, 3))
+        assertEquals(MetricChange.Unchanged, absoluteMetricChange(3, 3))
+        assertEquals(MetricChange.New, absoluteMetricChange(2, 0))
+    }
+
+    @Test
+    fun percentMetricChange_neverProducesInfinityWhenPreviousIsZero() {
+        assertEquals(MetricChange.New, percentMetricChange(100.0, 0.0))
+        assertEquals(MetricChange.Unchanged, percentMetricChange(0.0, 0.0))
+        assertEquals(MetricChange.Percent(8), percentMetricChange(108.0, 100.0))
+        assertEquals(MetricChange.Percent(-50), percentMetricChange(50.0, 100.0))
+    }
+
+    @Test
+    fun bestAvailablePerformance_picksHighestWeight() {
+        val a = ExercisePersonalRecords(
+            exerciseName = "Remada",
+            bestWeight = 60.0,
+            bestWeightReps = 10,
+            bestWeightSessionId = 1L,
+            bestReps = 12,
+            bestRepsWeight = 50.0,
+            bestRepsSessionId = 1L,
+            bestVolume = 500.0,
+            bestVolumeSessionId = 1L,
+        )
+        val b = ExercisePersonalRecords(
+            exerciseName = "Supino",
+            bestWeight = 80.0,
+            bestWeightReps = 8,
+            bestWeightSessionId = 2L,
+            bestReps = 10,
+            bestRepsWeight = 70.0,
+            bestRepsSessionId = 2L,
+            bestVolume = 800.0,
+            bestVolumeSessionId = 2L,
+        )
+        assertEquals(b, bestAvailablePerformance(listOf(a, b)))
+        assertEquals(null, bestAvailablePerformance(emptyList()))
+    }
+
     private fun local(dateTime: String): Long =
         LocalDateTime.parse(dateTime).atZone(zone).toInstant().toEpochMilli()
 

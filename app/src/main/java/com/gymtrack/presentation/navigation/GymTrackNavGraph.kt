@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.gymtrack.presentation.achievements.AchievementScreen
 import com.gymtrack.presentation.calendar.CalendarScreen
 import com.gymtrack.presentation.components.GymNavigationBar
+import com.gymtrack.presentation.dashboard.DashboardScreen
 import com.gymtrack.presentation.exercises.ExercisesScreen
 import com.gymtrack.presentation.history.HistoryScreen
 import com.gymtrack.presentation.home.HomeScreen
@@ -133,6 +134,30 @@ fun GymTrackNavGraph(
                     },
                     onNavigateToWeeklyPlanning = {
                         navController.navigate(ROUTE_WEEKLY_PLANNING) {
+                            launchSingleTop = true
+                        }
+                    },
+                    contentPadding = innerPadding,
+                )
+            }
+            composable(TopLevelDestination.DASHBOARD.route) {
+                DashboardScreen(
+                    onNavigateToWorkouts = {
+                        navController.navigate(TopLevelDestination.WORKOUTS.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNavigateToWorkoutDetail = { workoutId ->
+                        navController.navigate(routeWorkoutDetail(workoutId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToAchievements = {
+                        navController.navigate(ROUTE_ACHIEVEMENTS) {
                             launchSingleTop = true
                         }
                     },

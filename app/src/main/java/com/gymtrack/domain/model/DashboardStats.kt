@@ -145,3 +145,100 @@ fun dashboardPeriodStats(
         distinctExerciseCount = distinctNames.size,
     )
 }
+
+/** Inclusive local-day window of [dayCount] days ending today (today included). */
+fun rollingDayBounds(nowMillis: Long, zoneId: ZoneId, dayCount: Int): PeriodBounds {
+    require(dayCount > 0)
+    val today = Instant.ofEpochMilli(nowMillis).atZone(zoneId).toLocalDate()
+    val start = today.minusDays((dayCount - 1).toLong()).atStartOfDay(zoneId).toInstant().toEpochMilli()
+    val end = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
+    return PeriodBounds(startMillis = start, endMillis = end)
+}
+
+fun previousIsoWeekBounds(nowMillis: Long, zoneId: ZoneId): PeriodBounds {
+    val current = isoWeekBounds(nowMillis, zoneId)
+    val weekMillis = current.endMillis - current.startMillis
+    return PeriodBounds(
+        startMillis = current.startMillis - weekMillis,
+        endMillis = current.startMillis,
+    )
+}
+
+fun previousRollingDayBounds(nowMillis: Long, zoneId: ZoneId, dayCount: Int): PeriodBounds {
+    val current = rollingDayBounds(nowMillis, zoneId, dayCount)
+    val span = current.endMillis - current.startMillis
+    return PeriodBounds(
+        startMillis = current.startMillis - span,
+        endMillis = current.startMillis,
+    )
+}
+
+data class DashboardPeriodTotals(
+    val sessionCount: Int,
+    val completedSetCount: Int,
+    val volume: Double,
+) {
+    val isEmpty: Boolean
+        get() = sessionCount == 0 && completedSetCount == 0 && volume == 0.0
+
+    companion object {
+        val Empty = DashboardPeriodTotals(0, 0, 0.0)
+    }
+}
+
+fun dashboardPeriodTotals(
+    sessions: List<WorkoutHistoryItem>,
+    bounds: PeriodBounds?,
+): DashboardPeriodTotals {
+    val periodSessions = sessions.filter { bounds == null || bounds.contains(occurredAtMillis(it)) }
+    return DashboardPeriodTotals(
+        sessionCount = periodSessions.size,
+        completedSetCount = periodSessions.sumOf { it.completedSetCount },
+        volume = periodSessions.sumOf { it.volume },
+    )
+}
+
+/**
+ * How a metric changed versus a prior period.
+ * Never represents division by zero as infinity — uses [New] when previous is zero and current > 0.
+ */
+sealed class MetricChange {
+    data class Absolute(val delta: Int) : MetricChange()
+    data class Percent(val percent: Int) : MetricChange()
+    data object New : MetricChange()
+    data object Unchanged : MetricChange()
+}
+
+fun absoluteMetricChange(current: Int, previous: Int): MetricChange {
+    val delta = current - previous
+    return when {
+        previous == 0 && current > 0 -> MetricChange.New
+        delta == 0 -> MetricChange.Unchanged
+        else -> MetricChange.Absolute(delta)
+    }
+}
+
+fun percentMetricChange(current: Double, previous: Double): MetricChange {
+    return when {
+        previous == 0.0 && current > 0.0 -> MetricChange.New
+        previous == 0.0 && current == 0.0 -> MetricChange.Unchanged
+        else -> {
+            val percent = kotlin.math.round(((current - previous) / previous) * 100.0).toInt()
+            if (percent == 0) MetricChange.Unchanged else MetricChange.Percent(percent)
+        }
+    }
+}
+
+fun percentMetricChange(current: Int, previous: Int): MetricChange =
+    percentMetricChange(current.toDouble(), previous.toDouble())
+
+/** Best available lift highlight from existing PR aggregation — not a new PR rule. */
+fun bestAvailablePerformance(
+    records: List<ExercisePersonalRecords>,
+): ExercisePersonalRecords? {
+    return records.maxWithOrNull(
+        compareBy<ExercisePersonalRecords> { it.bestWeight }
+            .thenBy { it.bestWeightReps }
+            .thenBy { it.bestVolume },
+    )
+}

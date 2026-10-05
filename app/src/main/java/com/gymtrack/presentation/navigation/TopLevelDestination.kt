@@ -4,10 +4,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.gymtrack.R
@@ -29,6 +31,12 @@ enum class TopLevelDestination(
         selectedIcon = Icons.Filled.FitnessCenter,
         unselectedIcon = Icons.Outlined.FitnessCenter,
         labelResId = R.string.nav_workouts,
+    ),
+    DASHBOARD(
+        route = "dashboard",
+        selectedIcon = Icons.Filled.Insights,
+        unselectedIcon = Icons.Outlined.Insights,
+        labelResId = R.string.nav_dashboard,
     ),
     HISTORY(
         route = "history",

@@ -12,6 +12,7 @@
     <!-- Bottom navigation labels -->
     <string name="nav_home">Início</string>
     <string name="nav_workouts">Treinos</string>
+    <string name="nav_dashboard">Painel</string>
     <string name="nav_history">Histórico</string>
     <string name="nav_settings">Configurações</string>
 
@@ -82,6 +83,37 @@
     <string name="dashboard_next_workout_cta">Ver treino</string>
     <string name="dashboard_next_workout_cd">Próximo treino %1$s</string>
     <string name="dashboard_this_week">Esta semana</string>
+    <string name="dashboard_screen_title">Painel</string>
+    <string name="dashboard_screen_eyebrow">Desempenho</string>
+    <string name="dashboard_greeting">Olá 👋</string>
+    <string name="dashboard_greeting_with_name">Olá, %1$s 👋</string>
+    <string name="dashboard_subtitle">Veja como estão seus treinos.</string>
+    <string name="dashboard_sets_label">Séries</string>
+    <string name="dashboard_comparison_title">Comparação com a semana passada</string>
+    <string name="dashboard_comparison_empty">Comece a treinar para criar sua primeira comparação.</string>
+    <string name="dashboard_change_new">Novo</string>
+    <string name="dashboard_change_unavailable">—</string>
+    <string name="dashboard_frequency_days">%1$d dias treinados</string>
+    <string name="dashboard_frequency_window">nos últimos 30 dias</string>
+    <string name="dashboard_frequency_cd">%1$d dias treinados nos últimos 30 dias</string>
+    <string name="dashboard_volume_window">Últimos 30 dias</string>
+    <string name="dashboard_volume_vs_previous">vs. 30 dias anteriores: %1$s</string>
+    <string name="dashboard_highlight_title">Destaque</string>
+    <string name="dashboard_highlight_empty">Nenhum PR registrado ainda.</string>
+    <string name="dashboard_highlight_lift">%1$s × %2$d</string>
+    <string name="dashboard_highlight_best">Melhor desempenho</string>
+    <string name="dashboard_achievements_title">Conquistas</string>
+    <string name="dashboard_achievements_progress">%1$d / %2$d desbloqueadas</string>
+    <string name="dashboard_achievements_cd">%1$d de %2$d conquistas desbloqueadas</string>
+    <string name="dashboard_next_workout_empty">Nenhum treino disponível para recomendar.</string>
+    <string name="dashboard_plan_title">Planejamento</string>
+    <string name="dashboard_plan_today">Hoje</string>
+    <string name="dashboard_plan_tomorrow">Amanhã</string>
+    <string name="dashboard_plan_rest">Descanso</string>
+    <string name="dashboard_empty_title">Seu painel de treino</string>
+    <string name="dashboard_empty_body">Ainda não temos dados suficientes.</string>
+    <string name="dashboard_empty_bullets">Complete seu primeiro treino para começar a acompanhar:\n• frequência\n• volume\n• evolução\n• conquistas</string>
+    <string name="dashboard_empty_cta">Ver meus treinos</string>
     <string name="dashboard_this_month">Este mês</string>
     <string name="dashboard_all_time">Todo o histórico</string>
     <string name="dashboard_period_week">Semana</string>
