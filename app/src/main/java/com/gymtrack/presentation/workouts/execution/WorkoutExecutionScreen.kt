@@ -17,10 +17,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -34,6 +33,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -58,6 +58,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -237,26 +238,34 @@ private fun WorkoutExecutionContent(
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            // Compact action bar (no page title) — surface matches GymTopAppBar.
-            Row(
+            // Back + finish only; status bar inset already comes from parent contentPadding.
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(horizontal = GymSpacing.Xs, vertical = GymSpacing.Xxs),
-                verticalAlignment = Alignment.CenterVertically,
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)),
             ) {
-                GymIconButton(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back),
-                    onClick = onNavigateBack,
-                    modifier = Modifier.testTag("execution_back_button"),
-                )
-                Spacer(Modifier.weight(1f))
-                GymTextButton(
-                    text = stringResource(R.string.finish_workout),
-                    onClick = onRequestFinish,
-                    modifier = Modifier.testTag("finish_workout_button"),
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(GymSpacing.TouchTarget)
+                        .padding(horizontal = GymSpacing.Xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    GymIconButton(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                        onClick = onNavigateBack,
+                        modifier = Modifier.testTag("execution_back_button"),
+                    )
+                    Spacer(Modifier.weight(1f))
+                    GymTextButton(
+                        text = stringResource(R.string.finish_workout),
+                        onClick = onRequestFinish,
+                        modifier = Modifier.testTag("finish_workout_button"),
+                    )
+                }
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
                 )
             }
         },
@@ -540,48 +549,43 @@ private fun ExecutionProgressSummary(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column {
-                GymLabel(text = stringResource(R.string.elapsed_time_label))
-                Text(
-                    text = elapsedClock,
-                    style = GymTheme.gymTypography.metric,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .testTag("elapsed_timer")
-                        .semantics { contentDescription = elapsedDescription },
-                )
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = stringResource(R.string.exercises_progress, completedExercises, totalExercises),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = stringResource(R.string.sets_progress, completedSets, plannedSets),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text = elapsedClock,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .testTag("elapsed_timer")
+                    .semantics { contentDescription = elapsedDescription },
+            )
+            Text(
+                text = stringResource(
+                    R.string.execution_progress_compact,
+                    completedExercises,
+                    totalExercises,
+                    completedSets,
+                    plannedSets,
+                ),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
         LinearProgressIndicator(
             progress = { progressFraction },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(6.dp)
+                .height(4.dp)
                 .clip(RoundedCornerShape(GymShapeTokens.Badge))
                 .testTag("workout_progress_bar")
                 .semantics { contentDescription = progressBarDescription },
             color = MaterialTheme.colorScheme.primary,
             trackColor = MaterialTheme.colorScheme.surfaceVariant,
             strokeCap = StrokeCap.Round,
-        )
-        Text(
-            text = stringResource(R.string.workout_progress_percent, progressPercent),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary,
         )
     }
 }
@@ -647,208 +651,235 @@ private fun ActiveSetContent(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = GymSpacing.ScreenPadding, vertical = GymSpacing.Md),
-        verticalArrangement = Arrangement.spacedBy(GymSpacing.Md),
-    ) {
-        if (workoutName.isNotBlank()) {
-            GymLabel(
-                text = workoutName,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        if (!blockLabel.isNullOrBlank()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
-            ) {
-                GymTypeBadge(type = blockType)
-                Text(
-                    text = blockLabel,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.testTag("execution_block_label"),
-                )
-            }
-            if (slotCount > 1) {
-                Text(
-                    text = stringResource(R.string.execution_block_slot, slotIndex, slotCount),
-                    style = MaterialTheme.typography.titleSmall,
+    Column(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = GymSpacing.ScreenPadding)
+                .padding(top = GymSpacing.Sm, bottom = GymSpacing.Md),
+            verticalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
+        ) {
+            if (workoutName.isNotBlank()) {
+                GymLabel(
+                    text = workoutName,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-        }
-
-        GymCard(
-            tone = GymCardTone.Elevated,
-            contentPadding = PaddingValues(GymSpacing.CardPadding),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
+            if (!blockLabel.isNullOrBlank()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
+                ) {
+                    GymTypeBadge(type = blockType)
                     Text(
-                        text = exerciseName,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        text = blockLabel,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.testTag("execution_block_label"),
                     )
-                    if (muscleGroup.isNotBlank()) {
-                        Text(
-                            text = muscleGroup,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = GymSpacing.Xxs),
-                        )
-                    }
                 }
-                if (canApplyProgressionToTemplate) {
-                    Box {
-                        GymIconButton(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.exercise_actions_menu),
-                            onClick = { menuExpanded = true },
-                            modifier = Modifier.testTag("exercise_actions_menu"),
+                if (slotCount > 1) {
+                    Text(
+                        text = stringResource(R.string.execution_block_slot, slotIndex, slotCount),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            GymCard(
+                tone = GymCardTone.Elevated,
+                contentPadding = PaddingValues(GymSpacing.Md),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = exerciseName,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false },
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.apply_progression_menu)) },
-                                onClick = {
-                                    menuExpanded = false
-                                    onRequestApplyProgressionSuggestion()
-                                },
-                                modifier = Modifier.testTag("apply_progression_menu_item"),
+                        if (muscleGroup.isNotBlank()) {
+                            Text(
+                                text = muscleGroup,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = GymSpacing.Xxs),
                             )
                         }
                     }
-                }
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = GymSpacing.Md)
-                    .clip(RoundedCornerShape(GymShapeTokens.Medium))
-                    .border(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f),
-                        shape = RoundedCornerShape(GymShapeTokens.Medium),
-                    ),
-            ) {
-                ExerciseAnimation(
-                    exercise = mediaExercise,
-                    height = 112.dp,
-                    modifier = Modifier.testTag("execution_exercise_animation"),
-                )
-            }
-
-            Text(
-                text = stringResource(R.string.current_set, currentSetNumber, plannedSets),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(top = GymSpacing.Md),
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = GymSpacing.Sm),
-                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
-            ) {
-                repeat(plannedSets.coerceAtLeast(0)) { index ->
-                    val color = when {
-                        index < currentSetNumber - 1 -> MaterialTheme.colorScheme.primary
-                        index == currentSetNumber - 1 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    if (canApplyProgressionToTemplate) {
+                        Box {
+                            GymIconButton(
+                                imageVector = Icons.Filled.MoreVert,
+                                contentDescription = stringResource(R.string.exercise_actions_menu),
+                                onClick = { menuExpanded = true },
+                                modifier = Modifier.testTag("exercise_actions_menu"),
+                            )
+                            DropdownMenu(
+                                expanded = menuExpanded,
+                                onDismissRequest = { menuExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.apply_progression_menu)) },
+                                    onClick = {
+                                        menuExpanded = false
+                                        onRequestApplyProgressionSuggestion()
+                                    },
+                                    modifier = Modifier.testTag("apply_progression_menu_item"),
+                                )
+                            }
+                        }
                     }
-                    Box(
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = GymSpacing.Sm)
+                        .clip(RoundedCornerShape(GymShapeTokens.Medium))
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f),
+                            shape = RoundedCornerShape(GymShapeTokens.Medium),
+                        ),
+                ) {
+                    ExerciseAnimation(
+                        exercise = mediaExercise,
+                        height = 112.dp,
+                        modifier = Modifier.testTag("execution_exercise_animation"),
+                    )
+                }
+
+                Text(
+                    text = stringResource(R.string.current_set, currentSetNumber, plannedSets),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = GymSpacing.Md),
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = GymSpacing.Sm),
+                    horizontalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
+                ) {
+                    repeat(plannedSets.coerceAtLeast(0)) { index ->
+                        val color = when {
+                            index < currentSetNumber - 1 -> MaterialTheme.colorScheme.primary
+                            index == currentSetNumber - 1 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(GymShapeTokens.Badge))
+                                .background(color),
+                        )
+                    }
+                }
+                formatRepetitionTarget(minRepetitions, maxRepetitions)?.let { target ->
+                    Text(
+                        text = stringResource(R.string.execution_reps_target, target),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
-                            .weight(1f)
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(GymShapeTokens.Badge))
-                            .background(color),
+                            .padding(top = GymSpacing.Sm)
+                            .testTag("reps_target"),
+                    )
+                }
+                if (notes.isNotBlank()) {
+                    Text(
+                        text = notes,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                        modifier = Modifier.padding(top = GymSpacing.Xs),
                     )
                 }
             }
-            formatRepetitionTarget(minRepetitions, maxRepetitions)?.let { target ->
-                Text(
-                    text = stringResource(R.string.execution_reps_target, target),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+
+            ProgressionSuggestionInfo(
+                suggestion = progressionSuggestion,
+                canApplyProgressionToTemplate = canApplyProgressionToTemplate,
+                onRequestApplyProgressionSuggestion = onRequestApplyProgressionSuggestion,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Md),
+            ) {
+                OutlinedTextField(
+                    value = repsInput,
+                    onValueChange = onRepsChanged,
+                    label = { Text(stringResource(R.string.reps_label)) },
+                    isError = repsError != null,
+                    supportingText = repsError?.let { resId -> { Text(stringResource(resId)) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(GymShapeTokens.Medium),
                     modifier = Modifier
-                        .padding(top = GymSpacing.Sm)
-                        .testTag("reps_target"),
+                        .weight(1f)
+                        .testTag("reps_field"),
                 )
-            }
-            if (notes.isNotBlank()) {
-                Text(
-                    text = notes,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
-                    modifier = Modifier.padding(top = GymSpacing.Xs),
+                OutlinedTextField(
+                    value = weightInput,
+                    onValueChange = onWeightChanged,
+                    label = { Text(stringResource(R.string.weight_label)) },
+                    isError = weightError != null,
+                    supportingText = weightError?.let { resId -> { Text(stringResource(resId)) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    shape = RoundedCornerShape(GymShapeTokens.Medium),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("weight_field"),
                 )
             }
         }
 
-        ProgressionSuggestionInfo(
-            suggestion = progressionSuggestion,
-            canApplyProgressionToTemplate = canApplyProgressionToTemplate,
-            onRequestApplyProgressionSuggestion = onRequestApplyProgressionSuggestion,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(GymSpacing.Md),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.96f))
+                .imePadding()
+                .padding(horizontal = GymSpacing.ScreenPadding, vertical = GymSpacing.Sm)
+                .testTag("execution_actions"),
+            verticalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
         ) {
-            OutlinedTextField(
-                value = repsInput,
-                onValueChange = onRepsChanged,
-                label = { Text(stringResource(R.string.reps_label)) },
-                isError = repsError != null,
-                supportingText = repsError?.let { resId -> { Text(stringResource(resId)) } },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                shape = RoundedCornerShape(GymShapeTokens.Medium),
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("reps_field"),
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
             )
-            OutlinedTextField(
-                value = weightInput,
-                onValueChange = onWeightChanged,
-                label = { Text(stringResource(R.string.weight_label)) },
-                isError = weightError != null,
-                supportingText = weightError?.let { resId -> { Text(stringResource(resId)) } },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-                shape = RoundedCornerShape(GymShapeTokens.Medium),
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("weight_field"),
+            GymPrimaryButton(
+                text = stringResource(R.string.complete_set),
+                onClick = onCompleteSet,
+                glow = true,
+                leadingIcon = Icons.Filled.Check,
+                modifier = Modifier.testTag("complete_set_button"),
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
+            ) {
+                GymSecondaryButton(
+                    text = stringResource(R.string.session_exercises),
+                    onClick = onOpenSessionExercises,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("session_exercises_button"),
+                )
+                GymSecondaryButton(
+                    text = stringResource(R.string.skip_exercise),
+                    onClick = onRequestSkip,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("skip_exercise_button"),
+                )
+            }
         }
-        GymPrimaryButton(
-            text = stringResource(R.string.complete_set),
-            onClick = onCompleteSet,
-            glow = true,
-            leadingIcon = Icons.Filled.Check,
-            modifier = Modifier.testTag("complete_set_button"),
-        )
-        GymSecondaryButton(
-            text = stringResource(R.string.session_exercises),
-            onClick = onOpenSessionExercises,
-            modifier = Modifier.testTag("session_exercises_button"),
-        )
-        GymSecondaryButton(
-            text = stringResource(R.string.skip_exercise),
-            onClick = onRequestSkip,
-            modifier = Modifier.testTag("skip_exercise_button"),
-        )
     }
 }
 

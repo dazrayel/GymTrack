@@ -93,8 +93,8 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun identity_whenSignedIn_exposesDisplayName() = runTest(testDispatcher) {
-        identityRepository.user.value = GoogleUser("Danilo")
+    fun identity_whenSignedIn_exposesFirstNameOnly() = runTest(testDispatcher) {
+        identityRepository.user.value = GoogleUser("Danilo Barros")
         val viewModel = createViewModel()
         advanceUntilIdle()
 

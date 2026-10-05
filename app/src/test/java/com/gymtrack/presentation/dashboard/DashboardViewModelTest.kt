@@ -109,8 +109,8 @@ class DashboardViewModelTest {
     }
 
     @Test
-    fun signedInUser_exposesDisplayName() = runTest(testDispatcher) {
-        identityRepository.user.value = GoogleUser("Danilo")
+    fun signedInUser_exposesFirstNameOnly() = runTest(testDispatcher) {
+        identityRepository.user.value = GoogleUser("Danilo Barros")
         val viewModel = createViewModel()
         sessionRepository.emitSessions(emptyList())
         sessionRepository.emitSets(emptyList())

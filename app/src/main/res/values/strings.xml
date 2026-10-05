@@ -235,6 +235,7 @@
     <string name="elapsed_time_description">Tempo decorrido %1$s</string>
     <string name="exercises_progress">Exercícios: %1$d/%2$d</string>
     <string name="sets_progress">Séries: %1$d/%2$d</string>
+    <string name="execution_progress_compact">%1$d/%2$d ex. · %3$d/%4$d séries</string>
     <string name="workout_progress_percent">%1$d%% concluído</string>
     <string name="workout_progress_bar">Progresso do treino %1$d por cento</string>
     <string name="finish_workout">Finalizar</string>

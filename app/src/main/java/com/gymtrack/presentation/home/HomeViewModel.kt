@@ -2,6 +2,7 @@ package com.gymtrack.presentation.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gymtrack.domain.identity.firstNameFromDisplayName
 import com.gymtrack.domain.model.CompletedSetRecord
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.PeriodDashboardStats
@@ -128,7 +129,9 @@ class HomeViewModel @Inject constructor(
     private fun observeIdentity() {
         viewModelScope.launch {
             googleIdentityRepository.currentUser.collect { user ->
-                _uiState.update { it.copy(userDisplayName = user?.displayName) }
+                _uiState.update {
+                    it.copy(userDisplayName = firstNameFromDisplayName(user?.displayName))
+                }
             }
         }
     }

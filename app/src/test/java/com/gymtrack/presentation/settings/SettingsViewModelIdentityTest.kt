@@ -69,7 +69,7 @@ class SettingsViewModelIdentityTest {
         viewModel.signInWithGoogle(hostContext)
         advanceUntilIdle()
 
-        assertEquals(GoogleUser("Danilo"), viewModel.uiState.value.googleUser)
+        assertEquals(GoogleUser("Danilo Barros"), viewModel.uiState.value.googleUser)
         assertFalse(viewModel.uiState.value.accountActionInProgress)
         assertNull(viewModel.uiState.value.accountFeedback)
     }
@@ -129,7 +129,7 @@ private class FakeGoogleIdentityRepository : GoogleIdentityRepository {
         signInCalls++
         return when (val result = nextSignInResult) {
             GoogleSignInResult.Success -> {
-                user.value = GoogleUser("Danilo")
+                user.value = GoogleUser("Danilo Barros")
                 result
             }
             else -> result
