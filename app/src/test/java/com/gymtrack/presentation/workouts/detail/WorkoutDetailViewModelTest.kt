@@ -651,6 +651,7 @@ private class FakeWorkoutRepository : WorkoutRepository {
     override suspend fun save(workout: Workout) = 1L
     override suspend fun update(workout: Workout) {}
     override suspend fun delete(workout: Workout) {}
+    override suspend fun updateWorkoutPositions(positions: Map<Long, Int>) = Unit
     override fun getBlocks(workoutId: Long) = blocksFlow
     override fun getExercisesForWorkout(workoutId: Long) = exercisesFlow
     override suspend fun addBlock(block: WorkoutBlock, exercises: List<WorkoutExercise>): Long {

@@ -1,6 +1,9 @@
 package com.gymtrack.presentation.workouts
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -39,20 +43,27 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
@@ -82,6 +93,7 @@ fun WorkoutsScreen(
         onWorkoutClick = { workout -> onNavigateToDetail(workout.id) },
         onNavigateToWeeklyPlanning = onNavigateToWeeklyPlanning,
         onDeleteClick = viewModel::showDeleteConfirmation,
+        onReorder = viewModel::reorderWorkouts,
         onSaveWorkout = viewModel::saveWorkout,
         onDismissDialog = viewModel::dismissDialog,
         onConfirmDelete = viewModel::confirmDelete,
@@ -91,7 +103,7 @@ fun WorkoutsScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun WorkoutsContent(
     uiState: WorkoutUiState,
@@ -100,6 +112,7 @@ private fun WorkoutsContent(
     onWorkoutClick: (Workout) -> Unit,
     onNavigateToWeeklyPlanning: () -> Unit,
     onDeleteClick: (Workout) -> Unit,
+    onReorder: (fromIndex: Int, toIndex: Int) -> Unit,
     onSaveWorkout: (name: String, description: String) -> Unit,
     onDismissDialog: () -> Unit,
     onConfirmDelete: () -> Unit,
@@ -113,6 +126,18 @@ private fun WorkoutsContent(
         pluralStringResource(R.plurals.workouts_count_eyebrow, workoutCount, workoutCount)
     } else {
         null
+    }
+
+    val listState = rememberLazyListState()
+    var displayedWorkouts by remember { mutableStateOf(uiState.workouts) }
+    var draggingIndex by remember { mutableStateOf<Int?>(null) }
+    var dragStartIndex by remember { mutableStateOf<Int?>(null) }
+    var dragOffsetY by remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(uiState.workouts) {
+        if (draggingIndex == null) {
+            displayedWorkouts = uiState.workouts
+        }
     }
 
     LaunchedEffect(uiState.error) {
@@ -172,7 +197,14 @@ private fun WorkoutsContent(
             }
 
             else -> {
+                val latestWorkouts = rememberUpdatedState(displayedWorkouts)
+                val latestDraggingIndex = rememberUpdatedState(draggingIndex)
+                val latestDragOffset = rememberUpdatedState(dragOffsetY)
+                val latestUiWorkouts = rememberUpdatedState(uiState.workouts)
+                val latestOnReorder = rememberUpdatedState(onReorder)
+
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding),
@@ -184,11 +216,83 @@ private fun WorkoutsContent(
                     ),
                     verticalArrangement = Arrangement.spacedBy(GymSpacing.CardSpacing),
                 ) {
-                    items(uiState.workouts, key = { it.id }) { workout ->
+                    itemsIndexed(
+                        items = displayedWorkouts,
+                        key = { _, workout -> workout.id },
+                    ) { index, workout ->
+                        val isDragging = draggingIndex == index
+                        val elevation by animateDpAsState(
+                            targetValue = if (isDragging) 8.dp else 0.dp,
+                            label = "workoutDragElevation",
+                        )
                         WorkoutItem(
                             workout = workout,
+                            isDragging = isDragging,
+                            dragOffsetY = if (isDragging) dragOffsetY else 0f,
+                            elevation = elevation,
                             onClick = { onWorkoutClick(workout) },
                             onDeleteClick = { onDeleteClick(workout) },
+                            modifier = Modifier
+                                .animateItem()
+                                .zIndex(if (isDragging) 1f else 0f)
+                                .pointerInput(workout.id) {
+                                    detectDragGesturesAfterLongPress(
+                                        onDragStart = {
+                                            val start = latestWorkouts.value
+                                                .indexOfFirst { it.id == workout.id }
+                                            if (start < 0) return@detectDragGesturesAfterLongPress
+                                            draggingIndex = start
+                                            dragStartIndex = start
+                                            dragOffsetY = 0f
+                                        },
+                                        onDragCancel = {
+                                            draggingIndex = null
+                                            dragStartIndex = null
+                                            dragOffsetY = 0f
+                                            displayedWorkouts = latestUiWorkouts.value
+                                        },
+                                        onDragEnd = {
+                                            val start = dragStartIndex
+                                            val end = draggingIndex
+                                            draggingIndex = null
+                                            dragStartIndex = null
+                                            dragOffsetY = 0f
+                                            if (start != null && end != null && start != end) {
+                                                latestOnReorder.value(start, end)
+                                            } else {
+                                                displayedWorkouts = latestUiWorkouts.value
+                                            }
+                                        },
+                                        onDrag = { change, dragAmount ->
+                                            change.consume()
+                                            dragOffsetY = latestDragOffset.value + dragAmount.y
+                                            val current = latestDraggingIndex.value
+                                                ?: return@detectDragGesturesAfterLongPress
+                                            val items = latestWorkouts.value
+                                            val itemInfo = listState.layoutInfo.visibleItemsInfo
+                                                .find { it.index == current }
+                                                ?: return@detectDragGesturesAfterLongPress
+                                            val threshold = itemInfo.size / 2f
+                                            when {
+                                                dragOffsetY > threshold &&
+                                                    current < items.lastIndex -> {
+                                                    dragOffsetY -= itemInfo.size.toFloat()
+                                                    displayedWorkouts = items.toMutableList().apply {
+                                                        add(current + 1, removeAt(current))
+                                                    }
+                                                    draggingIndex = current + 1
+                                                }
+                                                dragOffsetY < -threshold && current > 0 -> {
+                                                    dragOffsetY += itemInfo.size.toFloat()
+                                                    displayedWorkouts = items.toMutableList().apply {
+                                                        add(current - 1, removeAt(current))
+                                                    }
+                                                    draggingIndex = current - 1
+                                                }
+                                            }
+                                        },
+                                    )
+                                },
                         )
                     }
                 }
@@ -218,17 +322,30 @@ private fun WorkoutsContent(
 @Composable
 private fun WorkoutItem(
     workout: Workout,
+    isDragging: Boolean,
+    dragOffsetY: Float,
+    elevation: androidx.compose.ui.unit.Dp,
     onClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val initial = workout.name.trim().firstOrNull()?.uppercaseChar()?.toString().orEmpty()
+    val reorderCd = stringResource(R.string.reorder_workout_cd, workout.name)
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                translationY = dragOffsetY
+                shadowElevation = elevation.toPx()
+                alpha = if (isDragging) 0.96f else 1f
+                scaleX = if (isDragging) 1.02f else 1f
+                scaleY = if (isDragging) 1.02f else 1f
+            }
+            .semantics { contentDescription = reorderCd },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         GymCard(
-            onClick = onClick,
+            onClick = if (isDragging) null else onClick,
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(GymSpacing.CardPadding),
         ) {
@@ -456,6 +573,7 @@ private fun WorkoutsContentLoadingPreview() {
             onWorkoutClick = {},
             onNavigateToWeeklyPlanning = {},
             onDeleteClick = {},
+            onReorder = { _, _ -> },
             onSaveWorkout = { _, _ -> },
             onDismissDialog = {},
             onConfirmDelete = {},
@@ -476,6 +594,7 @@ private fun WorkoutsContentEmptyPreview() {
             onWorkoutClick = {},
             onNavigateToWeeklyPlanning = {},
             onDeleteClick = {},
+            onReorder = { _, _ -> },
             onSaveWorkout = { _, _ -> },
             onDismissDialog = {},
             onConfirmDelete = {},
@@ -493,9 +612,9 @@ private fun WorkoutsContentListPreview() {
             uiState = WorkoutUiState(
                 isLoading = false,
                 workouts = listOf(
-                    Workout(1, "Push Day", "Peitoral, ombros e tríceps"),
-                    Workout(2, "Pull Day", "Costas e bíceps"),
-                    Workout(3, "Leg Day", ""),
+                    Workout(1, "Push Day", "Peitoral, ombros e tríceps", position = 0),
+                    Workout(2, "Pull Day", "Costas e bíceps", position = 1),
+                    Workout(3, "Leg Day", "", position = 2),
                 ),
             ),
             contentPadding = PaddingValues(),
@@ -503,6 +622,7 @@ private fun WorkoutsContentListPreview() {
             onWorkoutClick = {},
             onNavigateToWeeklyPlanning = {},
             onDeleteClick = {},
+            onReorder = { _, _ -> },
             onSaveWorkout = { _, _ -> },
             onDismissDialog = {},
             onConfirmDelete = {},

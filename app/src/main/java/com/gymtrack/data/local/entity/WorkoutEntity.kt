@@ -9,4 +9,6 @@ data class WorkoutEntity(
     val id: Long = 0,
     val name: String,
     val description: String = "",
+    /** 0-based visual list order. */
+    val position: Int = 0,
 )

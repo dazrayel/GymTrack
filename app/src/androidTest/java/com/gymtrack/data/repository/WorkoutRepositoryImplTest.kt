@@ -161,6 +161,57 @@ class WorkoutRepositoryImplTest {
         assertEquals("Pull Day", remaining[0].name)
     }
 
+    @Test
+    fun getAll_returnsInPositionOrder_notAlphabetical() = runBlocking {
+        repository.save(Workout(name = "Zebra"))
+        repository.save(Workout(name = "Alpha"))
+        repository.save(Workout(name = "Middle"))
+
+        val all = repository.getAll().first()
+        assertEquals(listOf("Zebra", "Alpha", "Middle"), all.map { it.name })
+        assertEquals(listOf(0, 1, 2), all.map { it.position })
+    }
+
+    @Test
+    fun save_appendsAtEndAfterManualReorder() = runBlocking {
+        val a = repository.save(Workout(name = "A"))
+        val b = repository.save(Workout(name = "B"))
+        val c = repository.save(Workout(name = "C"))
+        repository.updateWorkoutPositions(mapOf(c to 0, a to 1, b to 2))
+
+        repository.save(Workout(name = "D"))
+
+        val all = repository.getAll().first()
+        assertEquals(listOf("C", "A", "B", "D"), all.map { it.name })
+        assertEquals(listOf(0, 1, 2, 3), all.map { it.position })
+    }
+
+    @Test
+    fun updateWorkoutPositions_persistsConsecutivePositions() = runBlocking {
+        val a = repository.save(Workout(name = "A"))
+        val b = repository.save(Workout(name = "B"))
+        val c = repository.save(Workout(name = "C"))
+
+        repository.updateWorkoutPositions(mapOf(c to 0, a to 1, b to 2))
+
+        val all = repository.getAll().first()
+        assertEquals(listOf("C", "A", "B"), all.map { it.name })
+        assertEquals(listOf(0, 1, 2), all.map { it.position })
+    }
+
+    @Test
+    fun delete_compactsRemainingPositions() = runBlocking {
+        repository.save(Workout(name = "A"))
+        val b = repository.save(Workout(name = "B"))
+        repository.save(Workout(name = "C"))
+
+        repository.delete(repository.getById(b).first()!!)
+
+        val all = repository.getAll().first()
+        assertEquals(listOf("A", "C"), all.map { it.name })
+        assertEquals(listOf(0, 1), all.map { it.position })
+    }
+
     // ─── Blocks / exercises: add / retrieve (SINGLE) ──────────────────────────
 
     @Test

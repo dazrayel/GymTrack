@@ -81,6 +81,33 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Moves a workout from [fromIndex] to [toIndex] in the visual list.
+     * Applies an optimistic UI update, then persists consecutive positions `0..n-1`.
+     * On persistence failure, restores the previous list.
+     */
+    fun reorderWorkouts(fromIndex: Int, toIndex: Int) {
+        val current = _uiState.value.workouts
+        if (fromIndex == toIndex) return
+        if (fromIndex !in current.indices || toIndex !in current.indices) return
+
+        val previous = current
+        val reordered = current.toMutableList().apply {
+            add(toIndex, removeAt(fromIndex))
+        }.mapIndexed { index, workout -> workout.copy(position = index) }
+
+        _uiState.update { it.copy(workouts = reordered) }
+
+        val positions = reordered.associate { it.id to it.position }
+        viewModelScope.launch {
+            try {
+                repository.updateWorkoutPositions(positions)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(workouts = previous, error = e.message) }
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }

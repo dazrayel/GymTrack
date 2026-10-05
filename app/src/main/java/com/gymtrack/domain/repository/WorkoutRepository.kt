@@ -25,6 +25,13 @@ interface WorkoutRepository {
 
     suspend fun delete(workout: Workout)
 
+    /**
+     * Updates only [Workout.position] for each entry.
+     * Keys are workout IDs; values are the new 0-based positions.
+     * Applied atomically.
+     */
+    suspend fun updateWorkoutPositions(positions: Map<Long, Int>)
+
     // ─── WorkoutBlock operations ──────────────────────────────────────────────
 
     fun getBlocks(workoutId: Long): Flow<List<WorkoutBlock>>

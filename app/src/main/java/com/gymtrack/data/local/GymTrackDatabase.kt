@@ -35,7 +35,7 @@ import com.gymtrack.data.local.entity.WorkoutSetEntity
         WorkoutSetEntity::class,
         WeeklyWorkoutPlanEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
 )
 abstract class GymTrackDatabase : RoomDatabase() {
@@ -460,6 +460,28 @@ abstract class GymTrackDatabase : RoomDatabase() {
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS `index_weekly_workout_plans_workoutId` " +
                         "ON `weekly_workout_plans` (`workoutId`)",
+                )
+            }
+        }
+
+        /**
+         * Adds [WorkoutEntity.position] and backfills 0..n-1 by existing `id ASC`
+         * (best available proxy for creation order). Does **not** use name/alphabetical order.
+         */
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE `workouts` ADD COLUMN `position` INTEGER NOT NULL DEFAULT 0",
+                )
+                db.execSQL(
+                    """
+                    UPDATE `workouts`
+                    SET `position` = (
+                        SELECT COUNT(*)
+                        FROM `workouts` AS `earlier`
+                        WHERE `earlier`.`id` < `workouts`.`id`
+                    )
+                    """.trimIndent(),
                 )
             }
         }

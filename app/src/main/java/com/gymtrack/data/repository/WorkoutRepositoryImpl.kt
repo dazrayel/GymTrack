@@ -38,7 +38,8 @@ class WorkoutRepositoryImpl @Inject constructor(
         workoutExerciseDao.observeWorkoutIdsWithExercises().map { it.toSet() }
 
     override suspend fun save(workout: Workout): Long = withContext(Dispatchers.IO) {
-        workoutDao.insert(workout.toEntity())
+        val position = workoutDao.nextPosition()
+        workoutDao.insert(workout.copy(position = position).toEntity())
     }
 
     override suspend fun update(workout: Workout) {
@@ -46,7 +47,21 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     override suspend fun delete(workout: Workout) {
-        withContext(Dispatchers.IO) { workoutDao.deleteById(workout.id) }
+        withContext(Dispatchers.IO) {
+            database.withTransaction {
+                workoutDao.deleteById(workout.id)
+                // Compact remaining positions to 0..n-1 so the next save appends safely.
+                workoutDao.getAllOnce().forEachIndexed { index, entity ->
+                    if (entity.position != index) {
+                        workoutDao.updatePosition(entity.id, index)
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun updateWorkoutPositions(positions: Map<Long, Int>) {
+        withContext(Dispatchers.IO) { workoutDao.updatePositions(positions) }
     }
 
     override fun getBlocks(workoutId: Long): Flow<List<WorkoutBlock>> =
@@ -185,9 +200,19 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 }
 
-private fun WorkoutEntity.toDomain() = Workout(id = id, name = name, description = description)
+private fun WorkoutEntity.toDomain() = Workout(
+    id = id,
+    name = name,
+    description = description,
+    position = position,
+)
 
-private fun Workout.toEntity() = WorkoutEntity(id = id, name = name, description = description)
+private fun Workout.toEntity() = WorkoutEntity(
+    id = id,
+    name = name,
+    description = description,
+    position = position,
+)
 
 private fun WorkoutBlockEntity.toDomain() = WorkoutBlock(
     id = id,

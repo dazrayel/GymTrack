@@ -94,19 +94,19 @@ class WorkoutViewModelTest {
     }
 
     @Test
-    fun afterLoad_repositoryHasWorkouts_workoutsPopulated() = runTest(testDispatcher) {
+    fun afterLoad_repositoryHasWorkouts_workoutsPopulatedInPositionOrder() = runTest(testDispatcher) {
         fakeRepository.emit(
             listOf(
-                Workout(1, "Push Day", "Chest and shoulders"),
-                Workout(2, "Pull Day", "Back and biceps"),
+                Workout(1, "Push Day", "Chest and shoulders", position = 0),
+                Workout(2, "Pull Day", "Back and biceps", position = 1),
             ),
         )
         advanceUntilIdle()
 
         val workouts = viewModel.uiState.value.workouts
         assertEquals(2, workouts.size)
-        assertEquals("Pull Day", workouts[0].name)
-        assertEquals("Push Day", workouts[1].name)
+        assertEquals("Push Day", workouts[0].name)
+        assertEquals("Pull Day", workouts[1].name)
     }
 
     @Test
@@ -403,6 +403,89 @@ class WorkoutViewModelTest {
         viewModel.clearError()
         assertNull(viewModel.uiState.value.error)
     }
+
+    // ─── Reorder workouts ─────────────────────────────────────────────────────
+
+    @Test
+    fun reorderWorkouts_updatesStateAndPersistsPositions() = runTest(testDispatcher) {
+        fakeRepository.emit(
+            listOf(
+                Workout(1, "A", position = 0),
+                Workout(2, "B", position = 1),
+                Workout(3, "C", position = 2),
+            ),
+        )
+        advanceUntilIdle()
+
+        viewModel.reorderWorkouts(fromIndex = 2, toIndex = 0)
+        advanceUntilIdle()
+
+        val workouts = viewModel.uiState.value.workouts
+        assertEquals(listOf("C", "A", "B"), workouts.map { it.name })
+        assertEquals(listOf(0, 1, 2), workouts.map { it.position })
+        assertEquals(
+            mapOf(3L to 0, 1L to 1, 2L to 2),
+            fakeRepository.lastReorderPositions,
+        )
+    }
+
+    @Test
+    fun reorderWorkouts_persistFails_restoresPreviousOrder() = runTest(testDispatcher) {
+        fakeRepository.emit(
+            listOf(
+                Workout(1, "A", position = 0),
+                Workout(2, "B", position = 1),
+                Workout(3, "C", position = 2),
+            ),
+        )
+        advanceUntilIdle()
+        fakeRepository.shouldThrowOnReorder = true
+
+        viewModel.reorderWorkouts(fromIndex = 2, toIndex = 0)
+        advanceUntilIdle()
+
+        val workouts = viewModel.uiState.value.workouts
+        assertEquals(listOf("A", "B", "C"), workouts.map { it.name })
+        assertNotNull(viewModel.uiState.value.error)
+    }
+
+    @Test
+    fun reorderWorkouts_sameIndex_isNoOp() = runTest(testDispatcher) {
+        fakeRepository.emit(
+            listOf(
+                Workout(1, "A", position = 0),
+                Workout(2, "B", position = 1),
+            ),
+        )
+        advanceUntilIdle()
+
+        viewModel.reorderWorkouts(fromIndex = 1, toIndex = 1)
+        advanceUntilIdle()
+
+        assertNull(fakeRepository.lastReorderPositions)
+        assertEquals(listOf("A", "B"), viewModel.uiState.value.workouts.map { it.name })
+    }
+
+    @Test
+    fun saveWorkout_newWorkout_appendsAtEnd() = runTest(testDispatcher) {
+        fakeRepository.emit(
+            listOf(
+                Workout(1, "C", position = 0),
+                Workout(2, "A", position = 1),
+                Workout(3, "B", position = 2),
+            ),
+        )
+        advanceUntilIdle()
+
+        viewModel.saveWorkout("D", "")
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf("C", "A", "B", "D"),
+            viewModel.uiState.value.workouts.map { it.name },
+        )
+        assertEquals(3, viewModel.uiState.value.workouts.last().position)
+    }
 }
 
 // ─── Fake repository ─────────────────────────────────────────────────────────
@@ -415,12 +498,14 @@ private class FakeWorkoutRepository : WorkoutRepository {
     var shouldThrowOnSave = false
     var shouldThrowOnUpdate = false
     var shouldThrowOnDelete = false
+    var shouldThrowOnReorder = false
     var removeExerciseCalls = 0
     var removeExerciseByIdCalls = 0
+    var lastReorderPositions: Map<Long, Int>? = null
 
-    // Mirrors real DAO behavior: ORDER BY name ASC
+    // Mirrors real DAO behavior: ORDER BY position ASC
     fun emit(workouts: List<Workout>) {
-        _workouts.value = workouts.sortedBy { it.name }
+        _workouts.value = workouts.sortedBy { it.position }
     }
 
     // Throws inside the Flow so the ViewModel's .catch {} can intercept it,
@@ -438,20 +523,33 @@ private class FakeWorkoutRepository : WorkoutRepository {
     override suspend fun save(workout: Workout): Long {
         if (shouldThrowOnSave) throw RuntimeException("Simulated save error")
         val newId = (_workouts.value.maxOfOrNull { it.id } ?: 0L) + 1L
-        val saved = workout.copy(id = newId)
-        _workouts.value = (_workouts.value + saved).sortedBy { it.name }
+        val position = (_workouts.value.maxOfOrNull { it.position } ?: -1) + 1
+        val saved = workout.copy(id = newId, position = position)
+        _workouts.value = (_workouts.value + saved).sortedBy { it.position }
         return newId
     }
 
     override suspend fun update(workout: Workout) {
         if (shouldThrowOnUpdate) throw RuntimeException("Simulated update error")
         _workouts.value = (_workouts.value.filter { it.id != workout.id } + workout)
-            .sortedBy { it.name }
+            .sortedBy { it.position }
     }
 
     override suspend fun delete(workout: Workout) {
         if (shouldThrowOnDelete) throw RuntimeException("Simulated delete error")
-        _workouts.value = _workouts.value.filter { it.id != workout.id }
+        _workouts.value = _workouts.value
+            .filter { it.id != workout.id }
+            .mapIndexed { index, item -> item.copy(position = index) }
+    }
+
+    override suspend fun updateWorkoutPositions(positions: Map<Long, Int>) {
+        if (shouldThrowOnReorder) throw RuntimeException("Simulated reorder error")
+        lastReorderPositions = positions
+        _workouts.value = _workouts.value
+            .map { workout ->
+                positions[workout.id]?.let { workout.copy(position = it) } ?: workout
+            }
+            .sortedBy { it.position }
     }
 
     // WorkoutExercise operations — not used by WorkoutViewModel at this stage

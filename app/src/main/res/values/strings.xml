@@ -187,6 +187,9 @@
     <string name="edit_workout">Editar treino</string>
     <string name="delete_workout">Excluir treino</string>
     <string name="delete_workout_confirmation">Tem certeza que deseja excluir o treino \"%1$s\"?</string>
+    <string name="move_workout_up">Mover %1$s para cima</string>
+    <string name="move_workout_down">Mover %1$s para baixo</string>
+    <string name="reorder_workout_cd">Pressione e arraste para reordenar %1$s</string>
 
     <!-- Workout detail screen -->
     <string name="workout_detail_title">Detalhes do treino</string>

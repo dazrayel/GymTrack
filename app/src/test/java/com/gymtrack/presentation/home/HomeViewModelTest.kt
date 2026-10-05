@@ -640,6 +640,7 @@ private class FakeHomeWorkoutRepository : WorkoutRepository {
     override suspend fun replaceBlockExercise(exerciseRowId: Long, newCatalogueExerciseId: Long) = Unit
     override suspend fun removeBlock(blockId: Long) = Unit
     override suspend fun updateBlockPositions(positions: Map<Long, Int>) = Unit
+    override suspend fun updateWorkoutPositions(positions: Map<Long, Int>) = Unit
     override suspend fun addExercise(workoutExercise: WorkoutExercise): Long = 0L
     override suspend fun updateExercise(workoutExercise: WorkoutExercise) = Unit
     override suspend fun removeExercise(workoutExercise: WorkoutExercise) = Unit
