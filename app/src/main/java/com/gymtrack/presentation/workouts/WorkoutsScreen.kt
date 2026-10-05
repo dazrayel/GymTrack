@@ -1,5 +1,6 @@
 package com.gymtrack.presentation.workouts
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,18 +18,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.automirrored.outlined.EventNote
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -36,7 +36,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,20 +44,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
 import com.gymtrack.domain.model.Workout
+import com.gymtrack.presentation.components.GymCard
+import com.gymtrack.presentation.components.GymIconButton
+import com.gymtrack.presentation.components.GymTopAppBar
+import com.gymtrack.presentation.theme.GymShapeTokens
+import com.gymtrack.presentation.theme.GymSpacing
 import com.gymtrack.presentation.theme.GymTrackTheme
+import com.gymtrack.presentation.theme.gymPrimaryGlow
 
 @Composable
 fun WorkoutsScreen(
     onNavigateToDetail: (workoutId: Long) -> Unit = {},
+    onNavigateToWeeklyPlanning: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
     viewModel: WorkoutViewModel = hiltViewModel(),
@@ -70,6 +80,7 @@ fun WorkoutsScreen(
         contentPadding = contentPadding,
         onAddClick = viewModel::showAddDialog,
         onWorkoutClick = { workout -> onNavigateToDetail(workout.id) },
+        onNavigateToWeeklyPlanning = onNavigateToWeeklyPlanning,
         onDeleteClick = viewModel::showDeleteConfirmation,
         onSaveWorkout = viewModel::saveWorkout,
         onDismissDialog = viewModel::dismissDialog,
@@ -87,6 +98,7 @@ private fun WorkoutsContent(
     contentPadding: PaddingValues,
     onAddClick: () -> Unit,
     onWorkoutClick: (Workout) -> Unit,
+    onNavigateToWeeklyPlanning: () -> Unit,
     onDeleteClick: (Workout) -> Unit,
     onSaveWorkout: (name: String, description: String) -> Unit,
     onDismissDialog: () -> Unit,
@@ -96,6 +108,12 @@ private fun WorkoutsContent(
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val workoutCount = uiState.workouts.size
+    val eyebrow = if (!uiState.isLoading && workoutCount > 0) {
+        pluralStringResource(R.plurals.workouts_count_eyebrow, workoutCount, workoutCount)
+    } else {
+        null
+    }
 
     LaunchedEffect(uiState.error) {
         val message = uiState.error ?: return@LaunchedEffect
@@ -106,12 +124,17 @@ private fun WorkoutsContent(
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         modifier = modifier.padding(contentPadding),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.workouts_title),
-                        style = MaterialTheme.typography.titleLarge,
+            GymTopAppBar(
+                title = stringResource(R.string.workouts_title),
+                eyebrow = eyebrow,
+                actions = {
+                    GymIconButton(
+                        imageVector = Icons.AutoMirrored.Outlined.EventNote,
+                        contentDescription = stringResource(R.string.workouts_open_planning_cd),
+                        onClick = onNavigateToWeeklyPlanning,
+                        modifier = Modifier.testTag("workouts_open_planning"),
                     )
                 },
             )
@@ -120,11 +143,13 @@ private fun WorkoutsContent(
             FloatingActionButton(
                 onClick = onAddClick,
                 containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(GymShapeTokens.Button),
+                modifier = Modifier.gymPrimaryGlow(),
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = stringResource(R.string.add_workout),
-                    tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
         },
@@ -152,12 +177,12 @@ private fun WorkoutsContent(
                         .fillMaxSize()
                         .padding(innerPadding),
                     contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 4.dp,
-                        bottom = 88.dp,
+                        start = GymSpacing.ScreenPadding,
+                        end = GymSpacing.ScreenPadding,
+                        top = GymSpacing.Sm,
+                        bottom = 96.dp,
                     ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(GymSpacing.CardSpacing),
                 ) {
                     items(uiState.workouts, key = { it.id }) { workout ->
                         WorkoutItem(
@@ -197,41 +222,69 @@ private fun WorkoutItem(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        onClick = onClick,
+    val initial = workout.name.trim().firstOrNull()?.uppercaseChar()?.toString().orEmpty()
+    Row(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        ),
-        shape = RoundedCornerShape(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        GymCard(
+            onClick = onClick,
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(GymSpacing.CardPadding),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = workout.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (workout.description.isNotBlank()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(GymShapeTokens.Medium))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Text(
-                        text = workout.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 2.dp),
+                        text = if (initial.isNotEmpty()) initial else "•",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
-            }
-            IconButton(onClick = onDeleteClick) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = GymSpacing.Md),
+                ) {
+                    Text(
+                        text = workout.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (workout.description.isNotBlank()) {
+                        Text(
+                            text = workout.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = GymSpacing.Xs),
+                        )
+                    }
+                }
                 Icon(
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = stringResource(R.string.delete_workout),
-                    tint = MaterialTheme.colorScheme.error,
+                    imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
+        GymIconButton(
+            imageVector = Icons.Outlined.Delete,
+            contentDescription = stringResource(R.string.delete_workout),
+            onClick = onDeleteClick,
+            contentColor = MaterialTheme.colorScheme.error,
+        )
     }
 }
 
@@ -240,7 +293,7 @@ private fun EmptyWorkoutsContent(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(32.dp),
+            .padding(GymSpacing.Xxxl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -250,18 +303,18 @@ private fun EmptyWorkoutsContent(modifier: Modifier = Modifier) {
             modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(GymSpacing.Lg))
         Text(
             text = stringResource(R.string.empty_workouts),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(GymSpacing.Sm))
         Text(
             text = stringResource(R.string.empty_workouts_hint),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
     }
@@ -279,6 +332,10 @@ private fun AddEditWorkoutDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(GymShapeTokens.Dialog),
         title = {
             Text(
                 text = if (workout != null) {
@@ -286,10 +343,11 @@ private fun AddEditWorkoutDialog(
                 } else {
                     stringResource(R.string.add_workout)
                 },
+                style = MaterialTheme.typography.titleLarge,
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(GymSpacing.Md)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = {
@@ -307,6 +365,7 @@ private fun AddEditWorkoutDialog(
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                     ),
+                    shape = RoundedCornerShape(GymShapeTokens.Medium),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
@@ -318,6 +377,7 @@ private fun AddEditWorkoutDialog(
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                     ),
+                    shape = RoundedCornerShape(GymShapeTokens.Medium),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -351,10 +411,20 @@ private fun DeleteWorkoutDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.delete_workout)) },
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(GymShapeTokens.Dialog),
+        title = {
+            Text(
+                text = stringResource(R.string.delete_workout),
+                style = MaterialTheme.typography.titleLarge,
+            )
+        },
         text = {
             Text(
                 text = stringResource(R.string.delete_workout_confirmation, workout.name),
+                style = MaterialTheme.typography.bodyMedium,
             )
         },
         confirmButton = {
@@ -375,17 +445,16 @@ private fun DeleteWorkoutDialog(
     )
 }
 
-// ─── Previews ────────────────────────────────────────────────────────────────
-
 @Preview(showBackground = true)
 @Composable
 private fun WorkoutsContentLoadingPreview() {
-    GymTrackTheme {
+    GymTrackTheme(darkTheme = true) {
         WorkoutsContent(
             uiState = WorkoutUiState(isLoading = true),
             contentPadding = PaddingValues(),
             onAddClick = {},
             onWorkoutClick = {},
+            onNavigateToWeeklyPlanning = {},
             onDeleteClick = {},
             onSaveWorkout = { _, _ -> },
             onDismissDialog = {},
@@ -399,12 +468,13 @@ private fun WorkoutsContentLoadingPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun WorkoutsContentEmptyPreview() {
-    GymTrackTheme {
+    GymTrackTheme(darkTheme = true) {
         WorkoutsContent(
             uiState = WorkoutUiState(isLoading = false),
             contentPadding = PaddingValues(),
             onAddClick = {},
             onWorkoutClick = {},
+            onNavigateToWeeklyPlanning = {},
             onDeleteClick = {},
             onSaveWorkout = { _, _ -> },
             onDismissDialog = {},
@@ -418,7 +488,7 @@ private fun WorkoutsContentEmptyPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun WorkoutsContentListPreview() {
-    GymTrackTheme {
+    GymTrackTheme(darkTheme = true) {
         WorkoutsContent(
             uiState = WorkoutUiState(
                 isLoading = false,
@@ -431,6 +501,7 @@ private fun WorkoutsContentListPreview() {
             contentPadding = PaddingValues(),
             onAddClick = {},
             onWorkoutClick = {},
+            onNavigateToWeeklyPlanning = {},
             onDeleteClick = {},
             onSaveWorkout = { _, _ -> },
             onDismissDialog = {},

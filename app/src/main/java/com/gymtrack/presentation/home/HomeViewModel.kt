@@ -16,6 +16,7 @@ import com.gymtrack.domain.model.historicalPersonalRecords
 import com.gymtrack.domain.model.periodBounds
 import com.gymtrack.domain.model.recommendNextWorkout
 import com.gymtrack.domain.model.trainedDayCount
+import com.gymtrack.domain.repository.GoogleIdentityRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
@@ -34,6 +35,7 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val sessionRepository: WorkoutSessionRepository,
+    private val googleIdentityRepository: GoogleIdentityRepository,
     private val timeProvider: TimeProvider,
 ) : ViewModel() {
 
@@ -44,6 +46,7 @@ class HomeViewModel @Inject constructor(
     init {
         observeDashboard()
         observeInProgressSession()
+        observeIdentity()
     }
 
     fun selectPeriod(period: DashboardPeriod) {
@@ -119,6 +122,14 @@ class HomeViewModel @Inject constructor(
                         )
                     }
                 }
+        }
+    }
+
+    private fun observeIdentity() {
+        viewModelScope.launch {
+            googleIdentityRepository.currentUser.collect { user ->
+                _uiState.update { it.copy(userDisplayName = user?.displayName) }
+            }
         }
     }
 

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="workouts_count_eyebrow">
+        <item quantity="one">%d treino</item>
+        <item quantity="other">%d treinos</item>
+    </plurals>
+    <plurals name="calendar_month_sessions">
+        <item quantity="one">%d treino no mês</item>
+        <item quantity="other">%d treinos no mês</item>
+    </plurals>
+    <plurals name="calendar_month_trained_days">
+        <item quantity="one">%d dia treinado</item>
+        <item quantity="other">%d dias treinados</item>
+    </plurals>
+    <plurals name="calendar_day_sessions_eyebrow">
+        <item quantity="one">%d sessão</item>
+        <item quantity="other">%d sessões</item>
+    </plurals>
+    <plurals name="weekly_planning_days_eyebrow">
+        <item quantity="one">%d dia planejado</item>
+        <item quantity="other">%d dias planejados</item>
+    </plurals>
+</resources>

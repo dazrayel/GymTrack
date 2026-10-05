@@ -22,6 +22,7 @@ data class HomeUiState(
     val totalAchievementCount: Int = AchievementCatalog.size,
     val isLoading: Boolean = true,
     val error: String? = null,
+    val userDisplayName: String? = null,
 ) {
     val showEmpty: Boolean
         get() = !isLoading && recentWorkout == null

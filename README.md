@@ -76,7 +76,21 @@ Nomes de apresentação estão em pt-BR. A importação para o Room é **explíc
 - Ao confirmar, a linha de `workout_sessions` é removida e os dados da sessão (`workout_session_exercises`, `workout_sets`) saem pelo **CASCADE** já definido no Room — **sem** migration nem mudança de schema
 - Estatísticas por exercício (marcas e evolução a partir das séries gravadas)
 
-A aba **Configurações** existe na navegação. Em builds **debug** há importação explícita do catálogo publicado; em release a secção de debug é um no-op.
+A aba **Configurações** existe na navegação (tema claro/escuro e conta Google opcional). Em builds **debug** há importação explícita do catálogo publicado; em release a secção de debug é um no-op.
+
+### Conta Google (opcional, só identidade local)
+
+O GymTrack **não** possui backend de autenticação. O login com Google serve apenas para obter o **nome de exibição** e personalizar a interface (por exemplo, saudação na Home). Nenhum e-mail, ID Google, token ou foto é gravado em Room, DataStore ou ficheiros locais — a identidade vive **só em memória** enquanto o processo do app estiver activo.
+
+Para activar o fluxo em desenvolvimento, crie um **OAuth Client ID (Web application)** no [Google Cloud Console](https://console.cloud.google.com/) e adicione ao ficheiro **`local.properties`** na raiz do projecto (já ignorado pelo git):
+
+```properties
+google.web.client.id=SEU_CLIENT_ID.apps.googleusercontent.com
+```
+
+Também configure credenciais **Android** no mesmo projecto OAuth (package `com.gymtrack` e SHA-1 do keystore de debug/release, conforme a documentação do Sign in with Google). Sem este valor o app **continua a compilar**; em Configurações → Conta, o botão «Entrar com Google» mostra que o login ainda não está configurado neste ambiente.
+
+Tecnologia: **Android Credential Manager** + **Sign in with Google** (sem Firebase Auth).
 
 ## 🏗️ Arquitetura
 
@@ -223,7 +237,7 @@ Testes instrumentados (emulador ligado):
 
 O núcleo de catálogo, montagem de treinos, execução (incluindo skip, ordem livre e rascunhos), persistência Room 9 (identidade externa; pack publicado V2.1 com **136** exercícios e **272** JPG; importador explícito do Free Exercise DB, sem seed automático), histórico (incluindo exclusão de sessões concluídas) e estatísticas básicas **está implementado e coberto por testes**.
 
-Ainda é um projeto em evolução: não há conta de utilizador nem sincronização remota.
+Ainda é um projeto em evolução: não há sincronização remota; a conta Google é opcional e só para personalização local (o Dashboard futuro poderá usar o mesmo nome em memória).
 
 ## 🗺️ Roadmap
 

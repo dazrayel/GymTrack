@@ -22,27 +22,27 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -66,7 +66,16 @@ import com.gymtrack.domain.time.formatDashboardDuration
 import com.gymtrack.domain.time.formatLocalDate
 import com.gymtrack.domain.time.formatLocalDayOfMonth
 import com.gymtrack.domain.time.formatLocalTime
+import com.gymtrack.presentation.components.GymCard
+import com.gymtrack.presentation.components.GymCardTone
+import com.gymtrack.presentation.components.GymLabel
+import com.gymtrack.presentation.components.GymPrimaryButton
+import com.gymtrack.presentation.components.GymSecondaryButton
+import com.gymtrack.presentation.theme.GymShapeTokens
+import com.gymtrack.presentation.theme.GymSpacing
+import com.gymtrack.presentation.theme.GymTheme
 import com.gymtrack.presentation.theme.GymTrackTheme
+import java.time.LocalTime
 import java.time.ZoneId
 
 @Composable
@@ -99,7 +108,6 @@ fun HomeScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
@@ -126,17 +134,8 @@ fun HomeScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         modifier = modifier.padding(contentPadding),
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                },
-            )
-        },
     ) { innerPadding ->
         when {
             uiState.isLoading -> {
@@ -159,40 +158,95 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(innerPadding),
                 ) {
-                    uiState.inProgressSession?.let { session ->
-                        InProgressResumeCard(
-                            workoutName = session.workoutName,
-                            onContinue = { onContinueInProgress(session.id) },
-                            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
-                        )
-                    }
-                    uiState.nextWorkout?.let { workout ->
-                        NextWorkoutCard(
-                            workout = workout,
-                            onOpen = { onNavigateToWorkoutDetail(workout.id) },
-                            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
-                        )
-                    }
-                    AchievementsCard(
-                        unlockedCount = uiState.unlockedAchievementCount,
-                        totalCount = uiState.totalAchievementCount,
-                        onOpen = onNavigateToAchievements,
-                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp),
-                    )
                     if (uiState.showEmpty) {
-                        EmptyDashboardContent(
-                            onNavigateToWorkouts = onNavigateToWorkouts,
-                            modifier = Modifier.weight(1f),
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = GymSpacing.ScreenPadding),
+                            verticalArrangement = Arrangement.spacedBy(GymSpacing.CardSpacing),
+                        ) {
+                            HomeHeroHeader(
+                                trainedDayCount = uiState.trainedDayCount,
+                                userDisplayName = uiState.userDisplayName,
+                            )
+                            uiState.inProgressSession?.let { session ->
+                                InProgressResumeCard(
+                                    workoutName = session.workoutName,
+                                    onContinue = { onContinueInProgress(session.id) },
+                                )
+                            }
+                            uiState.nextWorkout?.let { workout ->
+                                NextWorkoutCard(
+                                    workout = workout,
+                                    onOpen = { onNavigateToWorkoutDetail(workout.id) },
+                                )
+                            }
+                            AchievementsCard(
+                                unlockedCount = uiState.unlockedAchievementCount,
+                                totalCount = uiState.totalAchievementCount,
+                                onOpen = onNavigateToAchievements,
+                            )
+                            EmptyDashboardContent(
+                                onNavigateToWorkouts = onNavigateToWorkouts,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = GymSpacing.Xxl),
+                            )
+                            Spacer(Modifier.height(GymSpacing.Sm))
+                        }
                     } else {
-                        DashboardContent(
-                            uiState = uiState,
-                            onSessionClick = onSessionClick,
-                            onNavigateToExercises = onNavigateToExercises,
-                            onPeriodSelected = onPeriodSelected,
-                            onRecordClick = onRecordClick,
-                            modifier = Modifier.weight(1f),
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = GymSpacing.ScreenPadding)
+                                .testTag("home_dashboard"),
+                            verticalArrangement = Arrangement.spacedBy(GymSpacing.SectionSpacing),
+                        ) {
+                            HomeHeroHeader(
+                                trainedDayCount = uiState.trainedDayCount,
+                                userDisplayName = uiState.userDisplayName,
+                            )
+                            uiState.inProgressSession?.let { session ->
+                                InProgressResumeCard(
+                                    workoutName = session.workoutName,
+                                    onContinue = { onContinueInProgress(session.id) },
+                                )
+                            }
+                            uiState.nextWorkout?.let { workout ->
+                                NextWorkoutCard(
+                                    workout = workout,
+                                    onOpen = { onNavigateToWorkoutDetail(workout.id) },
+                                )
+                            }
+                            AchievementsCard(
+                                unlockedCount = uiState.unlockedAchievementCount,
+                                totalCount = uiState.totalAchievementCount,
+                                onOpen = onNavigateToAchievements,
+                            )
+                            uiState.recentWorkout?.let { item ->
+                                RecentWorkoutCard(
+                                    item = item,
+                                    onClick = { onSessionClick(item.sessionId) },
+                                )
+                            }
+                            PeriodStatsCard(
+                                selectedPeriod = uiState.selectedPeriod,
+                                stats = uiState.periodStats,
+                                onPeriodSelected = onPeriodSelected,
+                            )
+                            FrequencyCard(trainedDayCount = uiState.trainedDayCount)
+                            TrendCard(points = uiState.dailyVolumeTrend)
+                            if (uiState.records.isNotEmpty()) {
+                                RecordsCard(
+                                    records = uiState.records,
+                                    onRecordClick = onRecordClick,
+                                )
+                            }
+                            QuickAccessCard(onNavigateToExercises = onNavigateToExercises)
+                            Spacer(Modifier.height(GymSpacing.Sm))
+                        }
                     }
                 }
             }
@@ -201,38 +255,69 @@ fun HomeScreen(
 }
 
 @Composable
-private fun DashboardContent(
-    uiState: HomeUiState,
-    onSessionClick: (Long) -> Unit,
-    onNavigateToExercises: () -> Unit,
-    onPeriodSelected: (DashboardPeriod) -> Unit,
-    onRecordClick: (String) -> Unit,
+private fun HomeHeroHeader(
+    trainedDayCount: Int,
+    userDisplayName: String? = null,
     modifier: Modifier = Modifier,
 ) {
+    val hour = LocalTime.now().hour
+    val period = homeGreetingStringResForHour(hour)
+    val (greetingRes, greetingWithNameRes) = when (period) {
+        HomeGreetingPeriod.MORNING -> R.string.home_greeting_morning to R.string.home_greeting_morning_with_name
+        HomeGreetingPeriod.AFTERNOON -> R.string.home_greeting_afternoon to R.string.home_greeting_afternoon_with_name
+        HomeGreetingPeriod.EVENING -> R.string.home_greeting_evening to R.string.home_greeting_evening_with_name
+    }
+    val greetingText = formatHomeGreeting(
+        baseGreeting = stringResource(greetingRes),
+        greetingWithName = stringResource(greetingWithNameRes),
+        displayName = userDisplayName,
+    )
     Column(
         modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-            .testTag("home_dashboard"),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+            .fillMaxWidth()
+            .padding(top = GymSpacing.Lg, bottom = GymSpacing.Sm),
+        verticalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
     ) {
-        Spacer(Modifier.height(4.dp))
-        uiState.recentWorkout?.let { item ->
-            RecentWorkoutCard(item = item, onClick = { onSessionClick(item.sessionId) })
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            GymLabel(text = stringResource(R.string.app_name))
+            if (trainedDayCount > 0) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(GymShapeTokens.Chip))
+                        .background(MaterialTheme.colorScheme.secondary)
+                        .padding(horizontal = GymSpacing.Md, vertical = GymSpacing.Xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.LocalFireDepartment,
+                        contentDescription = null,
+                        tint = GymTheme.extendedColors.warning,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.home_trained_days_chip, trainedDayCount),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSecondary,
+                    )
+                }
+            }
         }
-        PeriodStatsCard(
-            selectedPeriod = uiState.selectedPeriod,
-            stats = uiState.periodStats,
-            onPeriodSelected = onPeriodSelected,
+        Text(
+            text = greetingText,
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.testTag("home_greeting"),
         )
-        FrequencyCard(trainedDayCount = uiState.trainedDayCount)
-        TrendCard(points = uiState.dailyVolumeTrend)
-        if (uiState.records.isNotEmpty()) {
-            RecordsCard(records = uiState.records, onRecordClick = onRecordClick)
-        }
-        QuickAccessCard(onNavigateToExercises = onNavigateToExercises)
-        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.home_welcome_message),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -242,35 +327,26 @@ private fun InProgressResumeCard(
     onContinue: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("home_in_progress"),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
+    GymCard(
+        modifier = modifier.testTag("home_in_progress"),
+        tone = GymCardTone.Highlight,
     ) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-            Text(
-                text = stringResource(R.string.workout_in_progress),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-            )
-            Text(
-                text = workoutName,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            Button(
-                onClick = onContinue,
-                modifier = Modifier
-                    .padding(top = 12.dp)
-                    .testTag("home_continue_in_progress"),
-            ) {
-                Text(text = stringResource(R.string.continue_in_progress_workout))
-            }
-        }
+        GymLabel(text = stringResource(R.string.workout_in_progress))
+        Text(
+            text = workoutName,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = GymSpacing.Xs),
+        )
+        GymPrimaryButton(
+            text = stringResource(R.string.continue_in_progress_workout),
+            onClick = onContinue,
+            modifier = Modifier
+                .padding(top = GymSpacing.Md)
+                .testTag("home_continue_in_progress"),
+            glow = true,
+            leadingIcon = Icons.Filled.PlayArrow,
+        )
     }
 }
 
@@ -282,46 +358,42 @@ private fun NextWorkoutCard(
 ) {
     val description = stringResource(R.string.dashboard_next_workout_cd, workout.name)
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
+        GymLabel(
             text = stringResource(R.string.dashboard_next_workout_title),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
         )
-        Card(
+        GymCard(
             onClick = onOpen,
+            tone = GymCardTone.Highlight,
             modifier = Modifier
-                .fillMaxWidth()
                 .testTag("next_workout_card")
                 .semantics { contentDescription = description },
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = workout.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.testTag("next_workout_title"),
                     )
                     Text(
                         text = stringResource(R.string.dashboard_next_workout_cta),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
-                            .padding(top = 8.dp)
+                            .padding(top = GymSpacing.Sm)
                             .testTag("next_workout_open"),
                     )
                 }
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.NavigateNext,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -342,48 +414,53 @@ private fun RecentWorkoutCard(
     val description = stringResource(R.string.dashboard_recent_cd, item.workoutName, dateTime)
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
+        GymLabel(
             text = stringResource(R.string.dashboard_recent_title),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
         )
-        Card(
+        GymCard(
             onClick = onClick,
             modifier = Modifier
-                .fillMaxWidth()
                 .testTag("home_recent_${item.sessionId}")
                 .semantics { contentDescription = description },
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
         ) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                Text(
-                    text = item.workoutName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = dateTime,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-                Text(
-                    text = stringResource(
-                        R.string.dashboard_duration,
-                        formatDashboardDuration(item.durationMillis),
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-                Text(
-                    text = stringResource(R.string.dashboard_volume, formatVolumeKg(item.volume)),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 2.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = item.workoutName,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = dateTime,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = GymSpacing.Xs),
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.dashboard_duration,
+                            formatDashboardDuration(item.durationMillis),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = GymSpacing.Sm),
+                    )
+                    Text(
+                        text = stringResource(R.string.dashboard_volume, formatVolumeKg(item.volume)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = GymSpacing.Xxs),
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.NavigateNext,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -403,78 +480,117 @@ private fun PeriodStatsCard(
         DashboardPeriod.ALL -> R.string.dashboard_all_time
     }
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(titleRes),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
-        )
-        Card(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("home_period"),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
+                .padding(bottom = GymSpacing.Sm),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp)) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("home_period_selector"),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    PeriodChip(
-                        label = stringResource(R.string.dashboard_period_week),
-                        selected = selectedPeriod == DashboardPeriod.WEEK,
-                        testTag = "home_period_week",
-                        onClick = { onPeriodSelected(DashboardPeriod.WEEK) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    PeriodChip(
-                        label = stringResource(R.string.dashboard_period_month),
-                        selected = selectedPeriod == DashboardPeriod.MONTH,
-                        testTag = "home_period_month",
-                        onClick = { onPeriodSelected(DashboardPeriod.MONTH) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    PeriodChip(
-                        label = stringResource(R.string.dashboard_period_all),
-                        selected = selectedPeriod == DashboardPeriod.ALL,
-                        testTag = "home_period_all",
-                        onClick = { onPeriodSelected(DashboardPeriod.ALL) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp, bottom = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                ) {
-                    PeriodStat(
-                        label = stringResource(R.string.dashboard_workouts),
-                        value = stats.sessionCount.toString(),
-                        testTag = "home_period_sessions",
-                    )
-                    PeriodStat(
-                        label = stringResource(R.string.dashboard_volume_label),
-                        value = formatVolumeKg(stats.volume),
-                        testTag = "home_period_volume",
-                    )
-                    PeriodStat(
-                        label = stringResource(R.string.dashboard_time_label),
-                        value = formatDashboardDuration(stats.durationMillis),
-                        testTag = "home_period_duration",
-                    )
-                    PeriodStat(
-                        label = stringResource(R.string.dashboard_exercises_label),
-                        value = stats.distinctExerciseCount.toString(),
-                        testTag = "home_period_exercises",
-                    )
-                }
+            GymLabel(
+                text = stringResource(titleRes),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        GymCard(
+            modifier = Modifier.testTag("home_period"),
+            contentPadding = PaddingValues(GymSpacing.Md),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("home_period_selector"),
+                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
+            ) {
+                PeriodChip(
+                    label = stringResource(R.string.dashboard_period_week),
+                    selected = selectedPeriod == DashboardPeriod.WEEK,
+                    testTag = "home_period_week",
+                    onClick = { onPeriodSelected(DashboardPeriod.WEEK) },
+                    modifier = Modifier.weight(1f),
+                )
+                PeriodChip(
+                    label = stringResource(R.string.dashboard_period_month),
+                    selected = selectedPeriod == DashboardPeriod.MONTH,
+                    testTag = "home_period_month",
+                    onClick = { onPeriodSelected(DashboardPeriod.MONTH) },
+                    modifier = Modifier.weight(1f),
+                )
+                PeriodChip(
+                    label = stringResource(R.string.dashboard_period_all),
+                    selected = selectedPeriod == DashboardPeriod.ALL,
+                    testTag = "home_period_all",
+                    onClick = { onPeriodSelected(DashboardPeriod.ALL) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(Modifier.height(GymSpacing.Md))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
+            ) {
+                PeriodStatTile(
+                    label = stringResource(R.string.dashboard_workouts),
+                    value = stats.sessionCount.toString(),
+                    testTag = "home_period_sessions",
+                    modifier = Modifier.weight(1f),
+                )
+                PeriodStatTile(
+                    label = stringResource(R.string.dashboard_volume_label),
+                    value = formatVolumeKg(stats.volume),
+                    testTag = "home_period_volume",
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(Modifier.height(GymSpacing.Sm))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
+            ) {
+                PeriodStatTile(
+                    label = stringResource(R.string.dashboard_time_label),
+                    value = formatDashboardDuration(stats.durationMillis),
+                    testTag = "home_period_duration",
+                    modifier = Modifier.weight(1f),
+                )
+                PeriodStatTile(
+                    label = stringResource(R.string.dashboard_exercises_label),
+                    value = stats.distinctExerciseCount.toString(),
+                    testTag = "home_period_exercises",
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun PeriodStatTile(
+    label: String,
+    value: String,
+    testTag: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(GymShapeTokens.Medium))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f))
+            .padding(GymSpacing.Md),
+        verticalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
+    ) {
+        Text(
+            text = label.uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            modifier = Modifier.testTag(testTag),
+        )
     }
 }
 
@@ -489,8 +605,26 @@ private fun PeriodChip(
     FilterChip(
         selected = selected,
         onClick = onClick,
-        label = { Text(text = label) },
+        label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+            )
+        },
         modifier = modifier.testTag(testTag),
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            selectedContainerColor = MaterialTheme.colorScheme.surface,
+            selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+        ),
+        border = FilterChipDefaults.filterChipBorder(
+            enabled = true,
+            selected = selected,
+            borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+            selectedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+        ),
     )
 }
 
@@ -500,25 +634,16 @@ private fun FrequencyCard(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
+        GymLabel(
             text = stringResource(R.string.dashboard_frequency),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
         )
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("home_frequency"),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
-        ) {
+        GymCard(modifier = Modifier.testTag("home_frequency")) {
             Text(
                 text = stringResource(R.string.dashboard_trained_days, trainedDayCount),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -535,27 +660,25 @@ private fun TrendCard(
     val trendDescription = stringResource(R.string.dashboard_trend_cd)
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
+        GymLabel(
             text = stringResource(R.string.dashboard_last_seven_days),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
         )
-        Card(
+        GymCard(
             modifier = Modifier
-                .fillMaxWidth()
                 .testTag("home_trend")
                 .semantics { contentDescription = trendDescription },
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentPadding = PaddingValues(
+                horizontal = GymSpacing.Md,
+                vertical = GymSpacing.CardPadding,
             ),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 14.dp)
                     .height(96.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
                 verticalAlignment = Alignment.Bottom,
             ) {
                 points.forEachIndexed { index, point ->
@@ -583,15 +706,18 @@ private fun TrendCard(
                                     .fillMaxHeight(fraction)
                                     .background(
                                         color = MaterialTheme.colorScheme.primary,
-                                        shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp),
+                                        shape = RoundedCornerShape(
+                                            topStart = GymShapeTokens.ExtraSmall,
+                                            topEnd = GymShapeTokens.ExtraSmall,
+                                        ),
                                     ),
                             )
                         }
                         Text(
                             text = formatLocalDayOfMonth(point.dayStartMillis, zone),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.padding(top = 6.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = GymSpacing.Sm),
                         )
                     }
                 }
@@ -607,24 +733,13 @@ private fun RecordsCard(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
+        GymLabel(
             text = stringResource(R.string.dashboard_records),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
         )
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("home_records"),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+        GymCard(modifier = Modifier.testTag("home_records")) {
+            Column(verticalArrangement = Arrangement.spacedBy(GymSpacing.Md)) {
                 records.forEach { record ->
                     val description = stringResource(R.string.home_record_cd, record.exerciseName)
                     Column(
@@ -636,12 +751,12 @@ private fun RecordsCard(
                     ) {
                         Text(
                             text = record.exerciseName,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         Row(
-                            modifier = Modifier.padding(top = 2.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.padding(top = GymSpacing.Xs),
+                            horizontalArrangement = Arrangement.spacedBy(GymSpacing.Md),
                         ) {
                             Text(
                                 text = stringResource(
@@ -649,12 +764,12 @@ private fun RecordsCard(
                                     formatVolumeKg(record.bestWeight),
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Text(
                                 text = stringResource(R.string.home_record_reps, record.bestReps),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             Text(
                                 text = stringResource(
@@ -662,41 +777,13 @@ private fun RecordsCard(
                                     formatVolumeKg(record.bestVolume),
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                color = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun PeriodStat(
-    label: String,
-    value: String,
-    testTag: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier.padding(horizontal = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(top = 4.dp)
-                .testTag(testTag),
-        )
     }
 }
 
@@ -709,46 +796,58 @@ private fun AchievementsCard(
 ) {
     val summary = stringResource(R.string.home_achievements_summary, unlockedCount, totalCount)
     val description = stringResource(R.string.home_achievements_cd, unlockedCount, totalCount)
+    val progress = if (totalCount > 0) {
+        unlockedCount.toFloat() / totalCount.toFloat()
+    } else {
+        0f
+    }
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
+        GymLabel(
             text = stringResource(R.string.achievements_title),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
         )
-        Card(
+        GymCard(
             onClick = onOpen,
             modifier = Modifier
-                .fillMaxWidth()
                 .testTag("home_achievements")
                 .semantics { contentDescription = description },
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.EmojiEvents,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(28.dp),
-                )
-                Spacer(Modifier.width(16.dp))
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(GymShapeTokens.Medium))
+                        .background(GymTheme.extendedColors.warning.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.EmojiEvents,
+                        contentDescription = null,
+                        tint = GymTheme.extendedColors.warning,
+                        modifier = Modifier.size(26.dp),
+                    )
+                }
+                Spacer(Modifier.width(GymSpacing.Md))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = stringResource(R.string.achievements_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
                         text = summary,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.testTag("home_achievements_summary"),
+                    )
+                    LinearProgressIndicator(
+                        progress = { progress.coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = GymSpacing.Sm)
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(GymShapeTokens.ExtraSmall)),
+                        color = GymTheme.extendedColors.warning,
+                        trackColor = MaterialTheme.colorScheme.secondary,
                     )
                 }
                 Icon(
@@ -767,49 +866,52 @@ private fun QuickAccessCard(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
+        GymLabel(
             text = stringResource(R.string.home_quick_access),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
         )
-        Card(
+        GymCard(
             onClick = onNavigateToExercises,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("home_exercises"),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-            ),
+            tone = GymCardTone.Elevated,
+            modifier = Modifier.testTag("home_exercises"),
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.Filled.FitnessCenter,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(28.dp),
-                )
-                Spacer(Modifier.width(16.dp))
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(GymShapeTokens.Medium))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.FitnessCenter,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(26.dp),
+                    )
+                }
+                Spacer(Modifier.width(GymSpacing.Md))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.exercises_title),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
-                    Spacer(Modifier.height(2.dp))
                     Text(
                         text = stringResource(R.string.home_exercises_description),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = GymSpacing.Xxs),
                     )
                 }
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.NavigateNext,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -823,8 +925,7 @@ private fun EmptyDashboardContent(
 ) {
     Column(
         modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp)
+            .fillMaxWidth()
             .testTag("home_empty"),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -835,34 +936,33 @@ private fun EmptyDashboardContent(
             modifier = Modifier.size(72.dp),
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(GymSpacing.Lg))
         Text(
             text = stringResource(R.string.empty_dashboard),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(GymSpacing.Sm))
         Text(
             text = stringResource(R.string.empty_dashboard_hint),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        Spacer(Modifier.height(24.dp))
-        Button(
+        Spacer(Modifier.height(GymSpacing.Xxl))
+        GymSecondaryButton(
+            text = stringResource(R.string.empty_dashboard_cta),
             onClick = onNavigateToWorkouts,
             modifier = Modifier.testTag("home_workouts_cta"),
-        ) {
-            Text(text = stringResource(R.string.empty_dashboard_cta))
-        }
+        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenPreview() {
-    GymTrackTheme {
+    GymTrackTheme(darkTheme = true) {
         HomeScreen(
             uiState = HomeUiState(
                 isLoading = false,

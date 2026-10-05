@@ -2,15 +2,10 @@ package com.gymtrack.presentation.navigation
 
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -20,9 +15,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gymtrack.presentation.achievements.AchievementScreen
+import com.gymtrack.presentation.calendar.CalendarScreen
+import com.gymtrack.presentation.components.GymNavigationBar
 import com.gymtrack.presentation.exercises.ExercisesScreen
 import com.gymtrack.presentation.history.HistoryScreen
 import com.gymtrack.presentation.home.HomeScreen
+import com.gymtrack.presentation.planning.WeeklyPlanningScreen
 import com.gymtrack.presentation.settings.SettingsScreen
 import com.gymtrack.presentation.stats.ExerciseStatsScreen
 import com.gymtrack.presentation.workouts.WorkoutsScreen
@@ -31,6 +29,8 @@ import com.gymtrack.presentation.workouts.execution.WorkoutExecutionScreen
 import com.gymtrack.presentation.workouts.summary.WorkoutSessionSummaryScreen
 
 internal const val ROUTE_ACHIEVEMENTS = "achievements"
+internal const val ROUTE_CALENDAR = "calendar"
+internal const val ROUTE_WEEKLY_PLANNING = "weekly_planning"
 
 private const val ROUTE_EXERCISES = "exercises"
 private const val ROUTE_WORKOUT_DETAIL = "workout_detail/{workoutId}"
@@ -54,41 +54,25 @@ fun GymTrackNavGraph(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar {
-                TopLevelDestination.entries.forEach { destination ->
-                    val selected = currentRoute == destination.route
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            if (destination == TopLevelDestination.HOME) {
-                                navController.popBackStack(
-                                    TopLevelDestination.HOME.route,
-                                    inclusive = false,
-                                )
-                            } else {
-                                navController.navigate(destination.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+            GymNavigationBar(
+                currentRoute = currentRoute,
+                onDestinationSelected = { destination ->
+                    if (destination == TopLevelDestination.HOME) {
+                        navController.popBackStack(
+                            TopLevelDestination.HOME.route,
+                            inclusive = false,
+                        )
+                    } else {
+                        navController.navigate(destination.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
                             }
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (selected) {
-                                    destination.selectedIcon
-                                } else {
-                                    destination.unselectedIcon
-                                },
-                                contentDescription = stringResource(destination.labelResId),
-                            )
-                        },
-                        label = { Text(stringResource(destination.labelResId)) },
-                    )
-                }
-            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                },
+            )
         },
     ) { innerPadding ->
         NavHost(
@@ -147,6 +131,11 @@ fun GymTrackNavGraph(
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToWeeklyPlanning = {
+                        navController.navigate(ROUTE_WEEKLY_PLANNING) {
+                            launchSingleTop = true
+                        }
+                    },
                     contentPadding = innerPadding,
                 )
             }
@@ -155,6 +144,11 @@ fun GymTrackNavGraph(
                     contentPadding = innerPadding,
                     onSessionClick = { sessionId ->
                         navController.navigate(routeWorkoutSessionSummary(sessionId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToCalendar = {
+                        navController.navigate(ROUTE_CALENDAR) {
                             launchSingleTop = true
                         }
                     },
@@ -177,6 +171,32 @@ fun GymTrackNavGraph(
             composable(ROUTE_ACHIEVEMENTS) {
                 AchievementScreen(
                     onNavigateBack = { navController.popBackStack() },
+                    contentPadding = innerPadding,
+                )
+            }
+            composable(ROUTE_CALENDAR) {
+                CalendarScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onSessionClick = { sessionId ->
+                        navController.navigate(routeWorkoutSessionSummary(sessionId)) {
+                            launchSingleTop = true
+                        }
+                    },
+                    contentPadding = innerPadding,
+                )
+            }
+            composable(ROUTE_WEEKLY_PLANNING) {
+                WeeklyPlanningScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToWorkouts = {
+                        navController.navigate(TopLevelDestination.WORKOUTS.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     contentPadding = innerPadding,
                 )
             }

@@ -1,5 +1,7 @@
 package com.gymtrack.presentation.workouts.detail
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -49,7 +52,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -58,6 +60,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -73,7 +76,17 @@ import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutBlockDetail
 import com.gymtrack.domain.model.WorkoutBlockType
 import com.gymtrack.domain.model.WorkoutExerciseDetail
+import com.gymtrack.presentation.components.GymCard
+import com.gymtrack.presentation.components.GymCardTone
+import com.gymtrack.presentation.components.GymIconButton
+import com.gymtrack.presentation.components.GymPrimaryButton
+import com.gymtrack.presentation.components.GymTextButton
+import com.gymtrack.presentation.components.GymTopAppBar
+import com.gymtrack.presentation.components.GymTypeBadge
 import com.gymtrack.presentation.exercises.ExerciseAnimation
+import com.gymtrack.presentation.theme.GymShapeTokens
+import com.gymtrack.presentation.theme.GymSpacing
+import com.gymtrack.presentation.theme.gymPrimaryGlow
 
 @Composable
 fun WorkoutDetailScreen(
@@ -166,6 +179,12 @@ private fun WorkoutDetailContent(
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val blockCount = uiState.blocks.size
+    val eyebrow = when {
+        uiState.isLoading -> null
+        blockCount == 0 -> null
+        else -> stringResource(R.string.workout_detail_blocks_eyebrow, blockCount)
+    }
     LaunchedEffect(uiState.error) {
         val message = uiState.error ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(message = message)
@@ -174,34 +193,46 @@ private fun WorkoutDetailContent(
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         modifier = modifier.padding(contentPadding),
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = uiState.workout?.name ?: stringResource(R.string.workout_detail_title),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+            GymTopAppBar(
+                title = uiState.workout?.name ?: stringResource(R.string.workout_detail_title),
+                eyebrow = eyebrow,
+                navigationIcon = {
+                    GymIconButton(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                        onClick = onNavigateBack,
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                },
                 actions = {
-                    TextButton(onClick = onStartWorkout, enabled = uiState.blocks.isNotEmpty()) {
-                        Text(stringResource(R.string.start_workout))
-                    }
-                    IconButton(onClick = onShowEditWorkoutDialog) {
-                        Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_workout))
-                    }
+                    GymTextButton(
+                        text = stringResource(R.string.start_workout),
+                        onClick = onStartWorkout,
+                        enabled = uiState.blocks.isNotEmpty(),
+                    )
+                    GymIconButton(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = stringResource(R.string.edit_workout),
+                        onClick = onShowEditWorkoutDialog,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 },
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onShowAddTypeDialog, containerColor = MaterialTheme.colorScheme.primary) {
-                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_exercise_to_workout), tint = MaterialTheme.colorScheme.onPrimary)
+            FloatingActionButton(
+                onClick = onShowAddTypeDialog,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(GymShapeTokens.Button),
+                modifier = Modifier.gymPrimaryGlow(),
+            ) {
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = stringResource(R.string.add_exercise_to_workout),
+                )
             }
         },
     ) { innerPadding ->
@@ -212,17 +243,27 @@ private fun WorkoutDetailContent(
             uiState.blocks.isEmpty() -> EmptyExercisesContent(onAddClick = onShowAddTypeDialog, modifier = Modifier.padding(innerPadding))
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(
+                    start = GymSpacing.ScreenPadding,
+                    end = GymSpacing.ScreenPadding,
+                    top = GymSpacing.Sm,
+                    bottom = 96.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(GymSpacing.CardSpacing),
             ) {
                 uiState.workout?.description?.takeIf { it.isNotBlank() }?.let { desc ->
                     item {
-                        Text(text = desc, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            text = desc,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
                 itemsIndexed(uiState.blocks, key = { _, b -> b.id }) { index, block ->
                     WorkoutBlockCard(
                         block = block,
+                        blockIndex = index,
                         biSetIndex = uiState.blocks.filter { it.type == WorkoutBlockType.BI_SET }.indexOfFirst { it.id == block.id }.let { if (it >= 0) it + 1 else 0 },
                         triSetIndex = uiState.blocks.filter { it.type == WorkoutBlockType.TRI_SET }.indexOfFirst { it.id == block.id }.let { if (it >= 0) it + 1 else 0 },
                         canMoveUp = index > 0,
@@ -275,6 +316,10 @@ private fun WorkoutDetailContent(
     uiState.inProgressConflict?.let { conflict ->
         AlertDialog(
             onDismissRequest = onDismissInProgressConflict,
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            shape = RoundedCornerShape(GymShapeTokens.Dialog),
             title = { Text(stringResource(R.string.in_progress_conflict_title)) },
             text = { Text(stringResource(R.string.in_progress_conflict_message, conflict.workoutName)) },
             confirmButton = {
@@ -290,6 +335,7 @@ private fun WorkoutDetailContent(
 @Composable
 private fun WorkoutBlockCard(
     block: WorkoutBlockDetail,
+    blockIndex: Int,
     biSetIndex: Int,
     triSetIndex: Int,
     canMoveUp: Boolean,
@@ -301,70 +347,165 @@ private fun WorkoutBlockCard(
     onDuplicate: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth().testTag("workout_block_card_${block.id}"),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        shape = RoundedCornerShape(12.dp),
+    val moveLabel = when (block.type) {
+        WorkoutBlockType.SINGLE ->
+            block.items.firstOrNull()?.exercise?.name
+                ?: stringResource(R.string.add_normal_exercise)
+        WorkoutBlockType.BI_SET -> stringResource(R.string.bi_set_label, biSetIndex)
+        WorkoutBlockType.TRI_SET -> stringResource(R.string.tri_set_label, triSetIndex)
+    }
+    val cardTone = when (block.type) {
+        WorkoutBlockType.SINGLE -> GymCardTone.Surface
+        WorkoutBlockType.BI_SET, WorkoutBlockType.TRI_SET -> GymCardTone.Highlight
+    }
+    val indexLabel = (blockIndex + 1).toString().padStart(2, '0')
+
+    GymCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("workout_block_card_${block.id}"),
+        tone = cardTone,
+        contentPadding = PaddingValues(GymSpacing.CardPadding),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    val title = when (block.type) {
-                        WorkoutBlockType.SINGLE -> block.items.firstOrNull()?.exercise?.name ?: stringResource(R.string.add_normal_exercise)
-                        WorkoutBlockType.BI_SET -> stringResource(R.string.bi_set_label, biSetIndex)
-                        WorkoutBlockType.TRI_SET -> stringResource(R.string.tri_set_label, triSetIndex)
-                    }
-                    Text(text = title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(
-                        text = "${block.rounds}× · ${block.restSeconds}s ${stringResource(R.string.rest_seconds_display)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    )
-                }
-                IconButton(onClick = onMoveUp, enabled = canMoveUp) { Icon(Icons.Filled.KeyboardArrowUp, contentDescription = null) }
-                IconButton(onClick = onMoveDown, enabled = canMoveDown) { Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null) }
-                IconButton(
-                    onClick = onDuplicate,
-                    modifier = Modifier.testTag("duplicate_block_${block.id}"),
-                ) {
-                    Icon(
-                        Icons.Filled.ContentCopy,
-                        contentDescription = stringResource(R.string.duplicate_block),
-                    )
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(R.string.delete_block), tint = MaterialTheme.colorScheme.error)
-                }
-            }
-            block.items.forEachIndexed { index, item ->
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        if (block.type != WorkoutBlockType.SINGLE) {
-                            Text(text = "${index + 1}. ${item.exercise.name}", style = MaterialTheme.typography.bodyLarge)
-                        }
-                        Text(
-                            text = "${item.minRepetitions}–${item.maxRepetitions} reps · ${formatWeight(item.weight)} kg",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        )
-                    }
-                    IconButton(onClick = { onEditItem(item) }) {
-                        Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_exercise), tint = MaterialTheme.colorScheme.primary)
-                    }
-                    IconButton(
-                        onClick = { onReplaceItem(item) },
-                        modifier = Modifier.testTag("replace_exercise_${item.id}"),
-                    ) {
-                        Icon(
-                            Icons.Filled.SwapHoriz,
-                            contentDescription = stringResource(R.string.replace_exercise),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = indexLabel,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.width(GymSpacing.Sm))
+            GymTypeBadge(type = block.type)
+            Spacer(Modifier.weight(1f))
+            GymIconButton(
+                imageVector = Icons.Filled.KeyboardArrowUp,
+                contentDescription = stringResource(R.string.move_exercise_up, moveLabel),
+                onClick = onMoveUp,
+                enabled = canMoveUp,
+            )
+            GymIconButton(
+                imageVector = Icons.Filled.KeyboardArrowDown,
+                contentDescription = stringResource(R.string.move_exercise_down, moveLabel),
+                onClick = onMoveDown,
+                enabled = canMoveDown,
+            )
+            GymIconButton(
+                imageVector = Icons.Filled.ContentCopy,
+                contentDescription = stringResource(R.string.duplicate_block),
+                onClick = onDuplicate,
+                modifier = Modifier.testTag("duplicate_block_${block.id}"),
+            )
+            GymIconButton(
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = stringResource(R.string.delete_block),
+                onClick = onDelete,
+                contentColor = MaterialTheme.colorScheme.error,
+            )
+        }
+
+        Text(
+            text = "${block.rounds}× · ${block.restSeconds}s ${stringResource(R.string.rest_seconds_display)}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = GymSpacing.Sm),
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = GymSpacing.Md)
+                .then(
+                    if (block.items.size > 1) {
+                        Modifier
+                            .clip(RoundedCornerShape(GymShapeTokens.Small))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.06f))
+                            .padding(
+                                start = GymSpacing.Md,
+                                top = GymSpacing.Sm,
+                                bottom = GymSpacing.Sm,
+                                end = GymSpacing.Xs,
+                            )
+                    } else {
+                        Modifier
+                    },
+                ),
+            verticalArrangement = Arrangement.spacedBy(GymSpacing.Md),
+        ) {
+            block.items.forEach { item ->
+                BlockExerciseRow(
+                    block = block,
+                    item = item,
+                    onEdit = { onEditItem(item) },
+                    onReplace = { onReplaceItem(item) },
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun BlockExerciseRow(
+    block: WorkoutBlockDetail,
+    item: WorkoutExerciseDetail,
+    onEdit: () -> Unit,
+    onReplace: () -> Unit,
+) {
+    val summary = when (block.type) {
+        WorkoutBlockType.SINGLE ->
+            "${block.rounds}× • ${item.minRepetitions}–${item.maxRepetitions} reps • ${formatWeight(item.weight)} kg"
+        WorkoutBlockType.BI_SET, WorkoutBlockType.TRI_SET ->
+            "${item.minRepetitions}–${item.maxRepetitions} reps · ${formatWeight(item.weight)} kg"
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(72.dp)
+                .clip(RoundedCornerShape(GymShapeTokens.Medium)),
+        ) {
+            ExerciseAnimation(
+                exercise = item.exercise,
+                height = 72.dp,
+                modifier = Modifier.testTag("block_exercise_animation_${item.id}"),
+            )
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = GymSpacing.Md),
+        ) {
+            Text(
+                text = item.exercise.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = GymSpacing.Xxs),
+            )
+        }
+        GymIconButton(
+            imageVector = Icons.Filled.Edit,
+            contentDescription = stringResource(R.string.edit_exercise),
+            onClick = onEdit,
+            contentColor = MaterialTheme.colorScheme.primary,
+        )
+        GymIconButton(
+            imageVector = Icons.Filled.SwapHoriz,
+            contentDescription = stringResource(R.string.replace_exercise),
+            onClick = onReplace,
+            modifier = Modifier.testTag("replace_exercise_${item.id}"),
+            contentColor = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
@@ -372,16 +513,32 @@ private fun WorkoutBlockCard(
 private fun AddTypeDialog(onChoose: (WorkoutBlockType) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(GymShapeTokens.Dialog),
         title = { Text(stringResource(R.string.add_to_workout_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { onChoose(WorkoutBlockType.SINGLE) }, modifier = Modifier.fillMaxWidth().testTag("add_type_single")) {
+            Column(verticalArrangement = Arrangement.spacedBy(GymSpacing.Sm)) {
+                Button(
+                    onClick = { onChoose(WorkoutBlockType.SINGLE) },
+                    modifier = Modifier.fillMaxWidth().testTag("add_type_single"),
+                    shape = RoundedCornerShape(GymShapeTokens.Button),
+                ) {
                     Text(stringResource(R.string.add_normal_exercise))
                 }
-                Button(onClick = { onChoose(WorkoutBlockType.BI_SET) }, modifier = Modifier.fillMaxWidth().testTag("add_type_bi_set")) {
+                Button(
+                    onClick = { onChoose(WorkoutBlockType.BI_SET) },
+                    modifier = Modifier.fillMaxWidth().testTag("add_type_bi_set"),
+                    shape = RoundedCornerShape(GymShapeTokens.Button),
+                ) {
                     Text(stringResource(R.string.add_bi_set))
                 }
-                Button(onClick = { onChoose(WorkoutBlockType.TRI_SET) }, modifier = Modifier.fillMaxWidth().testTag("add_type_tri_set")) {
+                Button(
+                    onClick = { onChoose(WorkoutBlockType.TRI_SET) },
+                    modifier = Modifier.fillMaxWidth().testTag("add_type_tri_set"),
+                    shape = RoundedCornerShape(GymShapeTokens.Button),
+                ) {
                     Text(stringResource(R.string.add_tri_set))
                 }
             }
@@ -405,11 +562,15 @@ private fun BlockBuilderDialog(
     val ready = slots.size == type.requiredExerciseCount && slots.all { it != null }
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(GymShapeTokens.Dialog),
         title = {
             Text(if (type == WorkoutBlockType.BI_SET) stringResource(R.string.add_bi_set) else stringResource(R.string.add_tri_set))
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(GymSpacing.Lg)) {
                 slots.forEachIndexed { index, exercise ->
                     BlockExerciseSlot(
                         slotNumber = index + 1,
@@ -418,7 +579,7 @@ private fun BlockBuilderDialog(
                         onClear = { onClearSlot(index) },
                     )
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm)) {
                     OutlinedTextField(
                         value = rounds,
                         onValueChange = { rounds = it },
@@ -457,25 +618,24 @@ private fun BlockExerciseSlot(
     onPick: () -> Unit,
     onClear: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(GymSpacing.Sm)) {
         Text(
             text = stringResource(R.string.block_slot_label, slotNumber),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface,
         )
         if (exercise == null) {
-            Card(
+            GymCard(
                 onClick = onPick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("block_slot_empty_$slotNumber"),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.testTag("block_slot_empty_$slotNumber"),
+                tone = GymCardTone.Elevated,
+                contentPadding = PaddingValues(
+                    horizontal = GymSpacing.CardPadding,
+                    vertical = GymSpacing.Md,
+                ),
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -492,24 +652,25 @@ private fun BlockExerciseSlot(
                 }
             }
         } else {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("block_slot_filled_$slotNumber"),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                shape = RoundedCornerShape(12.dp),
+            GymCard(
+                modifier = Modifier.testTag("block_slot_filled_$slotNumber"),
+                tone = GymCardTone.Elevated,
+                contentPadding = PaddingValues(
+                    start = GymSpacing.CardPadding,
+                    top = GymSpacing.Sm,
+                    bottom = GymSpacing.Sm,
+                    end = GymSpacing.Xs,
+                ),
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(
                         modifier = Modifier
                             .weight(1f)
                             .clickable(onClick = onPick)
-                            .padding(vertical = 6.dp),
+                            .padding(vertical = GymSpacing.Xs),
                     ) {
                         Text(
                             text = exercise.name,
@@ -519,7 +680,7 @@ private fun BlockExerciseSlot(
                             overflow = TextOverflow.Ellipsis,
                         )
                         if (exercise.muscleGroup.isNotBlank()) {
-                            Spacer(Modifier.height(2.dp))
+                            Spacer(Modifier.height(GymSpacing.Xxs))
                             Text(
                                 text = exercise.muscleGroup,
                                 style = MaterialTheme.typography.bodySmall,
@@ -529,16 +690,12 @@ private fun BlockExerciseSlot(
                             )
                         }
                     }
-                    IconButton(
+                    GymIconButton(
+                        imageVector = Icons.Filled.Clear,
+                        contentDescription = null,
                         onClick = onClear,
                         modifier = Modifier.testTag("block_slot_clear_$slotNumber"),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Clear,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    )
                 }
             }
         }
@@ -548,20 +705,40 @@ private fun BlockExerciseSlot(
 @Composable
 private fun EmptyExercisesContent(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.fillMaxSize().padding(32.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(GymSpacing.Xxxl),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(Icons.Outlined.FitnessCenter, contentDescription = null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f))
-        Spacer(Modifier.height(16.dp))
-        Text(stringResource(R.string.workout_detail_empty), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
-        Text(stringResource(R.string.workout_detail_empty_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), textAlign = TextAlign.Center)
-        Spacer(Modifier.height(16.dp))
-        TextButton(onClick = onAddClick) {
-            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-            Text(stringResource(R.string.add_exercise_to_workout))
-        }
+        Icon(
+            Icons.Outlined.FitnessCenter,
+            contentDescription = null,
+            modifier = Modifier.size(72.dp),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+        )
+        Spacer(Modifier.height(GymSpacing.Lg))
+        Text(
+            stringResource(R.string.workout_detail_empty),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(GymSpacing.Sm))
+        Text(
+            stringResource(R.string.workout_detail_empty_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(GymSpacing.Xxl))
+        GymPrimaryButton(
+            text = stringResource(R.string.add_exercise_to_workout),
+            onClick = onAddClick,
+            leadingIcon = Icons.Filled.Add,
+            glow = true,
+            modifier = Modifier.fillMaxWidth(0.85f),
+        )
     }
 }
 
@@ -595,6 +772,10 @@ private fun ExercisePickerDialog(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(GymShapeTokens.Dialog),
         title = { Text(stringResource(R.string.pick_exercise_title)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -627,10 +808,10 @@ private fun ExercisePickerDialog(
                     ),
                     shape = RoundedCornerShape(50),
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(GymSpacing.Md))
                 when {
                     exercises.isEmpty() && searchQuery.isBlank() -> {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(GymSpacing.Sm)) {
                             Text(
                                 text = stringResource(R.string.pick_exercise_empty),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -654,10 +835,10 @@ private fun ExercisePickerDialog(
                             height = 140.dp,
                             modifier = Modifier.testTag("picker_exercise_animation"),
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(GymSpacing.Sm))
                         LazyColumn(
                             modifier = Modifier.heightIn(max = 220.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
                         ) {
                             items(filteredExercises, key = { it.id }) { exercise ->
                                 val selected = previewExercise?.id == exercise.id
@@ -673,11 +854,20 @@ private fun ExercisePickerDialog(
                                             MaterialTheme.colorScheme.surface
                                         },
                                     ),
+                                    shape = RoundedCornerShape(GymShapeTokens.Medium),
+                                    border = BorderStroke(
+                                        width = 1.dp,
+                                        color = if (selected) {
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                                        } else {
+                                            MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)
+                                        },
+                                    ),
                                 ) {
                                     Column(
                                         modifier = Modifier.padding(
-                                            horizontal = 12.dp,
-                                            vertical = 10.dp,
+                                            horizontal = GymSpacing.Md,
+                                            vertical = GymSpacing.Sm + GymSpacing.Xxs,
                                         ),
                                     ) {
                                         Text(
@@ -781,6 +971,10 @@ private fun ExerciseConfigurationDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(GymShapeTokens.Dialog),
         title = {
             Text(
                 if (isNew) stringResource(R.string.configure_exercise_title_new)
@@ -795,7 +989,7 @@ private fun ExerciseConfigurationDialog(
                     color = MaterialTheme.colorScheme.primary,
                 )
                 if (showBlockFields) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm)) {
                         NumberField(
                             value = sets,
                             onValueChange = {
@@ -824,7 +1018,7 @@ private fun ExerciseConfigurationDialog(
                         )
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm)) {
                     NumberField(
                         value = minReps,
                         onValueChange = {
@@ -1002,6 +1196,10 @@ private fun DeleteBlockDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(GymShapeTokens.Dialog),
         title = { Text(stringResource(R.string.delete_block)) },
         text = {
             Text(stringResource(R.string.delete_block_confirmation))
@@ -1040,9 +1238,13 @@ private fun EditWorkoutDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(GymShapeTokens.Dialog),
         title = { Text(stringResource(R.string.edit_workout)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(GymSpacing.Md)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = {

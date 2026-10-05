@@ -4,6 +4,8 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -12,32 +14,28 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -52,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -59,7 +58,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -74,7 +72,18 @@ import com.gymtrack.domain.model.formatProgressionRepsSequence
 import com.gymtrack.domain.model.formatRepetitionTarget
 import com.gymtrack.domain.model.formatVolumeKg
 import com.gymtrack.domain.time.formatElapsedMillis
+import com.gymtrack.presentation.components.GymCard
+import com.gymtrack.presentation.components.GymCardTone
+import com.gymtrack.presentation.components.GymIconButton
+import com.gymtrack.presentation.components.GymLabel
+import com.gymtrack.presentation.components.GymPrimaryButton
+import com.gymtrack.presentation.components.GymSecondaryButton
+import com.gymtrack.presentation.components.GymTextButton
+import com.gymtrack.presentation.components.GymTypeBadge
 import com.gymtrack.presentation.exercises.ExerciseAnimation
+import com.gymtrack.presentation.theme.GymShapeTokens
+import com.gymtrack.presentation.theme.GymSpacing
+import com.gymtrack.presentation.theme.GymTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -225,31 +234,30 @@ private fun WorkoutExecutionContent(
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         modifier = modifier.padding(contentPadding),
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
+            // Compact action bar (no page title) — surface matches GymTopAppBar.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
                     .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                    .padding(horizontal = GymSpacing.Xs, vertical = GymSpacing.Xxs),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(
+                GymIconButton(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.back),
                     onClick = onNavigateBack,
                     modifier = Modifier.testTag("execution_back_button"),
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back),
-                    )
-                }
+                )
                 Spacer(Modifier.weight(1f))
-                TextButton(
+                GymTextButton(
+                    text = stringResource(R.string.finish_workout),
                     onClick = onRequestFinish,
                     modifier = Modifier.testTag("finish_workout_button"),
-                ) {
-                    Text(stringResource(R.string.finish_workout))
-                }
+                )
             }
         },
     ) { innerPadding ->
@@ -280,7 +288,7 @@ private fun WorkoutExecutionContent(
                         progressPercent = uiState.progressPercent,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 4.dp),
+                            .padding(horizontal = GymSpacing.ScreenPadding, vertical = GymSpacing.Xs),
                     )
                     when {
                         uiState.phase == WorkoutExecutionPhase.FINISHED ||
@@ -323,6 +331,7 @@ private fun WorkoutExecutionContent(
                             } else {
                                 ActiveSetContent(
                                     workoutName = uiState.session?.workoutName.orEmpty(),
+                                    blockType = exercise.blockType,
                                     blockLabel = blockExecutionLabel(
                                         exercise = exercise,
                                         exercises = uiState.exercises,
@@ -362,6 +371,10 @@ private fun WorkoutExecutionContent(
     if (uiState.showFinishConfirmation) {
         AlertDialog(
             onDismissRequest = onDismissFinishConfirmation,
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            shape = RoundedCornerShape(GymShapeTokens.Dialog),
             title = { Text(stringResource(R.string.finish_workout_title)) },
             text = {
                 Text(
@@ -404,6 +417,10 @@ private fun WorkoutExecutionContent(
     if (showSessionExercises && uiState.phase == WorkoutExecutionPhase.WORKING) {
         AlertDialog(
             onDismissRequest = { showSessionExercises = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            shape = RoundedCornerShape(GymShapeTokens.Dialog),
             title = { Text(stringResource(R.string.session_exercises)) },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
@@ -430,6 +447,10 @@ private fun WorkoutExecutionContent(
     if (uiState.showSkipConfirmation) {
         AlertDialog(
             onDismissRequest = onDismissSkipConfirmation,
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            shape = RoundedCornerShape(GymShapeTokens.Dialog),
             title = { Text(stringResource(R.string.skip_exercise_title)) },
             text = { Text(stringResource(R.string.skip_exercise_message)) },
             confirmButton = {
@@ -456,6 +477,10 @@ private fun WorkoutExecutionContent(
         val toWeight = uiState.applyProgressionToWeight
         AlertDialog(
             onDismissRequest = onDismissApplyProgressionConfirmation,
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            shape = RoundedCornerShape(GymShapeTokens.Dialog),
             title = { Text(stringResource(R.string.apply_progression_title)) },
             text = {
                 if (fromWeight != null && toWeight != null) {
@@ -510,47 +535,53 @@ private fun ExecutionProgressSummary(
 
     Column(
         modifier = modifier.testTag("execution_progress"),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
     ) {
-        Text(
-            text = stringResource(R.string.elapsed_time_label),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-        )
-        Text(
-            text = elapsedClock,
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .testTag("elapsed_timer")
-                .semantics { contentDescription = elapsedDescription },
-        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom,
         ) {
-            Text(
-                text = stringResource(R.string.exercises_progress, completedExercises, totalExercises),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = stringResource(R.string.sets_progress, completedSets, plannedSets),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Column {
+                GymLabel(text = stringResource(R.string.elapsed_time_label))
+                Text(
+                    text = elapsedClock,
+                    style = GymTheme.gymTypography.metric,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .testTag("elapsed_timer")
+                        .semantics { contentDescription = elapsedDescription },
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = stringResource(R.string.exercises_progress, completedExercises, totalExercises),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.sets_progress, completedSets, plannedSets),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
-        Text(
-            text = stringResource(R.string.workout_progress_percent, progressPercent),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
         LinearProgressIndicator(
             progress = { progressFraction },
             modifier = Modifier
                 .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(GymShapeTokens.Badge))
                 .testTag("workout_progress_bar")
                 .semantics { contentDescription = progressBarDescription },
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            strokeCap = StrokeCap.Round,
+        )
+        Text(
+            text = stringResource(R.string.workout_progress_percent, progressPercent),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
         )
     }
 }
@@ -563,7 +594,7 @@ private fun CompletedWorkoutContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(GymSpacing.ScreenPadding),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -574,11 +605,11 @@ private fun CompletedWorkoutContent(
             textAlign = TextAlign.Center,
         )
         if (workoutName.isNotBlank()) {
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(GymSpacing.Sm))
             Text(
                 text = workoutName,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
         }
@@ -588,6 +619,7 @@ private fun CompletedWorkoutContent(
 @Composable
 private fun ActiveSetContent(
     workoutName: String,
+    blockType: WorkoutBlockType,
     blockLabel: String?,
     exerciseName: String,
     muscleGroup: String,
@@ -619,100 +651,150 @@ private fun ActiveSetContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(horizontal = GymSpacing.ScreenPadding, vertical = GymSpacing.Md),
+        verticalArrangement = Arrangement.spacedBy(GymSpacing.Md),
     ) {
         if (workoutName.isNotBlank()) {
-            Text(
+            GymLabel(
                 text = workoutName,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (!blockLabel.isNullOrBlank()) {
-            Text(
-                text = blockLabel,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.testTag("execution_block_label"),
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
+            ) {
+                GymTypeBadge(type = blockType)
+                Text(
+                    text = blockLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.testTag("execution_block_label"),
+                )
+            }
             if (slotCount > 1) {
                 Text(
                     text = stringResource(R.string.execution_block_slot, slotIndex, slotCount),
                     style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+
+        GymCard(
+            tone = GymCardTone.Elevated,
+            contentPadding = PaddingValues(GymSpacing.CardPadding),
         ) {
-            Text(
-                text = exerciseName,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
-            )
-            if (canApplyProgressionToTemplate) {
-                Box {
-                    IconButton(
-                        onClick = { menuExpanded = true },
-                        modifier = Modifier.testTag("exercise_actions_menu"),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.exercise_actions_menu),
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = menuExpanded,
-                        onDismissRequest = { menuExpanded = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.apply_progression_menu)) },
-                            onClick = {
-                                menuExpanded = false
-                                onRequestApplyProgressionSuggestion()
-                            },
-                            modifier = Modifier.testTag("apply_progression_menu_item"),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = exerciseName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    if (muscleGroup.isNotBlank()) {
+                        Text(
+                            text = muscleGroup,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = GymSpacing.Xxs),
                         )
                     }
                 }
+                if (canApplyProgressionToTemplate) {
+                    Box {
+                        GymIconButton(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = stringResource(R.string.exercise_actions_menu),
+                            onClick = { menuExpanded = true },
+                            modifier = Modifier.testTag("exercise_actions_menu"),
+                        )
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.apply_progression_menu)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    onRequestApplyProgressionSuggestion()
+                                },
+                                modifier = Modifier.testTag("apply_progression_menu_item"),
+                            )
+                        }
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = GymSpacing.Md)
+                    .clip(RoundedCornerShape(GymShapeTokens.Medium))
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f),
+                        shape = RoundedCornerShape(GymShapeTokens.Medium),
+                    ),
+            ) {
+                ExerciseAnimation(
+                    exercise = mediaExercise,
+                    height = 112.dp,
+                    modifier = Modifier.testTag("execution_exercise_animation"),
+                )
+            }
+
+            Text(
+                text = stringResource(R.string.current_set, currentSetNumber, plannedSets),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = GymSpacing.Md),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = GymSpacing.Sm),
+                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
+            ) {
+                repeat(plannedSets.coerceAtLeast(0)) { index ->
+                    val color = when {
+                        index < currentSetNumber - 1 -> MaterialTheme.colorScheme.primary
+                        index == currentSetNumber - 1 -> MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(GymShapeTokens.Badge))
+                            .background(color),
+                    )
+                }
+            }
+            formatRepetitionTarget(minRepetitions, maxRepetitions)?.let { target ->
+                Text(
+                    text = stringResource(R.string.execution_reps_target, target),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .padding(top = GymSpacing.Sm)
+                        .testTag("reps_target"),
+                )
+            }
+            if (notes.isNotBlank()) {
+                Text(
+                    text = notes,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
+                    modifier = Modifier.padding(top = GymSpacing.Xs),
+                )
             }
         }
-        if (muscleGroup.isNotBlank()) {
-            Text(
-                text = muscleGroup,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            )
-        }
-        ExerciseAnimation(
-            exercise = mediaExercise,
-            height = 100.dp,
-            modifier = Modifier.testTag("execution_exercise_animation"),
-        )
-        Text(
-            text = stringResource(R.string.current_set, currentSetNumber, plannedSets),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        formatRepetitionTarget(minRepetitions, maxRepetitions)?.let { target ->
-            Text(
-                text = stringResource(R.string.execution_reps_target, target),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                modifier = Modifier.testTag("reps_target"),
-            )
-        }
-        if (notes.isNotBlank()) {
-            Text(
-                text = notes,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            )
-        }
+
         ProgressionSuggestionInfo(
             suggestion = progressionSuggestion,
             canApplyProgressionToTemplate = canApplyProgressionToTemplate,
@@ -721,7 +803,7 @@ private fun ActiveSetContent(
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(GymSpacing.Md),
         ) {
             OutlinedTextField(
                 value = repsInput,
@@ -731,6 +813,7 @@ private fun ActiveSetContent(
                 supportingText = repsError?.let { resId -> { Text(stringResource(resId)) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
+                shape = RoundedCornerShape(GymShapeTokens.Medium),
                 modifier = Modifier
                     .weight(1f)
                     .testTag("reps_field"),
@@ -743,35 +826,29 @@ private fun ActiveSetContent(
                 supportingText = weightError?.let { resId -> { Text(stringResource(resId)) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
+                shape = RoundedCornerShape(GymShapeTokens.Medium),
                 modifier = Modifier
                     .weight(1f)
                     .testTag("weight_field"),
             )
         }
-        Button(
+        GymPrimaryButton(
+            text = stringResource(R.string.complete_set),
             onClick = onCompleteSet,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("complete_set_button"),
-        ) {
-            Text(stringResource(R.string.complete_set))
-        }
-        OutlinedButton(
+            glow = true,
+            leadingIcon = Icons.Filled.Check,
+            modifier = Modifier.testTag("complete_set_button"),
+        )
+        GymSecondaryButton(
+            text = stringResource(R.string.session_exercises),
             onClick = onOpenSessionExercises,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("session_exercises_button"),
-        ) {
-            Text(stringResource(R.string.session_exercises))
-        }
-        OutlinedButton(
+            modifier = Modifier.testTag("session_exercises_button"),
+        )
+        GymSecondaryButton(
+            text = stringResource(R.string.skip_exercise),
             onClick = onRequestSkip,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("skip_exercise_button"),
-        ) {
-            Text(stringResource(R.string.skip_exercise))
-        }
+            modifier = Modifier.testTag("skip_exercise_button"),
+        )
     }
 }
 
@@ -808,37 +885,41 @@ private fun ProgressionSuggestionInfo(
         ProgressionAction.MAINTAIN -> stringResource(R.string.progression_maintain)
         ProgressionAction.NO_HISTORY -> stringResource(R.string.progression_no_history)
     }
+    val tone = when (suggestion.action) {
+        ProgressionAction.INCREASE_WEIGHT, ProgressionAction.INCREASE_REPS -> GymCardTone.Highlight
+        else -> GymCardTone.Surface
+    }
 
-    Column(
+    GymCard(
         modifier = modifier.testTag("progression_suggestion"),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        tone = tone,
+        contentPadding = PaddingValues(GymSpacing.Md),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-        )
+        GymLabel(text = title)
         if (lastSessionLine != null) {
             Text(
                 text = lastSessionLine,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-                modifier = Modifier.testTag("progression_last_session"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(top = GymSpacing.Xs)
+                    .testTag("progression_last_session"),
             )
         }
         Text(
             text = guidance,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.testTag("progression_guidance"),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .padding(top = GymSpacing.Xs)
+                .testTag("progression_guidance"),
         )
         if (canApplyProgressionToTemplate) {
-            TextButton(
+            GymTextButton(
+                text = stringResource(R.string.apply_progression_to_workout),
                 onClick = onRequestApplyProgressionSuggestion,
                 modifier = Modifier.testTag("apply_progression_button"),
-            ) {
-                Text(stringResource(R.string.apply_progression_to_workout))
-            }
+            )
         }
     }
 }
@@ -854,14 +935,13 @@ private fun PendingExercisesPanel(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(GymSpacing.ScreenPadding),
+        verticalArrangement = Arrangement.spacedBy(GymSpacing.Md),
     ) {
         if (workoutName.isNotBlank()) {
-            Text(
+            GymLabel(
                 text = workoutName,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Text(
@@ -885,25 +965,30 @@ private fun SessionExercisesList(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("session_exercises_list"),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
     ) {
         rows.forEach { row ->
             val name = row.exercise.exerciseName
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("session_exercise_row_$name"),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+            val tone = when (row.listStatus) {
+                SessionExerciseListStatus.IN_PROGRESS -> GymCardTone.Highlight
+                else -> GymCardTone.Surface
+            }
+            GymCard(
+                modifier = Modifier.testTag("session_exercise_row_$name"),
+                tone = tone,
+                contentPadding = PaddingValues(GymSpacing.Md),
             ) {
                 Text(
                     text = name,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
                     text = stringResource(statusLabelRes(row.listStatus)),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                    modifier = Modifier.testTag("session_exercise_status_$name"),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .padding(top = GymSpacing.Xxs)
+                        .testTag("session_exercise_status_$name"),
                 )
                 Text(
                     text = stringResource(
@@ -911,16 +996,18 @@ private fun SessionExercisesList(
                         row.completedSets,
                         row.exercise.plannedSets,
                     ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = GymSpacing.Xxs),
                 )
                 if (row.canSelectNow) {
-                    OutlinedButton(
+                    GymSecondaryButton(
+                        text = stringResource(R.string.do_exercise_now),
                         onClick = { onResumeExercise(row.exercise.id) },
-                        modifier = Modifier.testTag("resume_exercise_$name"),
-                    ) {
-                        Text(stringResource(R.string.do_exercise_now))
-                    }
+                        modifier = Modifier
+                            .padding(top = GymSpacing.Sm)
+                            .testTag("resume_exercise_$name"),
+                    )
                 }
             }
         }
@@ -969,24 +1056,19 @@ private fun RestContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .padding(horizontal = GymSpacing.ScreenPadding, vertical = GymSpacing.Lg),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        GymLabel(text = stringResource(if (isPaused) R.string.rest_paused else R.string.rest_title))
         if (exerciseName.isNotBlank()) {
             Text(
                 text = exerciseName,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = GymSpacing.Sm),
             )
-            Spacer(Modifier.height(8.dp))
         }
-        Text(
-            text = stringResource(if (isPaused) R.string.rest_paused else R.string.rest_title),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
-        )
         BoxWithConstraints(
             modifier = Modifier
                 .weight(1f)
@@ -1015,7 +1097,7 @@ private fun RestContent(
                 )
                 Text(
                     text = clock,
-                    style = MaterialTheme.typography.displaySmall,
+                    style = GymTheme.gymTypography.metric,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -1026,49 +1108,28 @@ private fun RestContent(
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            val restActionModifier = Modifier
-                .weight(1f)
-                .heightIn(min = 48.dp)
-                .defaultMinSize(minHeight = 48.dp)
+            val restActionModifier = Modifier.weight(1f)
             if (isPaused) {
-                Button(
+                GymPrimaryButton(
+                    text = stringResource(R.string.resume_rest),
                     onClick = onResumeRest,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     modifier = restActionModifier.testTag("resume_rest_button"),
-                ) {
-                    Text(
-                        text = stringResource(R.string.resume_rest),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                )
             } else {
-                Button(
+                GymPrimaryButton(
+                    text = stringResource(R.string.pause_rest),
                     onClick = onPauseRest,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     modifier = restActionModifier.testTag("pause_rest_button"),
-                ) {
-                    Text(
-                        text = stringResource(R.string.pause_rest),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-            OutlinedButton(
-                onClick = onSkipRest,
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                modifier = restActionModifier.testTag("skip_rest_button"),
-            ) {
-                Text(
-                    text = stringResource(R.string.skip_rest),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
+            GymSecondaryButton(
+                text = stringResource(R.string.skip_rest),
+                onClick = onSkipRest,
+                modifier = restActionModifier.testTag("skip_rest_button"),
+            )
         }
     }
 }

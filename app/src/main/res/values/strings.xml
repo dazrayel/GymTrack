@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">GymTrack</string>
     <string name="home_welcome_message">Seu companheiro de treino</string>
+    <string name="home_greeting_morning">Bom dia</string>
+    <string name="home_greeting_afternoon">Boa tarde</string>
+    <string name="home_greeting_evening">Boa noite</string>
+    <string name="home_greeting_morning_with_name">Bom dia, %1$s</string>
+    <string name="home_greeting_afternoon_with_name">Boa tarde, %1$s</string>
+    <string name="home_greeting_evening_with_name">Boa noite, %1$s</string>
+    <string name="home_trained_days_chip">%1$d dias</string>
 
     <!-- Bottom navigation labels -->
     <string name="nav_home">Início</string>
@@ -10,7 +17,10 @@
 
     <!-- Screen titles -->
     <string name="workouts_title">Meus treinos</string>
+    <string name="workouts_open_planning_cd">Abrir planejamento semanal</string>
     <string name="history_title">Histórico</string>
+    <string name="history_sessions_eyebrow">%1$d sessões</string>
+    <string name="history_open_calendar_cd">Abrir calendário de treinos</string>
     <string name="empty_history">Nenhum treino realizado</string>
     <string name="empty_history_hint">Os treinos concluídos aparecerão aqui.</string>
     <string name="history_item_meta">%1$s · %2$d exercícios · %3$d séries</string>
@@ -19,7 +29,50 @@
     <string name="delete_history_session">Excluir treino?</string>
     <string name="delete_history_session_message">Esta sessão será removida do histórico. Essa ação não pode ser desfeita.</string>
     <string name="delete_history_session_cd">Excluir sessão %1$s do histórico</string>
+
+    <!-- Calendar -->
+    <string name="calendar_title">Calendário</string>
+    <string name="calendar_eyebrow">Histórico</string>
+    <string name="calendar_previous_month_cd">Mês anterior</string>
+    <string name="calendar_next_month_cd">Próximo mês</string>
+    <string name="calendar_empty_history">Nenhum treino concluído ainda. Os dias treinados aparecerão aqui.</string>
+    <string name="calendar_month_empty">Nenhum treino neste mês.</string>
+    <string name="calendar_select_day_hint">Toque em um dia para ver as sessões.</string>
+    <string name="calendar_selected_day_eyebrow">Dia selecionado</string>
+    <string name="calendar_day_empty">Nenhum treino neste dia.</string>
+
+    <!-- Weekly planning -->
+    <string name="weekly_planning_title">Planejamento semanal</string>
+    <string name="weekly_planning_eyebrow">Rotina</string>
+    <string name="weekly_planning_subtitle">Defina a rotina padrão da semana. Isso não registra treinos realizados.</string>
+    <string name="weekly_planning_add">Adicionar treino</string>
+    <string name="weekly_planning_planned_label">Treino planejado</string>
+    <string name="weekly_planning_picker_title">Escolher treino</string>
+    <string name="weekly_planning_picker_hint">Selecione um treino existente para este dia.</string>
+    <string name="weekly_planning_actions_title">Planejamento do dia</string>
+    <string name="weekly_planning_change">Trocar treino</string>
+    <string name="weekly_planning_remove">Remover do planejamento</string>
+    <string name="weekly_planning_no_workouts_title">Nenhum treino cadastrado</string>
+    <string name="weekly_planning_no_workouts_hint">Crie um treino primeiro para adicioná-lo ao planejamento.</string>
+    <string name="weekly_planning_go_to_workouts">Ir para treinos</string>
+
     <string name="settings_title">Configurações</string>
+    <string name="settings_eyebrow">Preferências</string>
+    <string name="settings_appearance_title">Aparência</string>
+    <string name="settings_theme_label">Tema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Escuro</string>
+    <string name="settings_account_title">Conta</string>
+    <string name="settings_account_eyebrow">Identidade</string>
+    <string name="settings_account_signed_out_hint">Entre com o Google para personalizar sua experiência.</string>
+    <string name="settings_account_sign_in_google">Entrar com Google</string>
+    <string name="settings_account_signed_in_greeting">Olá, %1$s</string>
+    <string name="settings_account_connected">Conta Google conectada</string>
+    <string name="settings_account_sign_out">Sair</string>
+    <string name="settings_account_sign_in_loading">Entrando…</string>
+    <string name="settings_account_error_generic">Não foi possível entrar com o Google. Tente novamente.</string>
+    <string name="settings_account_error_not_configured">O login Google ainda não está configurado neste ambiente.</string>
+    <string name="settings_account_error_cancelled">Entrada cancelada.</string>
 
     <!-- Home dashboard -->
     <string name="home_quick_access">Acesso rápido</string>
@@ -105,6 +158,7 @@
 
     <!-- Workout detail screen -->
     <string name="workout_detail_title">Detalhes do treino</string>
+    <string name="workout_detail_blocks_eyebrow">%1$d blocos</string>
     <string name="workout_detail_empty">Nenhum exercício neste treino</string>
     <string name="workout_detail_empty_hint">Toque no botão + para adicionar o primeiro exercício</string>
     <string name="add_exercise_to_workout">Adicionar exercício</string>
@@ -114,6 +168,9 @@
     <string name="add_tri_set">Tri-set</string>
     <string name="bi_set_label">BI-SET %1$d</string>
     <string name="tri_set_label">TRI-SET %1$d</string>
+    <string name="block_type_single">SINGLE</string>
+    <string name="block_type_bi_set">BI-SET</string>
+    <string name="block_type_tri_set">TRI-SET</string>
     <string name="block_builder_confirm">Adicionar grupo</string>
     <string name="block_slot_select">Selecionar exercício</string>
     <string name="block_slot_label">Exercício %1$d</string>
@@ -180,6 +237,10 @@
     <string name="exercise_status_in_progress">Em andamento</string>
     <string name="pending_exercise_sets">%1$d/%2$d séries</string>
     <string name="session_summary_title">Resumo do treino</string>
+    <string name="summary_completed_eyebrow">Treino concluído · %1$d%%</string>
+    <string name="summary_exercises_section">Exercícios</string>
+    <string name="summary_pr_highlight_title">Novo recorde pessoal</string>
+    <string name="summary_pr_badge">PR</string>
     <string name="session_start">Início: %1$s</string>
     <string name="session_end">Término: %1$s</string>
     <string name="session_not_found">Sessão não encontrada</string>
@@ -230,6 +291,8 @@
 
     <!-- Achievements -->
     <string name="achievements_title">Conquistas</string>
+    <string name="achievements_eyebrow">Progresso</string>
+    <string name="achievements_progress_label">Desbloqueadas</string>
     <string name="achievements_summary">%1$d de %2$d conquistas desbloqueadas</string>
     <string name="home_achievements_summary">%1$d de %2$d desbloqueadas</string>
     <string name="home_achievements_cd">Conquistas, %1$d de %2$d desbloqueadas</string>

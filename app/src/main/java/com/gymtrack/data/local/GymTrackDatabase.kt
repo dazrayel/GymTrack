@@ -6,6 +6,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.gymtrack.data.local.dao.ExerciseDao
 import com.gymtrack.data.local.dao.ExerciseSecondaryMuscleDao
+import com.gymtrack.data.local.dao.WeeklyWorkoutPlanDao
 import com.gymtrack.data.local.dao.WorkoutBlockDao
 import com.gymtrack.data.local.dao.WorkoutDao
 import com.gymtrack.data.local.dao.WorkoutExerciseDao
@@ -14,6 +15,7 @@ import com.gymtrack.data.local.dao.WorkoutSessionExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSetDao
 import com.gymtrack.data.local.entity.ExerciseEntity
 import com.gymtrack.data.local.entity.ExerciseSecondaryMuscleEntity
+import com.gymtrack.data.local.entity.WeeklyWorkoutPlanEntity
 import com.gymtrack.data.local.entity.WorkoutBlockEntity
 import com.gymtrack.data.local.entity.WorkoutEntity
 import com.gymtrack.data.local.entity.WorkoutExerciseEntity
@@ -31,8 +33,9 @@ import com.gymtrack.data.local.entity.WorkoutSetEntity
         WorkoutSessionEntity::class,
         WorkoutSessionExerciseEntity::class,
         WorkoutSetEntity::class,
+        WeeklyWorkoutPlanEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 abstract class GymTrackDatabase : RoomDatabase() {
@@ -45,6 +48,7 @@ abstract class GymTrackDatabase : RoomDatabase() {
     abstract fun workoutSessionDao(): WorkoutSessionDao
     abstract fun workoutSessionExerciseDao(): WorkoutSessionExerciseDao
     abstract fun workoutSetDao(): WorkoutSetDao
+    abstract fun weeklyWorkoutPlanDao(): WeeklyWorkoutPlanDao
 
     companion object {
 
@@ -439,6 +443,23 @@ abstract class GymTrackDatabase : RoomDatabase() {
                         "`blockType` = 'SINGLE', " +
                         "`blockPosition` = `position`, " +
                         "`positionInBlock` = 0",
+                )
+            }
+        }
+
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `weekly_workout_plans` " +
+                        "(`dayOfWeek` INTEGER NOT NULL, " +
+                        "`workoutId` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`dayOfWeek`), " +
+                        "FOREIGN KEY(`workoutId`) REFERENCES `workouts`(`id`) " +
+                        "ON UPDATE NO ACTION ON DELETE CASCADE )",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_weekly_workout_plans_workoutId` " +
+                        "ON `weekly_workout_plans` (`workoutId`)",
                 )
             }
         }

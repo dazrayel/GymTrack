@@ -5,29 +5,27 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,6 +47,13 @@ import com.gymtrack.domain.model.AchievementDefinition
 import com.gymtrack.domain.model.AchievementMetric
 import com.gymtrack.domain.model.AchievementStatus
 import com.gymtrack.domain.model.formatVolumeKg
+import com.gymtrack.presentation.components.GymCard
+import com.gymtrack.presentation.components.GymCardTone
+import com.gymtrack.presentation.components.GymIconButton
+import com.gymtrack.presentation.components.GymLabel
+import com.gymtrack.presentation.components.GymTopAppBar
+import com.gymtrack.presentation.theme.GymSpacing
+import com.gymtrack.presentation.theme.GymTheme
 import com.gymtrack.presentation.theme.GymTrackTheme
 
 @Composable
@@ -88,22 +93,18 @@ fun AchievementScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         modifier = modifier.padding(contentPadding),
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(R.string.achievements_title),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                },
+            GymTopAppBar(
+                title = stringResource(R.string.achievements_title),
+                eyebrow = stringResource(R.string.achievements_eyebrow),
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                        )
-                    }
+                    GymIconButton(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back),
+                        onClick = onNavigateBack,
+                    )
                 },
             )
         },
@@ -147,27 +148,32 @@ private fun AchievementsContent(
             .fillMaxSize()
             .testTag("achievements_list"),
         contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 4.dp,
-            bottom = 16.dp,
+            start = GymSpacing.ScreenPadding,
+            end = GymSpacing.ScreenPadding,
+            top = GymSpacing.Sm,
+            bottom = GymSpacing.Lg,
         ),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(GymSpacing.CardSpacing),
     ) {
         item {
-            Text(
-                text = stringResource(
-                    R.string.achievements_summary,
-                    unlockedCount,
-                    totalCount,
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-                    .testTag("achievements_summary"),
-            )
+            GymCard(
+                tone = GymCardTone.Highlight,
+                contentPadding = PaddingValues(GymSpacing.CardPadding),
+            ) {
+                GymLabel(text = stringResource(R.string.achievements_progress_label))
+                Text(
+                    text = stringResource(
+                        R.string.achievements_summary,
+                        unlockedCount,
+                        totalCount,
+                    ),
+                    style = GymTheme.gymTypography.metric,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .padding(top = GymSpacing.Xs)
+                        .testTag("achievements_summary"),
+                )
+            }
         }
         items(achievements, key = { it.achievementId }) { status ->
             val definition = definitionsById[status.achievementId] ?: return@items
@@ -188,26 +194,34 @@ private fun AchievementCard(
         if (status.unlocked) R.string.achievement_unlocked_cd else R.string.achievement_locked_cd,
         name,
     )
-    val containerColor = if (status.unlocked) {
-        MaterialTheme.colorScheme.primaryContainer
+    val tone = if (status.unlocked) GymCardTone.Warning else GymCardTone.Surface
+    val titleColor = MaterialTheme.colorScheme.onSurface
+    val bodyColor = if (status.unlocked) {
+        MaterialTheme.colorScheme.onSurfaceVariant
     } else {
-        MaterialTheme.colorScheme.surfaceVariant
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
     }
-    val contentColor = if (status.unlocked) {
-        MaterialTheme.colorScheme.onPrimaryContainer
+    val iconTint = if (status.unlocked) {
+        GymTheme.extendedColors.warning
     } else {
-        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val progressColor = if (status.unlocked) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    Card(
+    GymCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("achievement_card_${status.achievementId}")
             .semantics { this.contentDescription = contentDescription },
-        colors = CardDefaults.cardColors(containerColor = containerColor),
+        tone = tone,
+        contentPadding = PaddingValues(GymSpacing.CardPadding),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
@@ -217,7 +231,7 @@ private fun AchievementCard(
                     Icons.Outlined.Lock
                 },
                 contentDescription = null,
-                tint = contentColor,
+                tint = iconTint,
                 modifier = Modifier
                     .size(28.dp)
                     .testTag(
@@ -228,32 +242,25 @@ private fun AchievementCard(
                         },
                     ),
             )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp),
-            ) {
+            Spacer(Modifier.width(GymSpacing.Md))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleMedium,
-                    color = contentColor,
+                    color = titleColor,
                 )
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = contentColor.copy(alpha = if (status.unlocked) 0.85f else 0.7f),
-                    modifier = Modifier.padding(top = 2.dp),
+                    color = bodyColor,
+                    modifier = Modifier.padding(top = GymSpacing.Xxs),
                 )
                 Text(
                     text = formatAchievementProgress(status, definition.metric),
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (status.unlocked) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        contentColor
-                    },
+                    color = progressColor,
                     modifier = Modifier
-                        .padding(top = 8.dp)
+                        .padding(top = GymSpacing.Sm)
                         .testTag("achievement_progress_${status.achievementId}"),
                 )
             }
@@ -293,7 +300,7 @@ private fun formatAchievementProgress(
 @Preview(showBackground = true)
 @Composable
 private fun AchievementScreenPreview() {
-    GymTrackTheme {
+    GymTrackTheme(darkTheme = true) {
         AchievementScreen(
             uiState = AchievementUiState(
                 isLoading = false,
@@ -315,7 +322,7 @@ private fun AchievementScreenPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun AchievementScreenLoadingPreview() {
-    GymTrackTheme {
+    GymTrackTheme(darkTheme = true) {
         AchievementScreen(
             uiState = AchievementUiState(isLoading = true),
             onNavigateBack = {},

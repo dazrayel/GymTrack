@@ -11,14 +11,20 @@ import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSet
+import android.content.Context
+import com.gymtrack.domain.identity.GoogleSignInResult
+import com.gymtrack.domain.model.GoogleUser
+import com.gymtrack.domain.repository.GoogleIdentityRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
+import kotlinx.coroutines.flow.StateFlow
 import com.gymtrack.domain.time.TimeProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -52,12 +58,14 @@ class HomeViewModelTest {
     private lateinit var workoutRepository: FakeHomeWorkoutRepository
     private lateinit var sessionRepository: FakeHomeSessionRepository
     private lateinit var clock: FakeTimeProvider
+    private lateinit var identityRepository: FakeHomeIdentityRepository
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         workoutRepository = FakeHomeWorkoutRepository()
         sessionRepository = FakeHomeSessionRepository()
+        identityRepository = FakeHomeIdentityRepository()
         clock = FakeTimeProvider(now = local("2026-08-26T12:00:00"))
     }
 
@@ -66,7 +74,12 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = HomeViewModel(workoutRepository, sessionRepository, clock)
+    private fun createViewModel() = HomeViewModel(
+        workoutRepository,
+        sessionRepository,
+        identityRepository,
+        clock,
+    )
 
     @Test
     fun initialState_isLoadingTrue_beforeFirstEmission() {
@@ -76,6 +89,16 @@ class HomeViewModelTest {
         assertNull(viewModel.uiState.value.nextWorkout)
         assertFalse(viewModel.uiState.value.showEmpty)
         assertNull(viewModel.uiState.value.error)
+        assertNull(viewModel.uiState.value.userDisplayName)
+    }
+
+    @Test
+    fun identity_whenSignedIn_exposesDisplayName() = runTest(testDispatcher) {
+        identityRepository.user.value = GoogleUser("Danilo")
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals("Danilo", viewModel.uiState.value.userDisplayName)
     }
 
     @Test
@@ -683,4 +706,15 @@ private class FakeHomeSessionRepository : WorkoutSessionRepository {
     override suspend fun resumeSessionExercise(sessionExerciseId: Long) = Unit
     override suspend fun finishSession(sessionId: Long) = Unit
     override suspend fun deleteCompletedSession(sessionId: Long) = Unit
+}
+
+private class FakeHomeIdentityRepository : GoogleIdentityRepository {
+    private val state = MutableStateFlow<GoogleUser?>(null)
+    val user = state
+    override val currentUser: StateFlow<GoogleUser?> = state.asStateFlow()
+    override suspend fun tryRestoreSilentSignIn(hostContext: Context) = Unit
+    override suspend fun signIn(hostContext: Context) = GoogleSignInResult.Cancelled
+    override suspend fun signOut(hostContext: Context) {
+        state.value = null
+    }
 }

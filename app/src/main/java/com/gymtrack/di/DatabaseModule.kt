@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.gymtrack.data.local.GymTrackDatabase
 import com.gymtrack.data.local.dao.ExerciseDao
 import com.gymtrack.data.local.dao.ExerciseSecondaryMuscleDao
+import com.gymtrack.data.local.dao.WeeklyWorkoutPlanDao
 import com.gymtrack.data.local.dao.WorkoutBlockDao
 import com.gymtrack.data.local.dao.WorkoutDao
 import com.gymtrack.data.local.dao.WorkoutExerciseDao
@@ -13,10 +14,12 @@ import com.gymtrack.data.local.dao.WorkoutSessionExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSetDao
 import com.gymtrack.data.catalog.CatalogDemoOptionsProvider
 import com.gymtrack.data.repository.ExerciseRepositoryImpl
+import com.gymtrack.data.repository.WeeklyPlanRepositoryImpl
 import com.gymtrack.data.repository.WorkoutRepositoryImpl
 import com.gymtrack.data.repository.WorkoutSessionRepositoryImpl
 import com.gymtrack.domain.exercise.CatalogDemoOptionsSource
 import com.gymtrack.domain.repository.ExerciseRepository
+import com.gymtrack.domain.repository.WeeklyPlanRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.SystemTimeProvider
@@ -53,6 +56,7 @@ object DatabaseModule {
                 GymTrackDatabase.MIGRATION_8_9,
                 GymTrackDatabase.MIGRATION_9_10,
                 GymTrackDatabase.MIGRATION_10_11,
+                GymTrackDatabase.MIGRATION_11_12,
             )
             .build()
     }
@@ -126,6 +130,19 @@ object DatabaseModule {
     @Provides
     fun provideWorkoutSetDao(database: GymTrackDatabase): WorkoutSetDao {
         return database.workoutSetDao()
+    }
+
+    @Provides
+    fun provideWeeklyWorkoutPlanDao(database: GymTrackDatabase): WeeklyWorkoutPlanDao {
+        return database.weeklyWorkoutPlanDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideWeeklyPlanRepository(
+        planDao: WeeklyWorkoutPlanDao,
+    ): WeeklyPlanRepository {
+        return WeeklyPlanRepositoryImpl(planDao)
     }
 
     @Provides
