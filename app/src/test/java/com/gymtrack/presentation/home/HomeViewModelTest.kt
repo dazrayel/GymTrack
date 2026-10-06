@@ -114,7 +114,8 @@ class HomeViewModelTest {
         assertNull(viewModel.uiState.value.nextWorkout)
         assertEquals(DashboardPeriod.WEEK, viewModel.uiState.value.selectedPeriod)
         assertEquals(0, viewModel.uiState.value.periodStats.sessionCount)
-        assertTrue(viewModel.uiState.value.dailyVolumeTrend.isEmpty())
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
+        assertTrue(viewModel.uiState.value.activityWeekDays.none { it.trained })
         assertEquals(0, viewModel.uiState.value.trainedDayCount)
         assertTrue(viewModel.uiState.value.records.isEmpty())
         assertNull(viewModel.uiState.value.error)
@@ -145,7 +146,8 @@ class HomeViewModelTest {
         assertEquals(2, viewModel.uiState.value.periodStats.distinctExerciseCount)
         assertEquals(DashboardPeriod.WEEK, viewModel.uiState.value.selectedPeriod)
         assertEquals(2, viewModel.uiState.value.trainedDayCount)
-        assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
+        assertEquals(2, viewModel.uiState.value.activityWeekDays.count { it.trained })
         assertEquals(
             listOf("Agachamento", "Supino"),
             viewModel.uiState.value.records.map { it.exerciseName },
@@ -198,9 +200,13 @@ class HomeViewModelTest {
 
         assertEquals(0, viewModel.uiState.value.periodStats.sessionCount)
         assertEquals(0, viewModel.uiState.value.trainedDayCount)
-        assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
-        assertEquals(40.0, viewModel.uiState.value.dailyVolumeTrend.first().volume, 0.001)
-        assertEquals(local("2026-08-25T00:00:00"), viewModel.uiState.value.dailyVolumeTrend.first().dayStartMillis)
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
+        assertEquals(1, viewModel.uiState.value.activityWeekDays.count { it.trained })
+        assertTrue(
+            viewModel.uiState.value.activityWeekDays.any {
+                it.trained && it.dayStartMillis == local("2026-08-25T00:00:00")
+            },
+        )
         assertTrue(viewModel.uiState.value.records.isEmpty())
     }
 
@@ -231,7 +237,7 @@ class HomeViewModelTest {
         assertEquals(0.0, viewModel.uiState.value.records.single { it.exerciseName == "Abdominal" }.bestWeight, 0.001)
         assertEquals(20, viewModel.uiState.value.records.single { it.exerciseName == "Abdominal" }.bestReps)
         assertEquals(2, viewModel.uiState.value.trainedDayCount)
-        assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
     }
 
     @Test
@@ -263,18 +269,49 @@ class HomeViewModelTest {
         sessionRepository.emitSessions(listOf(first, second))
         advanceUntilIdle()
         assertEquals(2, viewModel.uiState.value.trainedDayCount)
-        assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
     }
 
     @Test
-    fun emptySessions_doNotExposeSevenZeroTrendBars() = runTest(testDispatcher) {
+    fun activityWeek_multipleSessionsSameDay_countAsOneTrainedDay() = runTest(testDispatcher) {
+        val morning = item(sessionId = 1L, occurredAt = local("2026-08-26T08:00:00"), volume = 10.0)
+        val evening = item(sessionId = 2L, occurredAt = local("2026-08-26T18:00:00"), volume = 20.0)
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(morning, evening))
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
+        assertEquals(1, viewModel.uiState.value.activityWeekDays.count { it.trained })
+        assertTrue(viewModel.uiState.value.activityWeekDays.single { it.isToday }.trained)
+    }
+
+    @Test
+    fun activityWeek_onlyCompletedHistoryIsObserved_inProgressNeverAppears() = runTest(testDispatcher) {
+        // observeCompletedSessions never emits IN_PROGRESS rows; in-progress is a separate flow.
+        val completed = item(sessionId = 1L, occurredAt = local("2026-08-25T10:00:00"), volume = 10.0)
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(completed))
+        sessionRepository.emitSets(emptyList())
+        sessionRepository.emitInProgress(inProgressSession(id = 99L, name = "Ativo"))
+        advanceUntilIdle()
+
+        assertEquals(1, viewModel.uiState.value.activityWeekDays.count { it.trained })
+        assertFalse(viewModel.uiState.value.activityWeekDays.single { it.isToday }.trained)
+        assertEquals(99L, viewModel.uiState.value.inProgressSession?.id)
+    }
+
+    @Test
+    fun emptySessions_stillExposeSevenActivityDays() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         sessionRepository.emitSessions(emptyList())
         sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.showEmpty)
-        assertTrue(viewModel.uiState.value.dailyVolumeTrend.isEmpty())
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
+        assertTrue(viewModel.uiState.value.activityWeekDays.none { it.trained })
+        assertEquals(1, viewModel.uiState.value.activityWeekDays.count { it.isToday })
         assertEquals(0, viewModel.uiState.value.trainedDayCount)
         assertTrue(viewModel.uiState.value.records.isEmpty())
     }
@@ -380,7 +417,7 @@ class HomeViewModelTest {
         assertEquals(2, viewModel.uiState.value.periodStats.distinctExerciseCount)
         assertEquals(2, viewModel.uiState.value.trainedDayCount)
         assertEquals(1L, viewModel.uiState.value.recentWorkout?.sessionId)
-        assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
         assertEquals(
             listOf("Agachamento", "Supino"),
             viewModel.uiState.value.records.map { it.exerciseName },
@@ -406,7 +443,7 @@ class HomeViewModelTest {
         assertEquals(50.0, viewModel.uiState.value.periodStats.volume, 0.001)
         assertEquals(2, viewModel.uiState.value.trainedDayCount)
         assertEquals(1L, viewModel.uiState.value.recentWorkout?.sessionId)
-        assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
     }
 
     @Test
@@ -426,7 +463,7 @@ class HomeViewModelTest {
         assertEquals(1L, viewModel.uiState.value.recentWorkout?.sessionId)
         assertEquals(0, viewModel.uiState.value.periodStats.sessionCount)
         assertEquals(0, viewModel.uiState.value.trainedDayCount)
-        assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
         assertEquals(listOf("Supino"), viewModel.uiState.value.records.map { it.exerciseName })
     }
 
@@ -573,7 +610,7 @@ class HomeViewModelTest {
         assertEquals(20L, viewModel.uiState.value.recentWorkout?.sessionId)
         assertEquals(1, viewModel.uiState.value.periodStats.sessionCount)
         assertEquals(listOf("Supino"), viewModel.uiState.value.records.map { it.exerciseName })
-        assertEquals(7, viewModel.uiState.value.dailyVolumeTrend.size)
+        assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
     }
 
     private fun local(dateTime: String): Long =

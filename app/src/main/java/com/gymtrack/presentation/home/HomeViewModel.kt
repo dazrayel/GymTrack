@@ -10,10 +10,10 @@ import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutHistoryItem
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionStatus
-import com.gymtrack.domain.model.dailyVolumeTrend
 import com.gymtrack.domain.model.dashboardPeriodStats
 import com.gymtrack.domain.model.evaluateAchievements
 import com.gymtrack.domain.model.historicalPersonalRecords
+import com.gymtrack.domain.model.homeActivityWeek
 import com.gymtrack.domain.model.periodBounds
 import com.gymtrack.domain.model.recommendNextWorkout
 import com.gymtrack.domain.model.trainedDayCount
@@ -106,11 +106,11 @@ class HomeViewModel @Inject constructor(
                             } else {
                                 trainedDayCount(emission.sessions, bounds, zoneId)
                             },
-                            dailyVolumeTrend = if (emptyHistory) {
-                                emptyList()
-                            } else {
-                                dailyVolumeTrend(emission.sessions, nowMillis, zoneId)
-                            },
+                            activityWeekDays = homeActivityWeek(
+                                sessions = emission.sessions,
+                                nowMillis = nowMillis,
+                                zoneId = zoneId,
+                            ),
                             records = if (emptyHistory) {
                                 emptyList()
                             } else {

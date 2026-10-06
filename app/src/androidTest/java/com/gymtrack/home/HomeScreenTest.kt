@@ -14,7 +14,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.gymtrack.TestActivity
-import com.gymtrack.domain.model.DailyVolume
+import com.gymtrack.domain.model.HomeActivityDay
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
 import com.gymtrack.domain.model.PeriodDashboardStats
@@ -37,6 +37,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.DayOfWeek
 import java.time.ZoneId
 
 @HiltAndroidTest
@@ -168,7 +169,7 @@ class HomeScreenTest {
                 recentWorkout = sampleItem,
                 periodStats = stats,
                 trainedDayCount = 3,
-                dailyVolumeTrend = sevenZeroDays(),
+                activityWeekDays = sevenActivityDays(),
                 records = listOf(
                     record("Crucifixo", weight = 25.0, reps = 12, volume = 300.0),
                     record("Supino", weight = 80.0, reps = 10, volume = 800.0),
@@ -196,11 +197,12 @@ class HomeScreenTest {
         waitUntilTextIsDisplayed("Frequência")
         waitUntilTextIsDisplayed("3 dias treinados")
         composeTestRule.onNodeWithTag("home_frequency").assertIsDisplayed()
-        waitUntilTextIsDisplayed("Últimos 7 dias")
-        composeTestRule.onNodeWithTag("home_trend").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_activity_week").assertIsDisplayed()
         repeat(7) { index ->
-            composeTestRule.onNodeWithTag("home_trend_bar_$index").assertIsDisplayed()
+            composeTestRule.onNodeWithTag("home_activity_day_$index").assertIsDisplayed()
         }
+        // sevenActivityDays marks today as trained → static with border, no pulse
+        composeTestRule.onNodeWithTag("home_activity_today_pulse").assertDoesNotExist()
         composeTestRule.onNodeWithTag("home_records").performScrollTo().assertIsDisplayed()
         waitUntilTextIsDisplayed("Recordes")
         composeTestRule.onNodeWithTag("home_record_Crucifixo").assertIsDisplayed()
@@ -246,15 +248,48 @@ class HomeScreenTest {
     }
 
     @Test
-    fun emptyState_doesNotShowTrend() {
-        setContent(HomeUiState(isLoading = false))
+    fun emptyState_stillShowsActivityWeek() {
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                activityWeekDays = sevenActivityDays(),
+            ),
+        )
         composeTestRule.waitForIdle()
         waitUntilTextIsDisplayed("Nenhum treino concluído")
-        composeTestRule.onNodeWithTag("home_trend").assertDoesNotExist()
+        composeTestRule.onNodeWithTag("home_activity_week").assertIsDisplayed()
         composeTestRule.onNodeWithTag("home_frequency").assertDoesNotExist()
         composeTestRule.onNodeWithTag("home_records").assertDoesNotExist()
         composeTestRule.onNodeWithTag("home_period_selector").assertDoesNotExist()
         composeTestRule.onNodeWithTag("home_period_week").assertDoesNotExist()
+    }
+
+    @Test
+    fun activityWeek_todayUntrained_showsPulseTag() {
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                recentWorkout = sampleItem,
+                activityWeekDays = sevenActivityDays(todayTrained = false),
+            ),
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_activity_week").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_activity_today_pulse").assertIsDisplayed()
+    }
+
+    @Test
+    fun activityWeek_todayTrained_doesNotShowPulseTag() {
+        setContent(
+            HomeUiState(
+                isLoading = false,
+                recentWorkout = sampleItem,
+                activityWeekDays = sevenActivityDays(todayTrained = true),
+            ),
+        )
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("home_activity_week").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_activity_today_pulse").assertDoesNotExist()
     }
 
     @Test
@@ -340,7 +375,7 @@ class HomeScreenTest {
                 selectedPeriod = DashboardPeriod.MONTH,
                 periodStats = stats,
                 trainedDayCount = 4,
-                dailyVolumeTrend = sevenZeroDays(),
+                activityWeekDays = sevenActivityDays(),
                 records = listOf(record("Supino", weight = 80.0, reps = 10, volume = 800.0)),
             ),
         )
@@ -354,7 +389,7 @@ class HomeScreenTest {
             .assertTextEquals(formatDashboardDuration(90_000L))
         composeTestRule.onNodeWithTag("home_period_exercises").assertTextEquals("4")
         waitUntilTextIsDisplayed("4 dias treinados")
-        composeTestRule.onNodeWithTag("home_trend").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_activity_week").assertIsDisplayed()
         composeTestRule.onNodeWithTag("home_records").performScrollTo().assertIsDisplayed()
     }
 
@@ -373,7 +408,7 @@ class HomeScreenTest {
                 selectedPeriod = DashboardPeriod.ALL,
                 periodStats = stats,
                 trainedDayCount = 15,
-                dailyVolumeTrend = sevenZeroDays(),
+                activityWeekDays = sevenActivityDays(),
             ),
         )
         composeTestRule.waitForIdle()
@@ -382,7 +417,7 @@ class HomeScreenTest {
         composeTestRule.onNodeWithTag("home_period_sessions").assertTextEquals("20")
         composeTestRule.onNodeWithTag("home_period_volume").assertTextEquals(formatVolumeKg(9_000.0))
         waitUntilTextIsDisplayed("15 dias treinados")
-        composeTestRule.onNodeWithTag("home_trend").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_activity_week").assertIsDisplayed()
     }
 
     @Test
@@ -394,7 +429,7 @@ class HomeScreenTest {
                 selectedPeriod = DashboardPeriod.MONTH,
                 periodStats = PeriodDashboardStats.Empty,
                 trainedDayCount = 0,
-                dailyVolumeTrend = sevenZeroDays(),
+                activityWeekDays = sevenActivityDays(),
                 records = listOf(record("Supino", weight = 80.0, reps = 10, volume = 800.0)),
             ),
         )
@@ -405,7 +440,7 @@ class HomeScreenTest {
         composeTestRule.onNodeWithTag("home_period_sessions").assertTextEquals("0")
         waitUntilTextIsDisplayed("0 dias treinados")
         composeTestRule.onNodeWithTag("home_recent_42").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("home_trend").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("home_activity_week").assertIsDisplayed()
         composeTestRule.onNodeWithTag("home_records").performScrollTo().assertIsDisplayed()
     }
 
@@ -587,10 +622,25 @@ class HomeScreenTest {
         composeTestRule.onNodeWithTag("home_achievements").assertDoesNotExist()
     }
 
-    private fun sevenZeroDays(): List<DailyVolume> {
+    private fun sevenActivityDays(todayTrained: Boolean = true): List<HomeActivityDay> {
+        val days = listOf(
+            DayOfWeek.MONDAY,
+            DayOfWeek.TUESDAY,
+            DayOfWeek.WEDNESDAY,
+            DayOfWeek.THURSDAY,
+            DayOfWeek.FRIDAY,
+            DayOfWeek.SATURDAY,
+            DayOfWeek.SUNDAY,
+        )
         val start = occurredAt
-        return (0..6).map { offset ->
-            DailyVolume(dayStartMillis = start + offset * 86_400_000L, volume = 0.0)
+        return days.mapIndexed { index, dayOfWeek ->
+            val isToday = index == 2
+            HomeActivityDay(
+                dayStartMillis = start + index * 86_400_000L,
+                dayOfWeek = dayOfWeek,
+                trained = if (isToday) todayTrained else index % 2 == 0,
+                isToday = isToday,
+            )
         }
     }
 

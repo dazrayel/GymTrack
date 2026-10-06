@@ -52,10 +52,10 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = GymPrimary,
-    onPrimary = GymOnPrimary,
-    primaryContainer = Color(0xFFDDE1FF),
-    onPrimaryContainer = Color(0xFF141B5C),
+    primary = GymLightPrimary,
+    onPrimary = GymLightOnPrimary,
+    primaryContainer = GymLightPrimaryContainer,
+    onPrimaryContainer = GymLightOnPrimaryContainer,
     secondary = Color(0xFF555866),
     onSecondary = Color(0xFFFFFFFF),
     secondaryContainer = GymLightSurfaceVariant,

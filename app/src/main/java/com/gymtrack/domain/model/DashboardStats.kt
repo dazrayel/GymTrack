@@ -74,6 +74,17 @@ data class DailyVolume(
     val volume: Double,
 )
 
+/**
+ * One day cell for the Home weekly activity strip (Mon→Sun display order).
+ * [trained] is true when at least one completed history session falls on that local day.
+ */
+data class HomeActivityDay(
+    val dayStartMillis: Long,
+    val dayOfWeek: DayOfWeek,
+    val trained: Boolean,
+    val isToday: Boolean,
+)
+
 fun localDateStartMillis(epochMillis: Long, zoneId: ZoneId): Long {
     return Instant.ofEpochMilli(epochMillis)
         .atZone(zoneId)
@@ -101,6 +112,47 @@ fun lastSevenLocalDayBounds(nowMillis: Long, zoneId: ZoneId): PeriodBounds {
     val start = today.minusDays(6).atStartOfDay(zoneId).toInstant().toEpochMilli()
     val end = today.plusDays(1).atStartOfDay(zoneId).toInstant().toEpochMilli()
     return PeriodBounds(startMillis = start, endMillis = end)
+}
+
+/**
+ * Builds the last 7 local days (today + 6 previous), keyed for display as Mon→Sun.
+ * Uses the same [occurredAtMillis] / local-day rule as [trainedDayCount] / [dailyVolumeTrend].
+ * Input [sessions] are completed-history rows only.
+ */
+fun homeActivityWeek(
+    sessions: List<WorkoutHistoryItem>,
+    nowMillis: Long,
+    zoneId: ZoneId,
+): List<HomeActivityDay> {
+    val today = Instant.ofEpochMilli(nowMillis).atZone(zoneId).toLocalDate()
+    val bounds = lastSevenLocalDayBounds(nowMillis, zoneId)
+    val trainedDayStarts = sessions
+        .map { occurredAtMillis(it) }
+        .filter { bounds.contains(it) }
+        .map { localDateStartMillis(it, zoneId) }
+        .toSet()
+    val byDayOfWeek = (0L..6L).associate { offset ->
+        val day = today.minusDays(offset)
+        day.dayOfWeek to day
+    }
+    return listOf(
+        DayOfWeek.MONDAY,
+        DayOfWeek.TUESDAY,
+        DayOfWeek.WEDNESDAY,
+        DayOfWeek.THURSDAY,
+        DayOfWeek.FRIDAY,
+        DayOfWeek.SATURDAY,
+        DayOfWeek.SUNDAY,
+    ).map { dow ->
+        val day = requireNotNull(byDayOfWeek[dow])
+        val dayStart = day.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        HomeActivityDay(
+            dayStartMillis = dayStart,
+            dayOfWeek = dow,
+            trained = dayStart in trainedDayStarts,
+            isToday = day == today,
+        )
+    }
 }
 
 fun dailyVolumeTrend(

@@ -1,6 +1,13 @@
 package com.gymtrack.presentation.home
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,7 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,6 +50,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -54,9 +63,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
 import com.gymtrack.domain.model.AchievementCatalog
-import com.gymtrack.domain.model.DailyVolume
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
+import com.gymtrack.domain.model.HomeActivityDay
 import com.gymtrack.domain.model.PeriodDashboardStats
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutHistoryItem
@@ -64,7 +73,6 @@ import com.gymtrack.domain.model.formatVolumeKg
 import com.gymtrack.domain.model.occurredAtMillis
 import com.gymtrack.domain.time.formatDashboardDuration
 import com.gymtrack.domain.time.formatLocalDate
-import com.gymtrack.domain.time.formatLocalDayOfMonth
 import com.gymtrack.domain.time.formatLocalTime
 import com.gymtrack.presentation.components.GymCard
 import com.gymtrack.presentation.components.GymCardTone
@@ -75,6 +83,7 @@ import com.gymtrack.presentation.theme.GymShapeTokens
 import com.gymtrack.presentation.theme.GymSpacing
 import com.gymtrack.presentation.theme.GymTheme
 import com.gymtrack.presentation.theme.GymTrackTheme
+import java.time.DayOfWeek
 import java.time.LocalTime
 import java.time.ZoneId
 
@@ -170,6 +179,7 @@ fun HomeScreen(
                                 trainedDayCount = uiState.trainedDayCount,
                                 userDisplayName = uiState.userDisplayName,
                             )
+                            HomeActivityWeekStrip(days = uiState.activityWeekDays)
                             uiState.inProgressSession?.let { session ->
                                 InProgressResumeCard(
                                     workoutName = session.workoutName,
@@ -208,6 +218,7 @@ fun HomeScreen(
                                 trainedDayCount = uiState.trainedDayCount,
                                 userDisplayName = uiState.userDisplayName,
                             )
+                            HomeActivityWeekStrip(days = uiState.activityWeekDays)
                             uiState.inProgressSession?.let { session ->
                                 InProgressResumeCard(
                                     workoutName = session.workoutName,
@@ -237,7 +248,6 @@ fun HomeScreen(
                                 onPeriodSelected = onPeriodSelected,
                             )
                             FrequencyCard(trainedDayCount = uiState.trainedDayCount)
-                            TrendCard(points = uiState.dailyVolumeTrend)
                             if (uiState.records.isNotEmpty()) {
                                 RecordsCard(
                                     records = uiState.records,
@@ -650,80 +660,170 @@ private fun FrequencyCard(
 }
 
 @Composable
-private fun TrendCard(
-    points: List<DailyVolume>,
+private fun HomeActivityWeekStrip(
+    days: List<HomeActivityDay>,
     modifier: Modifier = Modifier,
 ) {
-    if (points.isEmpty()) return
-    val zone = ZoneId.systemDefault()
-    val maxVolume = points.maxOf { it.volume }
-    val trendDescription = stringResource(R.string.dashboard_trend_cd)
+    if (days.isEmpty()) return
+    val weekDescription = stringResource(R.string.home_activity_week_cd)
 
-    Column(modifier = modifier.fillMaxWidth()) {
-        GymLabel(
-            text = stringResource(R.string.dashboard_last_seven_days),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = GymSpacing.Sm),
-        )
-        GymCard(
-            modifier = Modifier
-                .testTag("home_trend")
-                .semantics { contentDescription = trendDescription },
-            contentPadding = PaddingValues(
-                horizontal = GymSpacing.Md,
-                vertical = GymSpacing.CardPadding,
-            ),
-        ) {
-            Row(
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("home_activity_week")
+            .semantics { contentDescription = weekDescription },
+        horizontalArrangement = Arrangement.spacedBy(GymSpacing.Sm),
+    ) {
+        days.forEachIndexed { index, day ->
+            HomeActivityDayCell(
+                day = day,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(96.dp),
-                horizontalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                points.forEachIndexed { index, point ->
-                    val fraction = if (maxVolume <= 0.0) {
-                        0.2f
-                    } else {
-                        (point.volume / maxVolume).toFloat().coerceIn(0.08f, 1f)
-                    }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .testTag("home_trend_bar_$index"),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth(),
-                            contentAlignment = Alignment.BottomCenter,
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(fraction)
-                                    .background(
-                                        color = MaterialTheme.colorScheme.primary,
-                                        shape = RoundedCornerShape(
-                                            topStart = GymShapeTokens.ExtraSmall,
-                                            topEnd = GymShapeTokens.ExtraSmall,
-                                        ),
-                                    ),
-                            )
-                        }
-                        Text(
-                            text = formatLocalDayOfMonth(point.dayStartMillis, zone),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = GymSpacing.Sm),
-                        )
-                    }
-                }
-            }
+                    .weight(1f)
+                    .testTag("home_activity_day_$index"),
+            )
         }
     }
+}
+
+@Composable
+private fun HomeActivityDayCell(
+    day: HomeActivityDay,
+    modifier: Modifier = Modifier,
+) {
+    val weekdayFull = stringResource(weekdayFullRes(day.dayOfWeek))
+    val weekdayShort = stringResource(weekdayShortRes(day.dayOfWeek))
+    val dayDescription = stringResource(
+        if (day.trained) {
+            R.string.home_activity_day_trained_cd
+        } else {
+            R.string.home_activity_day_rest_cd
+        },
+        weekdayFull,
+    )
+    val cellColor = if (day.trained) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    val shape = RoundedCornerShape(GymShapeTokens.ExtraSmall)
+    val showTodayBorder = day.isToday && day.trained
+    val shouldPulse = day.isToday && !day.trained
+
+    Column(
+        modifier = modifier.semantics { contentDescription = dayDescription },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
+    ) {
+        if (shouldPulse) {
+            PulsingHomeActivitySquare(
+                color = cellColor,
+                shape = shape,
+            )
+        } else {
+            HomeActivitySquare(
+                color = cellColor,
+                shape = shape,
+                showBorder = showTodayBorder,
+            )
+        }
+        Text(
+            text = weekdayShort,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun HomeActivitySquare(
+    color: Color,
+    shape: RoundedCornerShape,
+    showBorder: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .then(
+                if (showBorder) {
+                    Modifier.border(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = shape,
+                    )
+                } else {
+                    Modifier
+                },
+            )
+            .clip(shape)
+            .background(color, shape),
+    )
+}
+
+@Composable
+private fun PulsingHomeActivitySquare(
+    color: Color,
+    shape: RoundedCornerShape,
+    modifier: Modifier = Modifier,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "home_activity_today_pulse")
+    val pulseSpec = infiniteRepeatable<Float>(
+        animation = tween(
+            durationMillis = HomeActivityTodayPulseDurationMs,
+            easing = FastOutSlowInEasing,
+        ),
+        repeatMode = RepeatMode.Reverse,
+    )
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = HomeActivityTodayPulseMaxScale,
+        animationSpec = pulseSpec,
+        label = "home_activity_today_pulse_scale",
+    )
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = HomeActivityTodayPulseMinAlpha,
+        targetValue = 1f,
+        animationSpec = pulseSpec,
+        label = "home_activity_today_pulse_alpha",
+    )
+    HomeActivitySquare(
+        color = color,
+        shape = shape,
+        showBorder = true,
+        modifier = modifier
+            .testTag("home_activity_today_pulse")
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+            },
+    )
+}
+
+private const val HomeActivityTodayPulseMaxScale = 1.07f
+private const val HomeActivityTodayPulseMinAlpha = 0.75f
+private const val HomeActivityTodayPulseDurationMs = 900
+
+private fun weekdayShortRes(dayOfWeek: DayOfWeek): Int = when (dayOfWeek) {
+    DayOfWeek.MONDAY -> R.string.home_weekday_mon
+    DayOfWeek.TUESDAY -> R.string.home_weekday_tue
+    DayOfWeek.WEDNESDAY -> R.string.home_weekday_wed
+    DayOfWeek.THURSDAY -> R.string.home_weekday_thu
+    DayOfWeek.FRIDAY -> R.string.home_weekday_fri
+    DayOfWeek.SATURDAY -> R.string.home_weekday_sat
+    DayOfWeek.SUNDAY -> R.string.home_weekday_sun
+}
+
+private fun weekdayFullRes(dayOfWeek: DayOfWeek): Int = when (dayOfWeek) {
+    DayOfWeek.MONDAY -> R.string.home_weekday_mon_full
+    DayOfWeek.TUESDAY -> R.string.home_weekday_tue_full
+    DayOfWeek.WEDNESDAY -> R.string.home_weekday_wed_full
+    DayOfWeek.THURSDAY -> R.string.home_weekday_thu_full
+    DayOfWeek.FRIDAY -> R.string.home_weekday_fri_full
+    DayOfWeek.SATURDAY -> R.string.home_weekday_sat_full
+    DayOfWeek.SUNDAY -> R.string.home_weekday_sun_full
 }
 
 @Composable
@@ -984,14 +1084,14 @@ private fun HomeScreenPreview() {
                     distinctExerciseCount = 8,
                 ),
                 trainedDayCount = 3,
-                dailyVolumeTrend = listOf(
-                    DailyVolume(1_756_166_400_000L, 100.0),
-                    DailyVolume(1_756_252_800_000L, 0.0),
-                    DailyVolume(1_756_339_200_000L, 200.0),
-                    DailyVolume(1_756_425_600_000L, 0.0),
-                    DailyVolume(1_756_512_000_000L, 150.0),
-                    DailyVolume(1_756_598_400_000L, 0.0),
-                    DailyVolume(1_756_684_800_000L, 80.0),
+                activityWeekDays = listOf(
+                    HomeActivityDay(1_756_512_000_000L, DayOfWeek.MONDAY, trained = true, isToday = false),
+                    HomeActivityDay(1_756_598_400_000L, DayOfWeek.TUESDAY, trained = true, isToday = false),
+                    HomeActivityDay(1_756_684_800_000L, DayOfWeek.WEDNESDAY, trained = false, isToday = true),
+                    HomeActivityDay(1_756_425_600_000L, DayOfWeek.THURSDAY, trained = true, isToday = false),
+                    HomeActivityDay(1_756_252_800_000L, DayOfWeek.FRIDAY, trained = false, isToday = false),
+                    HomeActivityDay(1_756_339_200_000L, DayOfWeek.SATURDAY, trained = false, isToday = false),
+                    HomeActivityDay(1_756_166_400_000L, DayOfWeek.SUNDAY, trained = true, isToday = false),
                 ),
                 unlockedAchievementCount = 1,
                 totalAchievementCount = AchievementCatalog.size,
