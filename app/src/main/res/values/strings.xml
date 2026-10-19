@@ -137,7 +137,7 @@
     <string name="dashboard_trained_days">%1$d dias treinados</string>
     <string name="dashboard_last_seven_days">Últimos 7 dias</string>
     <string name="dashboard_trend_cd">Volume dos últimos 7 dias</string>
-    <string name="home_activity_week_cd">Atividade dos últimos 7 dias</string>
+    <string name="home_activity_week_cd">Atividade da semana (segunda a domingo)</string>
     <string name="home_activity_day_trained_cd">%1$s, treino concluído</string>
     <string name="home_activity_day_rest_cd">%1$s, sem treino</string>
     <string name="home_weekday_mon">S</string>

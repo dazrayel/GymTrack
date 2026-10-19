@@ -75,7 +75,7 @@ data class DailyVolume(
 )
 
 /**
- * One day cell for the Home weekly activity strip (Mon→Sun display order).
+ * One day cell for the Home weekly activity strip (current ISO week, Mon→Sun).
  * [trained] is true when at least one completed history session falls on that local day.
  */
 data class HomeActivityDay(
@@ -115,9 +115,11 @@ fun lastSevenLocalDayBounds(nowMillis: Long, zoneId: ZoneId): PeriodBounds {
 }
 
 /**
- * Builds the last 7 local days (today + 6 previous), keyed for display as Mon→Sun.
- * Uses the same [occurredAtMillis] / local-day rule as [trainedDayCount] / [dailyVolumeTrend].
+ * Builds the current ISO calendar week (Monday→Sunday) for the Home activity strip.
+ * Resets each Monday. Uses the same [occurredAtMillis] / local-day rule as [trainedDayCount].
  * Input [sessions] are completed-history rows only.
+ *
+ * Note: [dailyVolumeTrend] still uses a rolling 7-day window via [lastSevenLocalDayBounds].
  */
 fun homeActivityWeek(
     sessions: List<WorkoutHistoryItem>,
@@ -125,16 +127,13 @@ fun homeActivityWeek(
     zoneId: ZoneId,
 ): List<HomeActivityDay> {
     val today = Instant.ofEpochMilli(nowMillis).atZone(zoneId).toLocalDate()
-    val bounds = lastSevenLocalDayBounds(nowMillis, zoneId)
+    val bounds = isoWeekBounds(nowMillis, zoneId)
+    val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
     val trainedDayStarts = sessions
         .map { occurredAtMillis(it) }
         .filter { bounds.contains(it) }
         .map { localDateStartMillis(it, zoneId) }
         .toSet()
-    val byDayOfWeek = (0L..6L).associate { offset ->
-        val day = today.minusDays(offset)
-        day.dayOfWeek to day
-    }
     return listOf(
         DayOfWeek.MONDAY,
         DayOfWeek.TUESDAY,
@@ -143,8 +142,8 @@ fun homeActivityWeek(
         DayOfWeek.FRIDAY,
         DayOfWeek.SATURDAY,
         DayOfWeek.SUNDAY,
-    ).map { dow ->
-        val day = requireNotNull(byDayOfWeek[dow])
+    ).mapIndexed { index, dow ->
+        val day = monday.plusDays(index.toLong())
         val dayStart = day.atStartOfDay(zoneId).toInstant().toEpochMilli()
         HomeActivityDay(
             dayStartMillis = dayStart,

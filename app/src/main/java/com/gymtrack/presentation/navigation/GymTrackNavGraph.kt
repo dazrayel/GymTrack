@@ -55,29 +55,35 @@ fun GymTrackNavGraph(
 ) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
+    // Full-screen flows keep IME/system insets local; showing the bottom bar here
+    // double-applies keyboard padding with execution's imePadding (empty gap above IME).
+    val hideBottomBar = currentRoute?.startsWith("workout_execution") == true ||
+        currentRoute?.startsWith("workout_session_summary") == true
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            GymNavigationBar(
-                currentRoute = currentRoute,
-                onDestinationSelected = { destination ->
-                    if (destination == TopLevelDestination.HOME) {
-                        navController.popBackStack(
-                            TopLevelDestination.HOME.route,
-                            inclusive = false,
-                        )
-                    } else {
-                        navController.navigate(destination.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+            if (!hideBottomBar) {
+                GymNavigationBar(
+                    currentRoute = currentRoute,
+                    onDestinationSelected = { destination ->
+                        if (destination == TopLevelDestination.HOME) {
+                            navController.popBackStack(
+                                TopLevelDestination.HOME.route,
+                                inclusive = false,
+                            )
+                        } else {
+                            navController.navigate(destination.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
-                    }
-                },
-            )
+                    },
+                )
+            }
         },
     ) { innerPadding ->
         NavHost(

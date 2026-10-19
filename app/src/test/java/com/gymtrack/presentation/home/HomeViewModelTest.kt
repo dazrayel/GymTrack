@@ -198,23 +198,20 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun sessionInRollingTrend_butOutsideIsoWeek_isNotCountedInFrequency() = runTest(testDispatcher) {
+    fun sessionOutsideIsoWeek_isExcludedFromFrequencyAndActivityStrip() = runTest(testDispatcher) {
+        // Monday 2026-08-31 starts a new ISO week; 2026-08-25 is the previous Tuesday.
         clock.now = local("2026-08-31T12:00:00")
-        val inTrendOutsideWeek = item(sessionId = 1L, occurredAt = local("2026-08-25T10:00:00"), volume = 40.0)
+        val previousWeek = item(sessionId = 1L, occurredAt = local("2026-08-25T10:00:00"), volume = 40.0)
         val viewModel = createViewModel()
-        sessionRepository.emitSessions(listOf(inTrendOutsideWeek))
+        sessionRepository.emitSessions(listOf(previousWeek))
         sessionRepository.emitSets(emptyList())
         advanceUntilIdle()
 
         assertEquals(0, viewModel.uiState.value.periodStats.sessionCount)
         assertEquals(0, viewModel.uiState.value.trainedDayCount)
         assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
-        assertEquals(1, viewModel.uiState.value.activityWeekDays.count { it.trained })
-        assertTrue(
-            viewModel.uiState.value.activityWeekDays.any {
-                it.trained && it.dayStartMillis == local("2026-08-25T00:00:00")
-            },
-        )
+        assertEquals(0, viewModel.uiState.value.activityWeekDays.count { it.trained })
+        assertEquals(local("2026-08-31T00:00:00"), viewModel.uiState.value.activityWeekDays.first().dayStartMillis)
         assertTrue(viewModel.uiState.value.records.isEmpty())
     }
 

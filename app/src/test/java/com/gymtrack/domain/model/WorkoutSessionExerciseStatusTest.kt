@@ -136,14 +136,28 @@ class WorkoutSessionExerciseStatusTest {
     }
 
     @Test
-    fun shouldRest_single_trueAfterLastSet() {
+    fun shouldRest_single_falseAfterLastSetOfLastExercise() {
         val ex = sessionExercise(id = 10, position = 0, plannedSets = 3, restSeconds = 60, blockPosition = 0)
-        assertTrue(
+        assertFalse(
             shouldRestAfterCompletingSet(
                 completedExercise = ex,
                 completedSetCountAfter = 3,
                 exercises = listOf(ex),
                 setsByExerciseId = mapOf(10L to listOf(set(10, 0), set(10, 1))),
+            ),
+        )
+    }
+
+    @Test
+    fun shouldRest_single_trueAfterLastSetWhenAnotherExerciseRemains() {
+        val first = sessionExercise(id = 10, position = 0, plannedSets = 2, restSeconds = 60, blockPosition = 0)
+        val second = sessionExercise(id = 11, position = 1, plannedSets = 2, restSeconds = 60, blockPosition = 1)
+        assertTrue(
+            shouldRestAfterCompletingSet(
+                completedExercise = first,
+                completedSetCountAfter = 2,
+                exercises = listOf(first, second),
+                setsByExerciseId = mapOf(10L to listOf(set(10, 0)), 11L to emptyList()),
             ),
         )
     }
@@ -183,14 +197,14 @@ class WorkoutSessionExerciseStatusTest {
             ),
         )
 
-        // Round 3: A → no rest; B → NO rest (last round)
+        // Round 3: A → no rest; B → rest because another block remains
         assertFalse(
             shouldRestAfterCompletingSet(
                 a, 3, block,
                 mapOf(11L to listOf(set(11, 0), set(11, 1)), 12L to listOf(set(12, 0), set(12, 1))),
             ),
         )
-        assertFalse(
+        assertTrue(
             shouldRestAfterCompletingSet(
                 b, 3, block,
                 mapOf(
@@ -209,6 +223,27 @@ class WorkoutSessionExerciseStatusTest {
                     11L to listOf(set(11, 0), set(11, 1), set(11, 2)),
                     12L to listOf(set(12, 0), set(12, 1), set(12, 2)),
                     13L to emptyList(),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun shouldRest_biSet_falseAfterLastRoundWhenNoFurtherWork() {
+        val a = sessionExercise(
+            id = 11, position = 0, plannedSets = 2, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 0, blockType = WorkoutBlockType.BI_SET,
+        )
+        val b = sessionExercise(
+            id = 12, position = 1, plannedSets = 2, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 1, blockType = WorkoutBlockType.BI_SET,
+        )
+        assertFalse(
+            shouldRestAfterCompletingSet(
+                b, 2, listOf(a, b),
+                mapOf(
+                    11L to listOf(set(11, 0), set(11, 1)),
+                    12L to listOf(set(12, 0)),
                 ),
             ),
         )
@@ -326,7 +361,7 @@ class WorkoutSessionExerciseStatusTest {
             ),
         )
 
-        // Round 3: A/B no rest; C → NO rest; then next block
+        // Round 3: A/B no rest; C → rest because another block remains
         assertFalse(
             shouldRestAfterCompletingSet(
                 a, 3, exercises,
@@ -347,7 +382,7 @@ class WorkoutSessionExerciseStatusTest {
                 ),
             ),
         )
-        assertFalse(
+        assertTrue(
             shouldRestAfterCompletingSet(
                 c, 3, exercises,
                 mapOf(

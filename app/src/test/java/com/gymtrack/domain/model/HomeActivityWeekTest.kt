@@ -77,10 +77,10 @@ class HomeActivityWeekTest {
     }
 
     @Test
-    fun sessionsOutsideLastSevenDaysAreIgnored() {
-        val now = local("2026-08-26T12:00:00")
-        val old = item(1L, local("2026-08-19T10:00:00"))
-        val days = homeActivityWeek(listOf(old), now, zone)
+    fun sessionsOutsideCurrentIsoWeekAreIgnored() {
+        val now = local("2026-08-26T12:00:00") // Wed; week starts Mon 24
+        val previousSunday = item(1L, local("2026-08-23T10:00:00"))
+        val days = homeActivityWeek(listOf(previousSunday), now, zone)
         assertTrue(days.none { it.trained })
     }
 
@@ -95,31 +95,33 @@ class HomeActivityWeekTest {
     }
 
     @Test
-    fun weekBoundary_sundayToMondayMapsCorrectly() {
-        // Monday 2026-08-24 → last 7 days include previous Tuesday..Sunday + Monday
+    fun weekBoundary_mondayResetsPreviousSunday() {
+        // Monday 2026-08-24 starts a new ISO week — previous Sunday is outside
         val monday = local("2026-08-24T12:00:00")
         val previousSunday = item(1L, local("2026-08-23T10:00:00"))
         val days = homeActivityWeek(listOf(previousSunday), monday, zone)
         assertEquals(DayOfWeek.MONDAY, days.single { it.isToday }.dayOfWeek)
-        assertTrue(days.single { it.dayOfWeek == DayOfWeek.SUNDAY }.trained)
+        assertFalse(days.single { it.dayOfWeek == DayOfWeek.SUNDAY }.trained)
         assertFalse(days.single { it.dayOfWeek == DayOfWeek.MONDAY }.trained)
-        assertEquals(local("2026-08-23T00:00:00"), days.single { it.dayOfWeek == DayOfWeek.SUNDAY }.dayStartMillis)
+        assertEquals(local("2026-08-30T00:00:00"), days.single { it.dayOfWeek == DayOfWeek.SUNDAY }.dayStartMillis)
         assertEquals(local("2026-08-24T00:00:00"), days.single { it.dayOfWeek == DayOfWeek.MONDAY }.dayStartMillis)
     }
 
     @Test
-    fun monthBoundary_mapsDaysAcrossMonths() {
-        val now = local("2026-09-02T12:00:00") // Wednesday
-        val august = item(1L, local("2026-08-28T10:00:00")) // Friday previous month
-        val days = homeActivityWeek(listOf(august), now, zone)
-        assertTrue(days.single { it.dayOfWeek == DayOfWeek.FRIDAY }.trained)
-        assertEquals(local("2026-08-28T00:00:00"), days.single { it.dayOfWeek == DayOfWeek.FRIDAY }.dayStartMillis)
+    fun monthBoundary_mapsDaysAcrossMonthsWithinSameWeek() {
+        // Wednesday 2026-09-02 — ISO week Mon 2026-08-31 … Sun 2026-09-06
+        val now = local("2026-09-02T12:00:00")
+        val augustMonday = item(1L, local("2026-08-31T10:00:00"))
+        val days = homeActivityWeek(listOf(augustMonday), now, zone)
+        assertTrue(days.single { it.dayOfWeek == DayOfWeek.MONDAY }.trained)
+        assertEquals(local("2026-08-31T00:00:00"), days.single { it.dayOfWeek == DayOfWeek.MONDAY }.dayStartMillis)
         assertEquals(local("2026-09-02T00:00:00"), days.single { it.isToday }.dayStartMillis)
     }
 
     @Test
-    fun yearBoundary_mapsDaysAcrossYears() {
-        val now = local("2026-01-02T12:00:00") // Friday
+    fun yearBoundary_mapsDaysAcrossYearsWithinSameWeek() {
+        // Friday 2026-01-02 — ISO week Mon 2025-12-29 … Sun 2026-01-04
+        val now = local("2026-01-02T12:00:00")
         val newYearEve = item(1L, local("2025-12-31T10:00:00")) // Wednesday
         val days = homeActivityWeek(listOf(newYearEve), now, zone)
         assertTrue(days.single { it.dayOfWeek == DayOfWeek.WEDNESDAY }.trained)
@@ -144,17 +146,17 @@ class HomeActivityWeekTest {
     }
 
     @Test
-    fun periodIsTodayPlusSixPreviousDays() {
+    fun periodIsCurrentIsoWeekMondayThroughSunday() {
         val now = local("2026-08-26T12:00:00") // Wednesday
         val days = homeActivityWeek(emptyList(), now, zone)
         val byDow = days.associateBy { it.dayOfWeek }
         assertEquals(local("2026-08-24T00:00:00"), byDow.getValue(DayOfWeek.MONDAY).dayStartMillis)
         assertEquals(local("2026-08-25T00:00:00"), byDow.getValue(DayOfWeek.TUESDAY).dayStartMillis)
         assertEquals(local("2026-08-26T00:00:00"), byDow.getValue(DayOfWeek.WEDNESDAY).dayStartMillis)
-        assertEquals(local("2026-08-20T00:00:00"), byDow.getValue(DayOfWeek.THURSDAY).dayStartMillis)
-        assertEquals(local("2026-08-21T00:00:00"), byDow.getValue(DayOfWeek.FRIDAY).dayStartMillis)
-        assertEquals(local("2026-08-22T00:00:00"), byDow.getValue(DayOfWeek.SATURDAY).dayStartMillis)
-        assertEquals(local("2026-08-23T00:00:00"), byDow.getValue(DayOfWeek.SUNDAY).dayStartMillis)
+        assertEquals(local("2026-08-27T00:00:00"), byDow.getValue(DayOfWeek.THURSDAY).dayStartMillis)
+        assertEquals(local("2026-08-28T00:00:00"), byDow.getValue(DayOfWeek.FRIDAY).dayStartMillis)
+        assertEquals(local("2026-08-29T00:00:00"), byDow.getValue(DayOfWeek.SATURDAY).dayStartMillis)
+        assertEquals(local("2026-08-30T00:00:00"), byDow.getValue(DayOfWeek.SUNDAY).dayStartMillis)
     }
 
     private fun local(dateTime: String): Long =

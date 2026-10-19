@@ -136,5 +136,12 @@ fun lastCompletedSessionSetsForExercise(
 fun formatProgressionRepsSequence(sets: List<ProgressionPerformedSet>): String =
     sets.sortedBy { it.setIndex }.joinToString("/") { it.reps.toString() }
 
+/**
+ * Reference load for "last session" UI: last performed set by [ProgressionPerformedSet.setIndex],
+ * not the first set (warm-up / ramp sets must not dominate the label).
+ */
+fun referenceWeightFromProgressionSets(sets: List<ProgressionPerformedSet>): Double? =
+    sets.maxByOrNull { it.setIndex }?.weight
+
 private fun weightsMatch(executed: Double, planned: Double): Boolean =
     abs(executed - planned) < 0.001

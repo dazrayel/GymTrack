@@ -431,6 +431,17 @@ class LoadProgressionTest {
         assertEquals("8/9/12", text)
     }
 
+    @Test
+    fun referenceWeight_usesLastSetByIndexNotFirst() {
+        val sets = listOf(
+            set(0, reps = 12, weight = 40.0),
+            set(1, reps = 10, weight = 50.0),
+            set(2, reps = 8, weight = 60.0),
+        )
+        assertEquals(60.0, referenceWeightFromProgressionSets(sets)!!, 0.001)
+        assertNull(referenceWeightFromProgressionSets(emptyList()))
+    }
+
     private fun evaluate(
         plannedWeight: Double,
         min: Int,

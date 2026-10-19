@@ -86,8 +86,8 @@ fun resolveCurrentExerciseIndex(
  * Rest starts only after every active (non-skipped) exercise in the block has finished the
  * round that was just completed. There is no rest between slots of the same bi-set/tri-set round.
  *
- * SINGLE keeps resting after every completed set (including the last), matching prior behaviour.
- * BI_SET / TRI_SET rest only between rounds — not after the final round of the block.
+ * Rest runs when there is still executable work after this completion (more sets/rounds in the
+ * block, or another incomplete block). No rest after the last set of the last remaining exercise.
  */
 fun shouldRestAfterCompletingSet(
     completedExercise: WorkoutSessionExercise,
@@ -110,9 +110,33 @@ fun shouldRestAfterCompletingSet(
         count >= completedSetCountAfter
     }
     if (!roundComplete) return false
-    if (completedExercise.blockType == WorkoutBlockType.SINGLE) return true
-    // Last round of a multi-exercise block: advance straight to the next block.
-    return completedSetCountAfter < completedExercise.plannedSets
+    return hasExecutableWorkRemaining(
+        completedExercise = completedExercise,
+        completedSetCountAfter = completedSetCountAfter,
+        exercises = exercises,
+        setsByExerciseId = setsByExerciseId,
+    )
+}
+
+/**
+ * True when, after projecting [completedSetCountAfter] on [completedExercise], any non-skipped
+ * exercise still needs sets.
+ */
+fun hasExecutableWorkRemaining(
+    completedExercise: WorkoutSessionExercise,
+    completedSetCountAfter: Int,
+    exercises: List<WorkoutSessionExercise>,
+    setsByExerciseId: Map<Long, List<WorkoutSet>>,
+): Boolean {
+    val active = exercises.filter { it.status != WorkoutSessionExerciseStatus.SKIPPED }
+    return active.any { exercise ->
+        val count = if (exercise.id == completedExercise.id) {
+            completedSetCountAfter
+        } else {
+            setsByExerciseId[exercise.id]?.size ?: 0
+        }
+        count < exercise.plannedSets
+    }
 }
 
 fun blockExercises(

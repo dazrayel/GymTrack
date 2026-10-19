@@ -72,6 +72,7 @@ import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.formatProgressionRepsSequence
 import com.gymtrack.domain.model.formatRepetitionTarget
 import com.gymtrack.domain.model.formatVolumeKg
+import com.gymtrack.domain.model.referenceWeightFromProgressionSets
 import com.gymtrack.domain.time.formatElapsedMillis
 import com.gymtrack.presentation.components.GymCard
 import com.gymtrack.presentation.components.GymCardTone
@@ -912,10 +913,11 @@ private fun ProgressionSuggestionInfo(
         else -> stringResource(R.string.progression_suggested_title)
     }
     val lastSessionLine = suggestion.lastSessionSets.takeIf { it.isNotEmpty() }?.let { sets ->
+        val referenceWeight = referenceWeightFromProgressionSets(sets) ?: return@let null
         stringResource(
             R.string.progression_last_session,
             formatProgressionRepsSequence(sets),
-            formatVolumeKg(sets.first().weight),
+            formatVolumeKg(referenceWeight),
         )
     }
     val guidance = when (suggestion.action) {
