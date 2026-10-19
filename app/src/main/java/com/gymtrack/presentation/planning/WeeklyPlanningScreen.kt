@@ -245,12 +245,17 @@ private fun WeeklyPlanDayCard(
         GymLabel(text = dayLabel.uppercase(locale))
         if (slot.hasPlan) {
             val name = slot.plannedWorkoutName.orEmpty()
+            val plannedCd = stringResource(
+                R.string.weekly_planning_planned_cd,
+                dayLabel,
+                name,
+            )
             GymCard(
                 onClick = onPlannedClick,
                 tone = GymCardTone.Highlight,
                 contentPadding = PaddingValues(GymSpacing.CardPadding),
                 modifier = Modifier.semantics {
-                    contentDescription = "$dayLabel, $name"
+                    contentDescription = plannedCd
                 },
             ) {
                 Row(
@@ -280,6 +285,7 @@ private fun WeeklyPlanDayCard(
                 }
             }
         } else {
+            val addCd = stringResource(R.string.weekly_planning_add_cd, dayLabel)
             GymCard(
                 onClick = onAddClick,
                 tone = GymCardTone.Surface,
@@ -287,7 +293,7 @@ private fun WeeklyPlanDayCard(
                 modifier = Modifier
                     .testTag("weekly_planning_add")
                     .semantics {
-                        contentDescription = "$dayLabel, adicionar treino"
+                        contentDescription = addCd
                     },
             ) {
                 Row(

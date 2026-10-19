@@ -48,6 +48,7 @@ import com.gymtrack.presentation.theme.GymTrackTheme
 fun SettingsScreen(
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
+    onNavigateToRpgProfile: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -57,6 +58,7 @@ fun SettingsScreen(
         onThemeModeSelected = viewModel::setThemeMode,
         onSignInWithGoogle = { viewModel.signInWithGoogle(context) },
         onSignOut = { viewModel.signOut(context) },
+        onNavigateToRpgProfile = onNavigateToRpgProfile,
         contentPadding = contentPadding,
         modifier = modifier,
     )
@@ -69,6 +71,7 @@ fun SettingsScreen(
     onThemeModeSelected: (ThemeMode) -> Unit,
     onSignInWithGoogle: () -> Unit = {},
     onSignOut: () -> Unit = {},
+    onNavigateToRpgProfile: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
 ) {
@@ -100,9 +103,34 @@ fun SettingsScreen(
                 selectedMode = uiState.themeMode,
                 onThemeModeSelected = onThemeModeSelected,
             )
+            RpgProfileSettingsSection(onNavigateToRpgProfile = onNavigateToRpgProfile)
             // Only existing settings live here. Release has none yet; debug adds catalog import.
             DebugSettingsSection(modifier = Modifier.fillMaxWidth())
         }
+    }
+}
+
+@Composable
+private fun RpgProfileSettingsSection(
+    onNavigateToRpgProfile: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("settings_rpg_profile"),
+        verticalArrangement = Arrangement.spacedBy(GymSpacing.Md),
+    ) {
+        GymSectionHeader(
+            title = stringResource(R.string.rpg_profile_title),
+            eyebrow = stringResource(R.string.rpg_profile_eyebrow),
+        )
+        GymSecondaryButton(
+            text = stringResource(R.string.settings_rpg_profile),
+            onClick = onNavigateToRpgProfile,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("settings_rpg_profile_button"),
+        )
     }
 }
 

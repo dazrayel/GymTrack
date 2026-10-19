@@ -17,7 +17,10 @@ import com.gymtrack.domain.model.homeActivityWeek
 import com.gymtrack.domain.model.periodBounds
 import com.gymtrack.domain.model.recommendNextWorkout
 import com.gymtrack.domain.model.trainedDayCount
+import com.gymtrack.domain.model.MissionStatus
+import com.gymtrack.domain.repository.GamificationRepository
 import com.gymtrack.domain.repository.GoogleIdentityRepository
+import com.gymtrack.domain.repository.MissionRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
@@ -36,6 +39,8 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val sessionRepository: WorkoutSessionRepository,
+    private val gamificationRepository: GamificationRepository,
+    private val missionRepository: MissionRepository,
     private val googleIdentityRepository: GoogleIdentityRepository,
     private val timeProvider: TimeProvider,
 ) : ViewModel() {
@@ -48,6 +53,8 @@ class HomeViewModel @Inject constructor(
         observeDashboard()
         observeInProgressSession()
         observeIdentity()
+        observeLevelProgress()
+        observeMissions()
     }
 
     fun selectPeriod(period: DashboardPeriod) {
@@ -131,6 +138,32 @@ class HomeViewModel @Inject constructor(
             googleIdentityRepository.currentUser.collect { user ->
                 _uiState.update {
                     it.copy(userDisplayName = firstNameFromDisplayName(user?.displayName))
+                }
+            }
+        }
+    }
+
+    private fun observeLevelProgress() {
+        viewModelScope.launch {
+            gamificationRepository.observeLevelProgress().collect { progress ->
+                _uiState.update { it.copy(levelProgress = progress) }
+            }
+        }
+    }
+
+    private fun observeMissions() {
+        viewModelScope.launch {
+            missionRepository.ensureCurrentInstances()
+            missionRepository.observeMissions().collect { missions ->
+                val active = missions.filter { it.instance.status == MissionStatus.ACTIVE }
+                val highlight = active.firstOrNull()
+                _uiState.update {
+                    it.copy(
+                        activeMissionCount = active.size,
+                        missionHighlightTitleRes = highlight?.definition?.titleRes,
+                        missionHighlightProgress = highlight?.progress ?: 0,
+                        missionHighlightTarget = highlight?.target ?: 0,
+                    )
                 }
             }
         }

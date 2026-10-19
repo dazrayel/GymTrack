@@ -29,6 +29,17 @@ interface WorkoutSetDao {
 
     @Query(
         """
+        SELECT workout_sets.* FROM workout_sets
+        INNER JOIN workout_session_exercises
+            ON workout_sets.sessionExerciseId = workout_session_exercises.id
+        WHERE workout_session_exercises.sessionId = :sessionId
+        ORDER BY workout_session_exercises.position ASC, workout_sets.setIndex ASC
+        """,
+    )
+    fun getBySessionIdOnce(sessionId: Long): List<WorkoutSetEntity>
+
+    @Query(
+        """
         SELECT
             s.id AS sessionId,
             COALESCE(s.endedAtMillis, s.startedAtMillis) AS occurredAtMillis,

@@ -4,6 +4,7 @@ import com.gymtrack.domain.model.AchievementCatalog
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
 import com.gymtrack.domain.model.HomeActivityDay
+import com.gymtrack.domain.model.LevelProgress
 import com.gymtrack.domain.model.PeriodDashboardStats
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutHistoryItem
@@ -18,6 +19,11 @@ data class HomeUiState(
     val trainedDayCount: Int = 0,
     val activityWeekDays: List<HomeActivityDay> = emptyList(),
     val records: List<ExercisePersonalRecords> = emptyList(),
+    val levelProgress: LevelProgress? = null,
+    val activeMissionCount: Int = 0,
+    val missionHighlightTitleRes: Int? = null,
+    val missionHighlightProgress: Int = 0,
+    val missionHighlightTarget: Int = 0,
     val unlockedAchievementCount: Int = 0,
     val totalAchievementCount: Int = AchievementCatalog.size,
     val isLoading: Boolean = true,

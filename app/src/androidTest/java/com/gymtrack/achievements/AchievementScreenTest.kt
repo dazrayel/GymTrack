@@ -169,6 +169,26 @@ class AchievementScreenTest {
     }
 
     @Test
+    fun categoriesAndRarity_areDisplayed() {
+        setContent(
+            AchievementUiState(isLoading = false, achievements = allLocked()),
+        )
+        composeTestRule.waitForIdle()
+        waitUntilTextIsDisplayed("Marcos")
+        composeTestRule.onNodeWithTag("achievement_section_MILESTONES").assertIsDisplayed()
+        scrollToAchievement("FIRST_WORKOUT")
+        composeTestRule.onNodeWithTag("achievement_rarity_FIRST_WORKOUT").assertIsDisplayed()
+        waitUntilTextIsDisplayed("Comum")
+        composeTestRule.onNodeWithTag("achievement_family_WORKOUTS").assertIsDisplayed()
+        waitUntilTextIsDisplayed("Treinos")
+        scrollToAchievement("WORKOUTS_50")
+        composeTestRule.onNodeWithTag("achievement_rarity_WORKOUTS_50").assertIsDisplayed()
+        waitUntilTextIsDisplayed("Épica")
+        composeTestRule.onNodeWithTag("achievement_bar_WORKOUTS_50").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("achievements_overall_progress").assertIsDisplayed()
+    }
+
+    @Test
     fun progress_isDisplayedForWorkoutsAndVolume() {
         val statuses = AchievementCatalog.map { definition ->
             when (definition.id) {

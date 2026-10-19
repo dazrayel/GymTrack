@@ -51,6 +51,18 @@ val GymLightSurfaceElevated = Color(0xFFFFFFFF)
 val GymLightOutline = Color(0xFFC5C7D1)
 val GymLightOutlineVariant = Color(0xFFD9DBE4)
 
+// Light secondary / tertiary / error (scheme roles; identity unchanged)
+val GymLightSecondary = Color(0xFF555866)
+val GymLightOnSecondary = Color(0xFFFFFFFF)
+val GymLightTertiary = Color(0xFFB8860B)
+val GymLightOnTertiary = Color(0xFFFFFFFF)
+val GymLightTertiaryContainer = Color(0xFFFFF0C2)
+val GymLightOnTertiaryContainer = Color(0xFF3D3200)
+val GymLightError = Color(0xFFBA1A1A)
+val GymLightOnError = Color(0xFFFFFFFF)
+val GymLightErrorContainer = Color(0xFFFFDAD6)
+val GymLightOnErrorContainer = Color(0xFF410002)
+
 // ─── Accent / chart aliases (identity green hierarchy) ───────────────────────
 
 val GymAccent = Color(0xFFB7E83F)

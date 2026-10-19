@@ -5,7 +5,9 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.gymtrack.data.preferences.ActiveTitleRepositoryImpl
 import com.gymtrack.data.preferences.ThemeRepositoryImpl
+import com.gymtrack.domain.repository.ActiveTitleRepository
 import com.gymtrack.domain.repository.ThemeRepository
 import dagger.Module
 import dagger.Provides
@@ -35,4 +37,10 @@ object PreferencesModule {
     fun provideThemeRepository(
         dataStore: DataStore<Preferences>,
     ): ThemeRepository = ThemeRepositoryImpl(dataStore)
+
+    @Provides
+    @Singleton
+    fun provideActiveTitleRepository(
+        dataStore: DataStore<Preferences>,
+    ): ActiveTitleRepository = ActiveTitleRepositoryImpl(dataStore)
 }

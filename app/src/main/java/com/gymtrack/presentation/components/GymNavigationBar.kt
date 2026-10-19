@@ -71,8 +71,8 @@ private fun RowScope.GymNavigationBarItem(
             selectedIconColor = MaterialTheme.colorScheme.primary,
             selectedTextColor = MaterialTheme.colorScheme.primary,
             indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
-            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
         ),
     )
 }

@@ -12,13 +12,19 @@ import com.gymtrack.data.local.dao.WorkoutExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSessionDao
 import com.gymtrack.data.local.dao.WorkoutSessionExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSetDao
+import com.gymtrack.data.local.dao.MissionInstanceDao
+import com.gymtrack.data.local.dao.XpEventDao
 import com.gymtrack.data.catalog.CatalogDemoOptionsProvider
 import com.gymtrack.data.repository.ExerciseRepositoryImpl
+import com.gymtrack.data.repository.GamificationRepositoryImpl
+import com.gymtrack.data.repository.MissionRepositoryImpl
 import com.gymtrack.data.repository.WeeklyPlanRepositoryImpl
 import com.gymtrack.data.repository.WorkoutRepositoryImpl
 import com.gymtrack.data.repository.WorkoutSessionRepositoryImpl
 import com.gymtrack.domain.exercise.CatalogDemoOptionsSource
 import com.gymtrack.domain.repository.ExerciseRepository
+import com.gymtrack.domain.repository.GamificationRepository
+import com.gymtrack.domain.repository.MissionRepository
 import com.gymtrack.domain.repository.WeeklyPlanRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
@@ -58,6 +64,8 @@ object DatabaseModule {
                 GymTrackDatabase.MIGRATION_10_11,
                 GymTrackDatabase.MIGRATION_11_12,
                 GymTrackDatabase.MIGRATION_12_13,
+                GymTrackDatabase.MIGRATION_13_14,
+                GymTrackDatabase.MIGRATION_14_15,
             )
             .build()
     }
@@ -139,11 +147,67 @@ object DatabaseModule {
     }
 
     @Provides
+    fun provideXpEventDao(database: GymTrackDatabase): XpEventDao {
+        return database.xpEventDao()
+    }
+
+    @Provides
+    fun provideMissionInstanceDao(database: GymTrackDatabase): MissionInstanceDao {
+        return database.missionInstanceDao()
+    }
+
+    @Provides
     @Singleton
     fun provideWeeklyPlanRepository(
         planDao: WeeklyWorkoutPlanDao,
     ): WeeklyPlanRepository {
         return WeeklyPlanRepositoryImpl(planDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGamificationRepository(
+        database: GymTrackDatabase,
+        xpEventDao: XpEventDao,
+        sessionDao: WorkoutSessionDao,
+        sessionExerciseDao: WorkoutSessionExerciseDao,
+        setDao: WorkoutSetDao,
+        weeklyWorkoutPlanDao: WeeklyWorkoutPlanDao,
+        timeProvider: TimeProvider,
+    ): GamificationRepository {
+        return GamificationRepositoryImpl(
+            database,
+            xpEventDao,
+            sessionDao,
+            sessionExerciseDao,
+            setDao,
+            weeklyWorkoutPlanDao,
+            timeProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMissionRepository(
+        database: GymTrackDatabase,
+        missionInstanceDao: MissionInstanceDao,
+        xpEventDao: XpEventDao,
+        sessionDao: WorkoutSessionDao,
+        sessionExerciseDao: WorkoutSessionExerciseDao,
+        setDao: WorkoutSetDao,
+        weeklyWorkoutPlanDao: WeeklyWorkoutPlanDao,
+        timeProvider: TimeProvider,
+    ): MissionRepository {
+        return MissionRepositoryImpl(
+            database,
+            missionInstanceDao,
+            xpEventDao,
+            sessionDao,
+            sessionExerciseDao,
+            setDao,
+            weeklyWorkoutPlanDao,
+            timeProvider,
+        )
     }
 
     @Provides
@@ -156,6 +220,8 @@ object DatabaseModule {
         workoutRepository: WorkoutRepository,
         exerciseRepository: ExerciseRepository,
         timeProvider: TimeProvider,
+        gamificationRepository: GamificationRepository,
+        missionRepository: MissionRepository,
     ): WorkoutSessionRepository {
         return WorkoutSessionRepositoryImpl(
             database,
@@ -165,6 +231,8 @@ object DatabaseModule {
             workoutRepository,
             exerciseRepository,
             timeProvider,
+            gamificationRepository,
+            missionRepository,
         )
     }
 }

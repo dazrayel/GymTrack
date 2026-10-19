@@ -26,6 +26,9 @@ interface WeeklyWorkoutPlanDao {
     @Query("SELECT * FROM weekly_workout_plans WHERE dayOfWeek = :dayOfWeek LIMIT 1")
     fun getByDay(dayOfWeek: Int): WeeklyWorkoutPlanEntity?
 
+    @Query("SELECT * FROM weekly_workout_plans")
+    fun getAllOnce(): List<WeeklyWorkoutPlanEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun upsert(entity: WeeklyWorkoutPlanEntity)
 

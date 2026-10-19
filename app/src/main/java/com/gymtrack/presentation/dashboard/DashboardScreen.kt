@@ -18,9 +18,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,6 +65,7 @@ fun DashboardScreen(
         onNavigateToWorkouts = onNavigateToWorkouts,
         onNavigateToWorkoutDetail = onNavigateToWorkoutDetail,
         onNavigateToAchievements = onNavigateToAchievements,
+        onErrorShown = viewModel::clearError,
         contentPadding = contentPadding,
         modifier = modifier,
     )
@@ -73,13 +78,21 @@ fun DashboardScreen(
     onNavigateToWorkouts: () -> Unit,
     onNavigateToWorkoutDetail: (Long) -> Unit,
     onNavigateToAchievements: () -> Unit,
+    onErrorShown: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(),
     modifier: Modifier = Modifier,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState.error) {
+        val message = uiState.error ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(message = message)
+        onErrorShown()
+    }
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         modifier = modifier.padding(contentPadding),
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             GymTopAppBar(
                 title = stringResource(R.string.dashboard_screen_title),

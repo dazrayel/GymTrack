@@ -309,10 +309,16 @@ private fun WorkoutExecutionContent(
                         }
 
                         uiState.phase == WorkoutExecutionPhase.RESTING -> {
+                            val resting = uiState.restExercise
                             RestContent(
-                                exerciseName = uiState.restExercise?.exerciseName.orEmpty(),
+                                exerciseName = resting?.exerciseName.orEmpty(),
+                                blockType = resting?.blockType,
+                                blockLabel = resting?.let {
+                                    blockExecutionLabel(it, uiState.exercises)
+                                },
+                                nextExerciseName = uiState.nextExerciseAfterRest?.exerciseName,
                                 remainingMillis = uiState.restRemainingMillis,
-                                restDurationMillis = (uiState.restExercise?.restSeconds ?: 0) * 1_000L,
+                                restDurationMillis = (resting?.restSeconds ?: 0) * 1_000L,
                                 isPaused = uiState.isRestPaused,
                                 onPauseRest = onPauseRest,
                                 onResumeRest = onResumeRest,
@@ -761,10 +767,19 @@ private fun ActiveSetContent(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = GymSpacing.Md),
                 )
+                val completedSets = (currentSetNumber - 1).coerceAtLeast(0)
+                val setProgressCd = stringResource(
+                    R.string.execution_set_progress_cd,
+                    completedSets,
+                    plannedSets,
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = GymSpacing.Sm),
+                        .padding(top = GymSpacing.Sm)
+                        .semantics {
+                            contentDescription = setProgressCd
+                        },
                     horizontalArrangement = Arrangement.spacedBy(GymSpacing.Xs),
                 ) {
                     repeat(plannedSets.coerceAtLeast(0)) { index ->
@@ -1060,6 +1075,9 @@ internal fun restRemainingFraction(remainingMillis: Long, durationMillis: Long):
 @Composable
 private fun RestContent(
     exerciseName: String,
+    blockType: WorkoutBlockType?,
+    blockLabel: String?,
+    nextExerciseName: String?,
     remainingMillis: Long,
     restDurationMillis: Long,
     isPaused: Boolean,
@@ -1090,7 +1108,26 @@ private fun RestContent(
             .padding(horizontal = GymSpacing.ScreenPadding, vertical = GymSpacing.Lg),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        GymLabel(text = stringResource(if (isPaused) R.string.rest_paused else R.string.rest_title))
+        if (blockType != null && blockType != WorkoutBlockType.SINGLE) {
+            GymTypeBadge(
+                type = blockType,
+                modifier = Modifier.testTag("rest_block_badge"),
+            )
+            if (!blockLabel.isNullOrBlank()) {
+                Text(
+                    text = blockLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .padding(top = GymSpacing.Xs)
+                        .testTag("rest_block_label"),
+                )
+            }
+        }
+        GymLabel(
+            text = stringResource(if (isPaused) R.string.rest_paused else R.string.rest_title),
+            modifier = Modifier.padding(top = GymSpacing.Sm),
+        )
         if (exerciseName.isNotBlank()) {
             Text(
                 text = exerciseName,
@@ -1098,6 +1135,17 @@ private fun RestContent(
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = GymSpacing.Sm),
+            )
+        }
+        if (!nextExerciseName.isNullOrBlank()) {
+            Text(
+                text = stringResource(R.string.rest_next_exercise, nextExerciseName),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(top = GymSpacing.Sm)
+                    .testTag("rest_next_exercise"),
             )
         }
         BoxWithConstraints(

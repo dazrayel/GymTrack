@@ -3,12 +3,17 @@ package com.gymtrack.presentation.workouts.summary
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.SavedStateHandle
 import com.gymtrack.domain.model.CompletedSetRecord
+import com.gymtrack.domain.model.ProgressionAction
 import com.gymtrack.domain.model.StartSessionResult
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
 import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
+import com.gymtrack.domain.model.XpEvent
+import com.gymtrack.domain.model.XpEventType
+import com.gymtrack.domain.model.XpSourceKeys
+import com.gymtrack.domain.repository.FakeGamificationRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.formatLocalDate
 import com.gymtrack.domain.time.formatLocalTime
@@ -42,6 +47,7 @@ class WorkoutSessionSummaryViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var fakeRepo: FakeSummarySessionRepository
+    private lateinit var fakeGamification: FakeGamificationRepository
     private lateinit var viewModel: WorkoutSessionSummaryViewModel
 
     private val session = WorkoutSession(
@@ -103,9 +109,11 @@ class WorkoutSessionSummaryViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         fakeRepo = FakeSummarySessionRepository()
+        fakeGamification = FakeGamificationRepository()
         viewModel = WorkoutSessionSummaryViewModel(
             savedStateHandle = SavedStateHandle(mapOf("sessionId" to SESSION_ID)),
             workoutSessionRepository = fakeRepo,
+            gamificationRepository = fakeGamification,
         )
     }
 
@@ -289,6 +297,86 @@ class WorkoutSessionSummaryViewModelTest {
         assertEquals(10L, progress.previousSession!!.sessionId)
     }
 
+    @Test
+    fun summaryWithoutRewards_hidesRewardsSection() {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA))
+        fakeRepo.emitSets(exerciseA.id, listOf(set(exerciseA.id, 0)))
+        fakeGamification.setXpEvents(emptyList())
+
+        assertFalse(viewModel.uiState.value.hasRewardsSection)
+        assertTrue(viewModel.uiState.value.sessionXp.isEmpty)
+        assertTrue(viewModel.uiState.value.missionRewards.isEmpty())
+        assertTrue(viewModel.uiState.value.unlockedAchievementIds.isEmpty())
+    }
+
+    @Test
+    fun summaryWithSessionXpAndMission_exposesRewardBlocks() {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA))
+        fakeRepo.emitSets(exerciseA.id, listOf(set(exerciseA.id, 0)))
+        fakeGamification.setXpEvents(
+            listOf(
+                XpEvent(
+                    id = 1,
+                    type = XpEventType.WORKOUT_COMPLETED,
+                    amount = 100,
+                    sourceKey = XpSourceKeys.workoutCompleted(SESSION_ID),
+                    createdAtMillis = session.endedAtMillis!!,
+                ),
+                XpEvent(
+                    id = 2,
+                    type = XpEventType.PROGRESSION_WEIGHT,
+                    amount = 30,
+                    sourceKey = XpSourceKeys.progressionWeight(SESSION_ID, "Supino Snapshot"),
+                    createdAtMillis = session.endedAtMillis!!,
+                ),
+                XpEvent(
+                    id = 3,
+                    type = XpEventType.MISSION_COMPLETED,
+                    amount = 25,
+                    sourceKey = XpSourceKeys.missionCompleted("training_day", "2026-W40"),
+                    createdAtMillis = session.endedAtMillis!! + 1_000L,
+                ),
+            ),
+        )
+
+        val state = viewModel.uiState.value
+        assertTrue(state.hasRewardsSection)
+        assertEquals(130, state.sessionXp.totalAmount)
+        assertEquals(1, state.missionRewards.size)
+        assertEquals("training_day", state.missionRewards[0].definitionId)
+        assertEquals(1, state.progressionHighlights.size)
+        assertEquals(ProgressionAction.INCREASE_WEIGHT, state.progressionHighlights[0].action)
+    }
+
+    @Test
+    fun summaryWithWeightPr_exposesPrHighlight() {
+        fakeRepo.emitSession(session)
+        fakeRepo.emitExercises(listOf(exerciseA))
+        fakeRepo.emitSets(
+            exerciseA.id,
+            listOf(set(exerciseA.id, 0, reps = 8, weight = 85.0)),
+        )
+        fakeRepo.emitHistory(
+            listOf(
+                CompletedSetRecord(
+                    sessionId = 10L,
+                    occurredAtMillis = 500L,
+                    exerciseName = "Supino Snapshot",
+                    reps = 8,
+                    weight = 80.0,
+                ),
+            ),
+        )
+
+        val prs = viewModel.uiState.value.prHighlights
+        assertEquals(1, prs.size)
+        assertEquals("Supino Snapshot", prs[0].exerciseName)
+        assertEquals(85.0, prs[0].weight, 0.001)
+        assertEquals(8, prs[0].reps)
+    }
+
     private fun set(
         sessionExerciseId: Long,
         setIndex: Int,
@@ -310,6 +398,8 @@ private class FakeSummarySessionRepository : WorkoutSessionRepository {
     private val exercisesFlow = MutableStateFlow<List<WorkoutSessionExercise>>(emptyList())
     private val setsFlows = mutableMapOf<Long, MutableStateFlow<List<WorkoutSet>>>()
     private val historyFlow = MutableStateFlow<List<CompletedSetRecord>>(emptyList())
+    private val completedSessionsFlow =
+        MutableStateFlow<List<com.gymtrack.domain.model.WorkoutHistoryItem>>(emptyList())
 
     fun emitSession(session: WorkoutSession?) {
         sessionFlow.value = session
@@ -331,7 +421,8 @@ private class FakeSummarySessionRepository : WorkoutSessionRepository {
     override suspend fun getSession(id: Long) = sessionFlow.value
     override fun observeSession(id: Long) = sessionFlow
     override fun observeInProgress(): Flow<WorkoutSession?> = emptyFlow()
-    override fun observeCompletedSessions(): Flow<List<com.gymtrack.domain.model.WorkoutHistoryItem>> = emptyFlow()
+    override fun observeCompletedSessions(): Flow<List<com.gymtrack.domain.model.WorkoutHistoryItem>> =
+        completedSessionsFlow
     override fun observeCompletedSetHistory(): Flow<List<CompletedSetRecord>> = historyFlow
     override fun observeSessionExercises(sessionId: Long) = exercisesFlow
     override fun observeSets(sessionExerciseId: Long): Flow<List<WorkoutSet>> =

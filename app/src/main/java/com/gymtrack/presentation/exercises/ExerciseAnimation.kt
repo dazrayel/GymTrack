@@ -7,9 +7,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FitnessCenter
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,6 +30,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -36,8 +40,17 @@ import com.gymtrack.domain.exercise.ExerciseMediaConstants
 import com.gymtrack.domain.exercise.ExerciseMediaResolution
 import com.gymtrack.domain.exercise.ExerciseMediaResolver
 import com.gymtrack.domain.model.Exercise
+import com.gymtrack.presentation.theme.GymShapeTokens
+import com.gymtrack.presentation.theme.GymSpacing
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+
+private enum class ExerciseAnimationPhase {
+    IdleUnavailable,
+    Loading,
+    Ready,
+    Unavailable,
+}
 
 @Composable
 fun ExerciseAnimation(
@@ -56,19 +69,44 @@ fun ExerciseAnimation(
     var frame0 by remember(mediaKey) { mutableStateOf<ImageBitmap?>(null) }
     var frame1 by remember(mediaKey) { mutableStateOf<ImageBitmap?>(null) }
     var activeFrameIndex by remember(mediaKey) { mutableIntStateOf(0) }
+    var phase by remember(mediaKey) {
+        mutableStateOf(
+            if (resolution is ExerciseMediaResolution.Available) {
+                ExerciseAnimationPhase.Loading
+            } else {
+                ExerciseAnimationPhase.IdleUnavailable
+            },
+        )
+    }
 
     LaunchedEffect(mediaKey, resolution) {
         frame0 = null
         frame1 = null
         activeFrameIndex = 0
-        val available = resolution as? ExerciseMediaResolution.Available ?: return@LaunchedEffect
+        val available = resolution as? ExerciseMediaResolution.Available
+        if (available == null) {
+            phase = ExerciseAnimationPhase.Unavailable
+            return@LaunchedEffect
+        }
+        phase = ExerciseAnimationPhase.Loading
         if (!ExerciseAssetImageLoader.assetExists(context, available.frames.frame0AssetPath) ||
             !ExerciseAssetImageLoader.assetExists(context, available.frames.frame1AssetPath)
         ) {
+            phase = ExerciseAnimationPhase.Unavailable
             return@LaunchedEffect
         }
-        frame0 = ExerciseAssetImageLoader.loadBitmap(context, available.frames.frame0AssetPath)
-        frame1 = ExerciseAssetImageLoader.loadBitmap(context, available.frames.frame1AssetPath)
+        val loaded0 = ExerciseAssetImageLoader.loadBitmap(context, available.frames.frame0AssetPath)
+        val loaded1 = ExerciseAssetImageLoader.loadBitmap(context, available.frames.frame1AssetPath)
+        frame0 = loaded0
+        frame1 = loaded1
+        phase = if (loaded0 != null && loaded1 != null) {
+            ExerciseAnimationPhase.Ready
+        } else if (loaded0 != null || loaded1 != null) {
+            // Keep whatever frame decoded; still allow a static demo rather than false "unavailable".
+            ExerciseAnimationPhase.Ready
+        } else {
+            ExerciseAnimationPhase.Unavailable
+        }
     }
 
     LaunchedEffect(mediaKey, frame0, frame1, frameDurationMs) {
@@ -80,48 +118,57 @@ fun ExerciseAnimation(
         }
     }
 
-    val displayedBitmap = when (activeFrameIndex) {
-        0 -> frame0
-        else -> frame1
+    val displayedBitmap = when {
+        frame0 == null && frame1 == null -> null
+        frame0 != null && frame1 != null -> if (activeFrameIndex == 0) frame0 else frame1
+        else -> frame0 ?: frame1
     }
 
+    val demoDescription = stringResource(R.string.exercise_demo_cd)
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(GymShapeTokens.Medium))
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .semantics { contentDescription = demoDescription }
             .testTag("exercise_animation"),
         contentAlignment = Alignment.Center,
     ) {
-        if (displayedBitmap != null) {
-            Image(
-                bitmap = displayedBitmap,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .testTag("exercise_animation_frame"),
-            )
-        } else {
-            ExerciseAnimationPlaceholder(
-                modifier = Modifier.padding(16.dp),
-            )
+        when {
+            displayedBitmap != null -> {
+                Image(
+                    bitmap = displayedBitmap,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(height)
+                        .testTag("exercise_animation_frame"),
+                )
+            }
+            phase == ExerciseAnimationPhase.Loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(GymSpacing.TouchTarget)
+                        .testTag("exercise_animation_loading"),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            else -> {
+                ExerciseAnimationPlaceholder(
+                    modifier = Modifier.padding(GymSpacing.Md),
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun ExerciseAnimationPlaceholder(modifier: Modifier = Modifier) {
-    ColumnPlaceholderContent(modifier)
-}
-
-@Composable
-private fun ColumnPlaceholderContent(modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier,
+        modifier = modifier.testTag("exercise_animation_unavailable"),
     ) {
         Icon(
             imageVector = Icons.Outlined.FitnessCenter,
@@ -133,7 +180,7 @@ private fun ColumnPlaceholderContent(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = GymSpacing.Sm),
         )
     }
 }

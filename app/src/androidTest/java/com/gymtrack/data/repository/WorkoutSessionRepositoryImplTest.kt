@@ -41,6 +41,8 @@ class WorkoutSessionRepositoryImplTest {
     private lateinit var workoutRepository: WorkoutRepositoryImpl
     private lateinit var exerciseRepository: ExerciseRepositoryImpl
     private lateinit var repository: WorkoutSessionRepository
+    private lateinit var gamificationRepository: com.gymtrack.domain.repository.GamificationRepository
+    private lateinit var missionRepository: com.gymtrack.domain.repository.MissionRepository
 
     private var exerciseId: Long = 0L
     private var squatId: Long = 0L
@@ -64,6 +66,25 @@ class WorkoutSessionRepositoryImplTest {
             db.exerciseDao(),
             db.exerciseSecondaryMuscleDao(),
         )
+        gamificationRepository = com.gymtrack.data.repository.GamificationRepositoryImpl(
+            db,
+            db.xpEventDao(),
+            db.workoutSessionDao(),
+            db.workoutSessionExerciseDao(),
+            db.workoutSetDao(),
+            db.weeklyWorkoutPlanDao(),
+            com.gymtrack.domain.time.SystemTimeProvider(),
+        )
+        missionRepository = com.gymtrack.data.repository.MissionRepositoryImpl(
+            db,
+            db.missionInstanceDao(),
+            db.xpEventDao(),
+            db.workoutSessionDao(),
+            db.workoutSessionExerciseDao(),
+            db.workoutSetDao(),
+            db.weeklyWorkoutPlanDao(),
+            com.gymtrack.domain.time.SystemTimeProvider(),
+        )
         repository = WorkoutSessionRepositoryImpl(
             db,
             db.workoutSessionDao(),
@@ -72,6 +93,8 @@ class WorkoutSessionRepositoryImplTest {
             workoutRepository,
             exerciseRepository,
             com.gymtrack.domain.time.SystemTimeProvider(),
+            gamificationRepository,
+            missionRepository,
         )
 
         runBlocking {
@@ -235,6 +258,8 @@ class WorkoutSessionRepositoryImplTest {
             workoutRepository,
             exerciseRepository,
             com.gymtrack.domain.time.SystemTimeProvider(),
+            gamificationRepository,
+            missionRepository,
         )
         val after = reread.observeSessionExercises(sessionId).first()
         assertEquals(com.gymtrack.domain.model.WorkoutSessionExerciseStatus.PENDING, after[0].status)
@@ -970,6 +995,8 @@ class WorkoutSessionRepositoryImplTest {
             workoutRepository,
             exerciseRepository,
             clock,
+            gamificationRepository,
+            missionRepository,
         )
     }
 

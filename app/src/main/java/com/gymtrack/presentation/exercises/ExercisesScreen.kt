@@ -28,8 +28,6 @@ import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -69,6 +67,9 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import com.gymtrack.domain.exercise.CatalogDemoOption
 import com.gymtrack.domain.model.EQUIPMENT_TYPES
+import com.gymtrack.presentation.components.GymCard
+import com.gymtrack.presentation.components.GymCardTone
+import com.gymtrack.presentation.theme.GymSpacing
 import com.gymtrack.domain.model.Exercise
 import com.gymtrack.domain.model.MUSCLE_GROUPS
 import com.gymtrack.presentation.theme.GymTrackTheme
@@ -276,18 +277,16 @@ private fun ExerciseItem(
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    GymCard(
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("exercise_card_${exercise.name}"),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier.testTag("exercise_card_${exercise.name}"),
+        tone = GymCardTone.Surface,
+        contentPadding = PaddingValues(
+            horizontal = GymSpacing.CardPadding,
+            vertical = GymSpacing.Md,
         ),
-        shape = RoundedCornerShape(12.dp),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -313,7 +312,7 @@ private fun ExerciseItem(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = 2.dp),
+                        modifier = Modifier.padding(top = GymSpacing.Xxs),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )

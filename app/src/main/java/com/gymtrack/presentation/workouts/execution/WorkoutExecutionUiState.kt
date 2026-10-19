@@ -101,6 +101,27 @@ data class WorkoutExecutionUiState(
 
     val currentExerciseSets: List<WorkoutSet>
         get() = currentExercise?.let { setsByExerciseId[it.id].orEmpty() }.orEmpty()
+
+    /**
+     * Exercise that resumes after the current rest (same block for BI/TRI, else next incomplete).
+     * Presentation-only derived from existing session exercises + sets.
+     */
+    val nextExerciseAfterRest: WorkoutSessionExercise?
+        get() {
+            val resting = restExercise ?: return null
+            val incompleteInBlock = exercises
+                .filter { it.blockPosition == resting.blockPosition }
+                .sortedBy { it.position }
+                .filter { (setsByExerciseId[it.id]?.size ?: 0) < it.plannedSets }
+            if (incompleteInBlock.isNotEmpty()) {
+                return incompleteInBlock.first()
+            }
+            val restIndex = exercises.indexOfFirst { it.id == resting.id }
+            if (restIndex < 0) return null
+            return exercises.drop(restIndex + 1).firstOrNull { exercise ->
+                (setsByExerciseId[exercise.id]?.size ?: 0) < exercise.plannedSets
+            }
+        }
 }
 
 data class SessionExerciseRow(

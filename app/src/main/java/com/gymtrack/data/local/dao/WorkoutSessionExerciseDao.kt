@@ -14,6 +14,11 @@ interface WorkoutSessionExerciseDao {
     )
     fun getBySessionId(sessionId: Long): Flow<List<WorkoutSessionExerciseEntity>>
 
+    @Query(
+        "SELECT * FROM workout_session_exercises WHERE sessionId = :sessionId ORDER BY position ASC",
+    )
+    fun getBySessionIdOnce(sessionId: Long): List<WorkoutSessionExerciseEntity>
+
     /**
      * Blocking insert — Room 2.6.1 + KSP 2.3.x incompatibility prevents suspend DAO
      * methods with non-Unit return types. Caller must dispatch on Dispatchers.IO.

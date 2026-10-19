@@ -13,8 +13,11 @@ import com.gymtrack.data.local.dao.WorkoutExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSessionDao
 import com.gymtrack.data.local.dao.WorkoutSessionExerciseDao
 import com.gymtrack.data.local.dao.WorkoutSetDao
+import com.gymtrack.data.local.dao.MissionInstanceDao
+import com.gymtrack.data.local.dao.XpEventDao
 import com.gymtrack.data.local.entity.ExerciseEntity
 import com.gymtrack.data.local.entity.ExerciseSecondaryMuscleEntity
+import com.gymtrack.data.local.entity.MissionInstanceEntity
 import com.gymtrack.data.local.entity.WeeklyWorkoutPlanEntity
 import com.gymtrack.data.local.entity.WorkoutBlockEntity
 import com.gymtrack.data.local.entity.WorkoutEntity
@@ -22,6 +25,7 @@ import com.gymtrack.data.local.entity.WorkoutExerciseEntity
 import com.gymtrack.data.local.entity.WorkoutSessionEntity
 import com.gymtrack.data.local.entity.WorkoutSessionExerciseEntity
 import com.gymtrack.data.local.entity.WorkoutSetEntity
+import com.gymtrack.data.local.entity.XpEventEntity
 
 @Database(
     entities = [
@@ -34,8 +38,10 @@ import com.gymtrack.data.local.entity.WorkoutSetEntity
         WorkoutSessionExerciseEntity::class,
         WorkoutSetEntity::class,
         WeeklyWorkoutPlanEntity::class,
+        XpEventEntity::class,
+        MissionInstanceEntity::class,
     ],
-    version = 13,
+    version = 15,
     exportSchema = true,
 )
 abstract class GymTrackDatabase : RoomDatabase() {
@@ -49,6 +55,8 @@ abstract class GymTrackDatabase : RoomDatabase() {
     abstract fun workoutSessionExerciseDao(): WorkoutSessionExerciseDao
     abstract fun workoutSetDao(): WorkoutSetDao
     abstract fun weeklyWorkoutPlanDao(): WeeklyWorkoutPlanDao
+    abstract fun xpEventDao(): XpEventDao
+    abstract fun missionInstanceDao(): MissionInstanceDao
 
     companion object {
 
@@ -482,6 +490,50 @@ abstract class GymTrackDatabase : RoomDatabase() {
                         WHERE `earlier`.`id` < `workouts`.`id`
                     )
                     """.trimIndent(),
+                )
+            }
+        }
+
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `xp_events` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`type` TEXT NOT NULL, " +
+                        "`amount` INTEGER NOT NULL, " +
+                        "`sourceKey` TEXT NOT NULL, " +
+                        "`createdAtMillis` INTEGER NOT NULL)",
+                )
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS `index_xp_events_sourceKey` " +
+                        "ON `xp_events` (`sourceKey`)",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_xp_events_createdAtMillis` " +
+                        "ON `xp_events` (`createdAtMillis`)",
+                )
+            }
+        }
+
+        val MIGRATION_14_15 = object : Migration(14, 15) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `mission_instances` (" +
+                        "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`definitionId` TEXT NOT NULL, " +
+                        "`periodKey` TEXT NOT NULL, " +
+                        "`status` TEXT NOT NULL, " +
+                        "`startedAtMillis` INTEGER NOT NULL, " +
+                        "`completedAtMillis` INTEGER)",
+                )
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS " +
+                        "`index_mission_instances_definitionId_periodKey` " +
+                        "ON `mission_instances` (`definitionId`, `periodKey`)",
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_mission_instances_status` " +
+                        "ON `mission_instances` (`status`)",
                 )
             }
         }

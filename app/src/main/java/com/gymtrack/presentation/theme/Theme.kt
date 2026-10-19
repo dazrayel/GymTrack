@@ -7,7 +7,6 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -56,14 +55,14 @@ private val LightColorScheme = lightColorScheme(
     onPrimary = GymLightOnPrimary,
     primaryContainer = GymLightPrimaryContainer,
     onPrimaryContainer = GymLightOnPrimaryContainer,
-    secondary = Color(0xFF555866),
-    onSecondary = Color(0xFFFFFFFF),
+    secondary = GymLightSecondary,
+    onSecondary = GymLightOnSecondary,
     secondaryContainer = GymLightSurfaceVariant,
     onSecondaryContainer = GymLightOnSurfaceVariant,
-    tertiary = Color(0xFFB8860B),
-    onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFFFF0C2),
-    onTertiaryContainer = Color(0xFF3D3200),
+    tertiary = GymLightTertiary,
+    onTertiary = GymLightOnTertiary,
+    tertiaryContainer = GymLightTertiaryContainer,
+    onTertiaryContainer = GymLightOnTertiaryContainer,
     background = GymLightBackground,
     onBackground = GymLightOnBackground,
     surface = GymLightSurface,
@@ -77,10 +76,10 @@ private val LightColorScheme = lightColorScheme(
     surfaceContainerHighest = GymLightSurfaceVariant,
     outline = GymLightOutline,
     outlineVariant = GymLightOutlineVariant,
-    error = Color(0xFFBA1A1A),
-    onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410002),
+    error = GymLightError,
+    onError = GymLightOnError,
+    errorContainer = GymLightErrorContainer,
+    onErrorContainer = GymLightOnErrorContainer,
 )
 
 @Composable

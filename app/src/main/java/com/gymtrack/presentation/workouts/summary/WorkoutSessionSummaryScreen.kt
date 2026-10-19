@@ -41,6 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gymtrack.R
+import com.gymtrack.domain.model.AchievementDefinition
+import com.gymtrack.domain.model.MissionCatalog
+import com.gymtrack.domain.model.ProgressionAction
+import com.gymtrack.domain.model.SessionMissionReward
+import com.gymtrack.domain.model.SessionProgressionHighlight
+import com.gymtrack.domain.model.SessionPrHighlight
 import com.gymtrack.domain.model.formatSignedInt
 import com.gymtrack.domain.model.formatSignedKg
 import com.gymtrack.domain.model.formatVolumeKg
@@ -53,6 +59,7 @@ import com.gymtrack.presentation.components.GymSectionHeader
 import com.gymtrack.presentation.components.GymTopAppBar
 import com.gymtrack.presentation.theme.GymSpacing
 import com.gymtrack.presentation.theme.GymTheme
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -256,10 +263,32 @@ private fun WorkoutSessionSummaryContent(
                     modifier = Modifier.testTag("summary_percent"),
                 )
 
-                if (improvedExercises.isNotEmpty()) {
+                if (uiState.progressionHighlights.isNotEmpty()) {
+                    SummaryHighlightSection(
+                        title = stringResource(R.string.summary_progression_section),
+                        testTag = "summary_progression_section",
+                    ) {
+                        uiState.progressionHighlights.forEach { highlight ->
+                            ProgressionRewardRow(highlight)
+                        }
+                    }
+                }
+
+                if (uiState.prHighlights.isNotEmpty()) {
+                    SummaryHighlightSection(
+                        title = stringResource(R.string.summary_new_pr_section),
+                        testTag = "summary_pr_section",
+                        tone = GymCardTone.Warning,
+                    ) {
+                        uiState.prHighlights.forEach { pr ->
+                            PrRewardRow(pr)
+                        }
+                    }
+                } else if (improvedExercises.isNotEmpty()) {
                     GymCard(
                         tone = GymCardTone.Warning,
                         contentPadding = PaddingValues(GymSpacing.CardPadding),
+                        modifier = Modifier.testTag("summary_pr_legacy"),
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -285,6 +314,32 @@ private fun WorkoutSessionSummaryContent(
                             }
                         }
                     }
+                }
+
+                if (!uiState.sessionXp.isEmpty) {
+                    SummaryHighlightSection(
+                        title = stringResource(R.string.summary_rewards_section),
+                        testTag = "summary_xp_section",
+                        tone = GymCardTone.Highlight,
+                    ) {
+                        Text(
+                            text = stringResource(
+                                R.string.summary_xp_total,
+                                uiState.sessionXp.totalAmount,
+                            ),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.testTag("summary_xp_total"),
+                        )
+                    }
+                }
+
+                uiState.missionRewards.forEach { reward ->
+                    MissionRewardCard(reward)
+                }
+
+                uiState.unlockedAchievementDefinitions.forEach { definition ->
+                    AchievementUnlockedCard(definition)
                 }
 
                 GymSectionHeader(title = stringResource(R.string.summary_exercises_section))
@@ -451,6 +506,125 @@ private fun ExerciseSummaryCard(
             )
         }
     }
+}
+
+@Composable
+private fun SummaryHighlightSection(
+    title: String,
+    testTag: String,
+    tone: GymCardTone = GymCardTone.Surface,
+    content: @Composable () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(GymSpacing.Sm)) {
+        GymSectionHeader(title = title)
+        GymCard(
+            tone = tone,
+            contentPadding = PaddingValues(GymSpacing.CardPadding),
+            modifier = Modifier.testTag(testTag),
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun ProgressionRewardRow(highlight: SessionProgressionHighlight) {
+    val label = when (highlight.action) {
+        ProgressionAction.INCREASE_WEIGHT -> stringResource(R.string.summary_progression_weight)
+        ProgressionAction.INCREASE_REPS -> stringResource(R.string.summary_progression_reps)
+        else -> return
+    }
+    Text(
+        text = "${highlight.exerciseName} · $label",
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier
+            .padding(top = GymSpacing.Xs)
+            .testTag("summary_progression_${highlight.exerciseName}"),
+    )
+}
+
+@Composable
+private fun PrRewardRow(pr: SessionPrHighlight) {
+    Text(
+        text = stringResource(
+            R.string.summary_pr_line,
+            pr.exerciseName,
+            formatWeight(pr.weight),
+            pr.reps,
+        ),
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier
+            .padding(top = GymSpacing.Xs)
+            .testTag("summary_pr_${pr.exerciseName}"),
+    )
+}
+
+@Composable
+private fun MissionRewardCard(reward: SessionMissionReward) {
+    val definition = MissionCatalog.byId(reward.definitionId)
+    val title = definition?.let { stringResource(it.titleRes) } ?: reward.definitionId
+    GymCard(
+        tone = GymCardTone.Highlight,
+        contentPadding = PaddingValues(GymSpacing.CardPadding),
+        modifier = Modifier.testTag("summary_mission_${reward.definitionId}"),
+    ) {
+        GymLabel(text = stringResource(R.string.summary_mission_completed_section))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(top = GymSpacing.Xs),
+        )
+        Text(
+            text = stringResource(R.string.summary_mission_xp, reward.xpAmount),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(top = GymSpacing.Xs),
+        )
+    }
+}
+
+@Composable
+private fun AchievementUnlockedCard(definition: AchievementDefinition) {
+    val name = achievementString(definition.nameKey)
+    GymCard(
+        tone = GymCardTone.Elevated,
+        contentPadding = PaddingValues(GymSpacing.CardPadding),
+        modifier = Modifier.testTag("summary_achievement_${definition.id}"),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(GymSpacing.Md),
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.EmojiEvents,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Column {
+                GymLabel(text = stringResource(R.string.summary_achievement_unlocked_section))
+                Text(
+                    text = name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = GymSpacing.Xs),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun achievementString(key: String): String {
+    val context = LocalContext.current
+    val resId = context.resources.getIdentifier(
+        key.replace('.', '_'),
+        "string",
+        context.packageName,
+    )
+    return if (resId != 0) stringResource(resId) else key
 }
 
 private fun formatWeight(weight: Double): String =

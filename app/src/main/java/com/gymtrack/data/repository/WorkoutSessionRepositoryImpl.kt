@@ -22,6 +22,8 @@ import com.gymtrack.domain.model.elapsedMillis
 import com.gymtrack.domain.model.parseWorkoutSessionExerciseStatus
 import com.gymtrack.domain.model.serializeSecondaryMuscles
 import com.gymtrack.domain.repository.ExerciseRepository
+import com.gymtrack.domain.repository.GamificationRepository
+import com.gymtrack.domain.repository.MissionRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
 import com.gymtrack.domain.time.TimeProvider
@@ -42,6 +44,8 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
     private val workoutRepository: WorkoutRepository,
     private val exerciseRepository: ExerciseRepository,
     private val timeProvider: TimeProvider,
+    private val gamificationRepository: GamificationRepository,
+    private val missionRepository: MissionRepository,
 ) : WorkoutSessionRepository {
 
     override suspend fun startSession(workoutId: Long): StartSessionResult =
@@ -251,6 +255,9 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
                 ?: throw IllegalArgumentException("Session not found: $sessionId")
             if (session.status == WorkoutSessionEntity.STATUS_COMPLETED) {
                 sessionDao.clearRest(sessionId)
+                // Idempotent retries for XP + missions if a prior run was interrupted.
+                gamificationRepository.awardXpForCompletedSession(sessionId)
+                missionRepository.evaluateAfterSession(sessionId)
                 return@withContext
             }
             val affected = sessionDao.updateCompletion(
@@ -261,6 +268,8 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
             if (affected == 0) {
                 throw IllegalArgumentException("Session not found: $sessionId")
             }
+            gamificationRepository.awardXpForCompletedSession(sessionId)
+            missionRepository.evaluateAfterSession(sessionId)
         }
     }
 

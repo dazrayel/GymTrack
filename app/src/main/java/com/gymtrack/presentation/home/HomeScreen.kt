@@ -66,6 +66,7 @@ import com.gymtrack.domain.model.AchievementCatalog
 import com.gymtrack.domain.model.DashboardPeriod
 import com.gymtrack.domain.model.ExercisePersonalRecords
 import com.gymtrack.domain.model.HomeActivityDay
+import com.gymtrack.domain.model.LevelProgress
 import com.gymtrack.domain.model.PeriodDashboardStats
 import com.gymtrack.domain.model.Workout
 import com.gymtrack.domain.model.WorkoutHistoryItem
@@ -93,6 +94,8 @@ fun HomeScreen(
     onNavigateToWorkouts: () -> Unit = {},
     onNavigateToWorkoutDetail: (workoutId: Long) -> Unit = {},
     onNavigateToAchievements: () -> Unit = {},
+    onNavigateToMissions: () -> Unit = {},
+    onNavigateToRpgProfile: () -> Unit = {},
     onSessionClick: (Long) -> Unit = {},
     onRecordClick: (String) -> Unit = {},
     onContinueInProgress: (sessionId: Long) -> Unit = {},
@@ -107,6 +110,8 @@ fun HomeScreen(
         onNavigateToWorkouts = onNavigateToWorkouts,
         onNavigateToWorkoutDetail = onNavigateToWorkoutDetail,
         onNavigateToAchievements = onNavigateToAchievements,
+        onNavigateToMissions = onNavigateToMissions,
+        onNavigateToRpgProfile = onNavigateToRpgProfile,
         onSessionClick = onSessionClick,
         onRecordClick = onRecordClick,
         onContinueInProgress = onContinueInProgress,
@@ -126,6 +131,8 @@ fun HomeScreen(
     onErrorShown: () -> Unit,
     onNavigateToWorkoutDetail: (workoutId: Long) -> Unit = {},
     onNavigateToAchievements: () -> Unit = {},
+    onNavigateToMissions: () -> Unit = {},
+    onNavigateToRpgProfile: () -> Unit = {},
     onPeriodSelected: (DashboardPeriod) -> Unit = {},
     onRecordClick: (String) -> Unit = {},
     onContinueInProgress: (sessionId: Long) -> Unit = {},
@@ -172,14 +179,20 @@ fun HomeScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
-                                .padding(horizontal = GymSpacing.ScreenPadding),
+                                .padding(horizontal = GymSpacing.ScreenPadding)
+                                .testTag("home_empty"),
                             verticalArrangement = Arrangement.spacedBy(GymSpacing.CardSpacing),
                         ) {
                             HomeHeroHeader(
                                 trainedDayCount = uiState.trainedDayCount,
                                 userDisplayName = uiState.userDisplayName,
                             )
-                            HomeActivityWeekStrip(days = uiState.activityWeekDays)
+                            uiState.levelProgress?.let { progress ->
+                                HomeLevelCard(
+                                    progress = progress,
+                                    onOpen = onNavigateToRpgProfile,
+                                )
+                            }
                             uiState.inProgressSession?.let { session ->
                                 InProgressResumeCard(
                                     workoutName = session.workoutName,
@@ -192,11 +205,6 @@ fun HomeScreen(
                                     onOpen = { onNavigateToWorkoutDetail(workout.id) },
                                 )
                             }
-                            AchievementsCard(
-                                unlockedCount = uiState.unlockedAchievementCount,
-                                totalCount = uiState.totalAchievementCount,
-                                onOpen = onNavigateToAchievements,
-                            )
                             EmptyDashboardContent(
                                 onNavigateToWorkouts = onNavigateToWorkouts,
                                 modifier = Modifier
@@ -219,6 +227,19 @@ fun HomeScreen(
                                 userDisplayName = uiState.userDisplayName,
                             )
                             HomeActivityWeekStrip(days = uiState.activityWeekDays)
+                            uiState.levelProgress?.let { progress ->
+                                HomeLevelCard(
+                                    progress = progress,
+                                    onOpen = onNavigateToRpgProfile,
+                                )
+                            }
+                            HomeMissionsCard(
+                                activeCount = uiState.activeMissionCount,
+                                highlightTitleRes = uiState.missionHighlightTitleRes,
+                                highlightProgress = uiState.missionHighlightProgress,
+                                highlightTarget = uiState.missionHighlightTarget,
+                                onOpen = onNavigateToMissions,
+                            )
                             uiState.inProgressSession?.let { session ->
                                 InProgressResumeCard(
                                     workoutName = session.workoutName,
@@ -655,6 +676,122 @@ private fun FrequencyCard(
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
+        }
+    }
+}
+
+@Composable
+private fun HomeMissionsCard(
+    activeCount: Int,
+    highlightTitleRes: Int?,
+    highlightProgress: Int,
+    highlightTarget: Int,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val description = stringResource(R.string.home_missions_cd, activeCount)
+    Column(modifier = modifier.fillMaxWidth()) {
+        GymLabel(
+            text = stringResource(R.string.home_missions_title),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
+        )
+        GymCard(
+            onClick = onOpen,
+            modifier = Modifier
+                .testTag("home_missions")
+                .semantics { contentDescription = description },
+        ) {
+            Text(
+                text = stringResource(R.string.home_missions_summary, activeCount),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            if (highlightTitleRes != null && highlightTarget > 0) {
+                Text(
+                    text = stringResource(
+                        R.string.home_missions_highlight,
+                        stringResource(highlightTitleRes),
+                        highlightProgress,
+                        highlightTarget,
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = GymSpacing.Xs),
+                )
+            }
+            Text(
+                text = stringResource(R.string.home_missions_cta),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = GymSpacing.Sm),
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeLevelCard(
+    progress: LevelProgress,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val description = stringResource(R.string.home_level_open_profile_cd, progress.level)
+    Column(modifier = modifier.fillMaxWidth()) {
+        GymLabel(
+            text = stringResource(R.string.home_level_label, progress.level),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
+        )
+        GymCard(
+            onClick = onOpen,
+            modifier = Modifier
+                .testTag("home_level")
+                .semantics { contentDescription = description },
+        ) {
+            if (progress.isMaxLevel) {
+                Text(
+                    text = stringResource(R.string.home_level_max),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = stringResource(
+                        R.string.home_level_xp_progress,
+                        progress.totalXp.toInt(),
+                        progress.totalXp.toInt(),
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = GymSpacing.Xs),
+                )
+            } else {
+                val into = progress.xpIntoLevel.toInt()
+                val need = progress.xpForNextLevel?.toInt() ?: 0
+                Text(
+                    text = stringResource(R.string.home_level_xp_progress, into, need),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                LinearProgressIndicator(
+                    progress = { progress.progressFraction },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = GymSpacing.Sm)
+                        .testTag("home_level_bar"),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                )
+                Text(
+                    text = stringResource(
+                        R.string.home_level_xp_remaining,
+                        progress.xpRemainingToNextLevel?.toInt() ?: 0,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = GymSpacing.Xs),
+                )
+            }
         }
     }
 }

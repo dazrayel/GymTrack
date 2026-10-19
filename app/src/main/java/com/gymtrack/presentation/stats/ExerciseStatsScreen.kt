@@ -17,8 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -48,6 +46,10 @@ import com.gymtrack.domain.model.ExercisePersonalRecords
 import com.gymtrack.domain.model.formatVolumeKg
 import com.gymtrack.domain.time.formatLocalDate
 import com.gymtrack.domain.time.formatLocalTime
+import com.gymtrack.presentation.components.GymCard
+import com.gymtrack.presentation.components.GymCardTone
+import com.gymtrack.presentation.components.GymSectionHeader
+import com.gymtrack.presentation.theme.GymSpacing
 import java.time.ZoneId
 
 @Composable
@@ -200,24 +202,16 @@ private fun RecordsSummaryCard(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.dashboard_records),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
+        GymSectionHeader(
+            title = stringResource(R.string.dashboard_records),
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
         )
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("exercise_stats_records"),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
+        GymCard(
+            modifier = Modifier.testTag("exercise_stats_records"),
+            tone = GymCardTone.Surface,
         ) {
             Column(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
-                    .testTag("exercise_stats_record_${record.exerciseName}"),
+                modifier = Modifier.testTag("exercise_stats_record_${record.exerciseName}"),
             ) {
                 Text(
                     text = stringResource(R.string.home_record_weight, formatVolumeKg(record.bestWeight)),
@@ -228,13 +222,13 @@ private fun RecordsSummaryCard(
                     text = stringResource(R.string.home_record_reps, record.bestReps),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = GymSpacing.Xxs),
                 )
                 Text(
                     text = stringResource(R.string.home_record_volume, formatVolumeKg(record.bestVolume)),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = GymSpacing.Xxs),
                 )
             }
         }
@@ -248,23 +242,16 @@ private fun HistoryCard(
 ) {
     val zone = ZoneId.systemDefault()
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.exercise_stats_history),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            modifier = Modifier.padding(bottom = 8.dp),
+        GymSectionHeader(
+            title = stringResource(R.string.exercise_stats_history),
+            modifier = Modifier.padding(bottom = GymSpacing.Sm),
         )
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("exercise_stats_history"),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
+        GymCard(
+            modifier = Modifier.testTag("exercise_stats_history"),
+            tone = GymCardTone.Surface,
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(GymSpacing.Md),
             ) {
                 points.forEach { point ->
                     val dateTime = stringResource(
@@ -283,8 +270,8 @@ private fun HistoryCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Row(
-                            modifier = Modifier.padding(top = 2.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.padding(top = GymSpacing.Xxs),
+                            horizontalArrangement = Arrangement.spacedBy(GymSpacing.Md),
                         ) {
                             Text(
                                 text = stringResource(

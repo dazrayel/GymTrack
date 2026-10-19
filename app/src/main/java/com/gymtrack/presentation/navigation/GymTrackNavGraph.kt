@@ -21,7 +21,9 @@ import com.gymtrack.presentation.dashboard.DashboardScreen
 import com.gymtrack.presentation.exercises.ExercisesScreen
 import com.gymtrack.presentation.history.HistoryScreen
 import com.gymtrack.presentation.home.HomeScreen
+import com.gymtrack.presentation.missions.MissionScreen
 import com.gymtrack.presentation.planning.WeeklyPlanningScreen
+import com.gymtrack.presentation.rpg.RpgProfileScreen
 import com.gymtrack.presentation.settings.SettingsScreen
 import com.gymtrack.presentation.stats.ExerciseStatsScreen
 import com.gymtrack.presentation.workouts.WorkoutsScreen
@@ -30,6 +32,8 @@ import com.gymtrack.presentation.workouts.execution.WorkoutExecutionScreen
 import com.gymtrack.presentation.workouts.summary.WorkoutSessionSummaryScreen
 
 internal const val ROUTE_ACHIEVEMENTS = "achievements"
+internal const val ROUTE_MISSIONS = "missions"
+internal const val ROUTE_RPG_PROFILE = "rpg_profile"
 internal const val ROUTE_CALENDAR = "calendar"
 internal const val ROUTE_WEEKLY_PLANNING = "weekly_planning"
 
@@ -107,6 +111,16 @@ fun GymTrackNavGraph(
                             launchSingleTop = true
                         }
                     },
+                    onNavigateToMissions = {
+                        navController.navigate(ROUTE_MISSIONS) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToRpgProfile = {
+                        navController.navigate(ROUTE_RPG_PROFILE) {
+                            launchSingleTop = true
+                        }
+                    },
                     onSessionClick = { sessionId ->
                         navController.navigate(routeWorkoutSessionSummary(sessionId)) {
                             launchSingleTop = true
@@ -180,7 +194,14 @@ fun GymTrackNavGraph(
                 )
             }
             composable(TopLevelDestination.SETTINGS.route) {
-                SettingsScreen(contentPadding = innerPadding)
+                SettingsScreen(
+                    contentPadding = innerPadding,
+                    onNavigateToRpgProfile = {
+                        navController.navigate(ROUTE_RPG_PROFILE) {
+                            launchSingleTop = true
+                        }
+                    },
+                )
             }
             composable(ROUTE_EXERCISES) {
                 ExercisesScreen(
@@ -196,6 +217,28 @@ fun GymTrackNavGraph(
             composable(ROUTE_ACHIEVEMENTS) {
                 AchievementScreen(
                     onNavigateBack = { navController.popBackStack() },
+                    contentPadding = innerPadding,
+                )
+            }
+            composable(ROUTE_MISSIONS) {
+                MissionScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    contentPadding = innerPadding,
+                )
+            }
+            composable(ROUTE_RPG_PROFILE) {
+                RpgProfileScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToAchievements = {
+                        navController.navigate(ROUTE_ACHIEVEMENTS) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onNavigateToMissions = {
+                        navController.navigate(ROUTE_MISSIONS) {
+                            launchSingleTop = true
+                        }
+                    },
                     contentPadding = innerPadding,
                 )
             }

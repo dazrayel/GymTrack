@@ -14,6 +14,8 @@ import com.gymtrack.domain.model.WorkoutSet
 import android.content.Context
 import com.gymtrack.domain.identity.GoogleSignInResult
 import com.gymtrack.domain.model.GoogleUser
+import com.gymtrack.domain.repository.FakeGamificationRepository
+import com.gymtrack.domain.repository.FakeMissionRepository
 import com.gymtrack.domain.repository.GoogleIdentityRepository
 import com.gymtrack.domain.repository.WorkoutRepository
 import com.gymtrack.domain.repository.WorkoutSessionRepository
@@ -57,6 +59,8 @@ class HomeViewModelTest {
     private val zone: ZoneId = ZoneId.systemDefault()
     private lateinit var workoutRepository: FakeHomeWorkoutRepository
     private lateinit var sessionRepository: FakeHomeSessionRepository
+    private lateinit var gamificationRepository: FakeGamificationRepository
+    private lateinit var missionRepository: FakeMissionRepository
     private lateinit var clock: FakeTimeProvider
     private lateinit var identityRepository: FakeHomeIdentityRepository
 
@@ -65,6 +69,8 @@ class HomeViewModelTest {
         Dispatchers.setMain(testDispatcher)
         workoutRepository = FakeHomeWorkoutRepository()
         sessionRepository = FakeHomeSessionRepository()
+        gamificationRepository = FakeGamificationRepository()
+        missionRepository = FakeMissionRepository()
         identityRepository = FakeHomeIdentityRepository()
         clock = FakeTimeProvider(now = local("2026-08-26T12:00:00"))
     }
@@ -77,6 +83,8 @@ class HomeViewModelTest {
     private fun createViewModel() = HomeViewModel(
         workoutRepository,
         sessionRepository,
+        gamificationRepository,
+        missionRepository,
         identityRepository,
         clock,
     )
