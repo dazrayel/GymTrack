@@ -85,11 +85,19 @@ data class WorkoutExecutionUiState(
             return exercises.map { exercise ->
                 val completedSets = setsByExerciseId[exercise.id]?.size ?: 0
                 val isComplete = completedSets >= exercise.plannedSets
+                val hasEarlierIncompleteBlock = exercises.any { other ->
+                    other.blockPosition < exercise.blockPosition &&
+                        other.status != WorkoutSessionExerciseStatus.SKIPPED &&
+                        (setsByExerciseId[other.id]?.size ?: 0) < other.plannedSets
+                }
                 SessionExerciseRow(
                     exercise = exercise,
                     completedSets = completedSets,
                     isCurrent = exercise.id == currentId,
                     isComplete = isComplete,
+                    canSelectNow = !isComplete &&
+                        exercise.id != currentId &&
+                        !hasEarlierIncompleteBlock,
                 )
             }
         }
@@ -129,10 +137,8 @@ data class SessionExerciseRow(
     val completedSets: Int,
     val isCurrent: Boolean,
     val isComplete: Boolean,
+    val canSelectNow: Boolean = !isComplete && !isCurrent,
 ) {
-    val canSelectNow: Boolean
-        get() = !isComplete && !isCurrent
-
     val listStatus: SessionExerciseListStatus
         get() = when {
             isComplete -> SessionExerciseListStatus.COMPLETED

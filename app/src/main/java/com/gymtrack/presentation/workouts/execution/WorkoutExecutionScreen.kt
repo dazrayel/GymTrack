@@ -658,7 +658,13 @@ private fun ActiveSetContent(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    // Single IME consumer: padding the outer column avoids a second inset on the action bar
+    // (edge-to-edge + local imePadding previously left a keyboard-sized empty gap).
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding(),
+    ) {
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -861,7 +867,6 @@ private fun ActiveSetContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.96f))
-                .imePadding()
                 .padding(horizontal = GymSpacing.ScreenPadding, vertical = GymSpacing.Sm)
                 .testTag("execution_actions"),
             verticalArrangement = Arrangement.spacedBy(GymSpacing.Sm),

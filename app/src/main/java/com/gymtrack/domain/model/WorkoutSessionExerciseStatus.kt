@@ -26,6 +26,10 @@ fun areAllSessionExercisesComplete(
 /**
  * Picks the next exercise respecting block rounds:
  * within a bi/tri-set, finish the current round across all slots before starting the next round.
+ *
+ * An [WorkoutSessionExerciseStatus.IN_PROGRESS] mark (e.g. from the exercise list) must not skip
+ * incomplete work in an earlier block or an earlier slot of the same round — otherwise the last
+ * set of a BI/TRI partner can be deferred until much later in the session.
  */
 fun resolveCurrentExerciseIndex(
     exercises: List<WorkoutSessionExercise>,
@@ -37,24 +41,38 @@ fun resolveCurrentExerciseIndex(
     fun isComplete(exercise: WorkoutSessionExercise): Boolean =
         isSessionExerciseComplete(exercise, completedCount(exercise))
 
+    fun nextInBlock(block: List<WorkoutSessionExercise>): WorkoutSessionExercise? {
+        if (block.isEmpty() || block.all { isComplete(it) }) return null
+        val currentRound = block.minOf { completedCount(it).coerceAtMost(it.plannedSets) }
+        return block.firstOrNull { completedCount(it) == currentRound && !isComplete(it) }
+            ?: block.firstOrNull { !isComplete(it) }
+    }
+
     val inProgress = exercises.indexOfFirst { exercise ->
         exercise.status == WorkoutSessionExerciseStatus.IN_PROGRESS && !isComplete(exercise)
     }
     if (inProgress >= 0) {
-        // Still honour explicit IN_PROGRESS, but prefer same-round ordering inside its block.
         val current = exercises[inProgress]
-        val block = exercises
-            .filter {
-                it.blockPosition == current.blockPosition &&
-                    it.status != WorkoutSessionExerciseStatus.SKIPPED
-            }
-            .sortedBy { it.positionInBlock }
-        val round = block.minOfOrNull { completedCount(it).coerceAtMost(it.plannedSets) } ?: 0
-        val sameRound = block.firstOrNull { completedCount(it) == round && !isComplete(it) }
-        if (sameRound != null) {
-            return exercises.indexOfFirst { it.id == sameRound.id }
+        val hasEarlierIncompleteBlock = exercises.any { exercise ->
+            exercise.blockPosition < current.blockPosition &&
+                exercise.status != WorkoutSessionExerciseStatus.SKIPPED &&
+                !isComplete(exercise)
         }
-        return inProgress
+        if (!hasEarlierIncompleteBlock) {
+            val block = exercises
+                .filter {
+                    it.blockPosition == current.blockPosition &&
+                        it.status != WorkoutSessionExerciseStatus.SKIPPED
+                }
+                .sortedBy { it.positionInBlock }
+            // Always honour round order inside the block — never stay on a later slot while an
+            // earlier slot still owes the current round (selection of B must not skip A's set).
+            val sameRound = nextInBlock(block)
+            if (sameRound != null) {
+                return exercises.indexOfFirst { it.id == sameRound.id }
+            }
+        }
+        // Stale IN_PROGRESS on a later block: ignore and fall through to ordered resolution.
     }
 
     val blockPositions = exercises
@@ -70,13 +88,7 @@ fun resolveCurrentExerciseIndex(
                     it.status != WorkoutSessionExerciseStatus.SKIPPED
             }
             .sortedBy { it.positionInBlock }
-        if (block.isEmpty()) continue
-        if (block.all { isComplete(it) }) continue
-
-        val currentRound = block.minOf { completedCount(it).coerceAtMost(it.plannedSets) }
-        val next = block.firstOrNull { completedCount(it) == currentRound }
-            ?: block.firstOrNull { !isComplete(it) }
-            ?: continue
+        val next = nextInBlock(block) ?: continue
         return exercises.indexOfFirst { it.id == next.id }
     }
     return -1
@@ -88,6 +100,9 @@ fun resolveCurrentExerciseIndex(
  *
  * Rest runs when there is still executable work after this completion (more sets/rounds in the
  * block, or another incomplete block). No rest after the last set of the last remaining exercise.
+ *
+ * Completing the last set of exercise A must not start rest while exercise B in the same block
+ * still owes that same round — regardless of which exercise is marked IN_PROGRESS in the UI.
  */
 fun shouldRestAfterCompletingSet(
     completedExercise: WorkoutSessionExercise,
@@ -101,14 +116,12 @@ fun shouldRestAfterCompletingSet(
             it.status != WorkoutSessionExerciseStatus.SKIPPED
     }
     if (block.isEmpty()) return false
-    val roundComplete = block.all { exercise ->
-        val count = if (exercise.id == completedExercise.id) {
-            completedSetCountAfter
-        } else {
-            setsByExerciseId[exercise.id]?.size ?: 0
-        }
-        count >= completedSetCountAfter
-    }
+    val roundComplete = isBlockRoundComplete(
+        block = block,
+        completedExerciseId = completedExercise.id,
+        completedSetCountAfter = completedSetCountAfter,
+        setsByExerciseId = setsByExerciseId,
+    )
     if (!roundComplete) return false
     return hasExecutableWorkRemaining(
         completedExercise = completedExercise,
@@ -116,6 +129,27 @@ fun shouldRestAfterCompletingSet(
         exercises = exercises,
         setsByExerciseId = setsByExerciseId,
     )
+}
+
+/**
+ * True when every active exercise in [block] has at least [completedSetCountAfter] sets
+ * (projecting the set that was just completed onto [completedExerciseId]).
+ */
+fun isBlockRoundComplete(
+    block: List<WorkoutSessionExercise>,
+    completedExerciseId: Long,
+    completedSetCountAfter: Int,
+    setsByExerciseId: Map<Long, List<WorkoutSet>>,
+): Boolean {
+    if (block.isEmpty() || completedSetCountAfter <= 0) return false
+    return block.all { exercise ->
+        val count = if (exercise.id == completedExerciseId) {
+            completedSetCountAfter
+        } else {
+            setsByExerciseId[exercise.id]?.size ?: 0
+        }
+        count >= completedSetCountAfter
+    }
 }
 
 /**

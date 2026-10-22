@@ -12,6 +12,7 @@ import com.gymtrack.domain.model.WorkoutBlock
 import com.gymtrack.domain.model.WorkoutExercise
 import com.gymtrack.domain.model.WorkoutSession
 import com.gymtrack.domain.model.WorkoutSessionExercise
+import com.gymtrack.domain.model.WorkoutSessionExerciseStatus
 import com.gymtrack.domain.model.WorkoutSessionStatus
 import com.gymtrack.domain.model.WorkoutSet
 import com.gymtrack.domain.model.areAllSessionExercisesComplete
@@ -700,7 +701,23 @@ class WorkoutExecutionViewModel @Inject constructor(
         val target = state.exercises.firstOrNull { it.id == sessionExerciseId } ?: return
         val completedSets = state.setsByExerciseId[target.id]?.size ?: 0
         if (completedSets >= target.plannedSets) return
-        if (state.currentExercise?.id == sessionExerciseId) return
+        // Already the resolved current and marked IN_PROGRESS: nothing to do. If status is
+        // still PENDING (e.g. partner was selected in a BI/TRI), still persist IN_PROGRESS so
+        // the partner is demoted.
+        if (state.currentExercise?.id == sessionExerciseId &&
+            target.status == WorkoutSessionExerciseStatus.IN_PROGRESS
+        ) {
+            return
+        }
+        // Do not jump past incomplete earlier blocks — that deferred partner sets in BI/TRI
+        // until much later. Same-block selection remains allowed; round order is enforced by
+        // resolveCurrentExerciseIndex.
+        val hasEarlierIncompleteBlock = state.exercises.any { exercise ->
+            exercise.blockPosition < target.blockPosition &&
+                exercise.status != WorkoutSessionExerciseStatus.SKIPPED &&
+                (state.setsByExerciseId[exercise.id]?.size ?: 0) < exercise.plannedSets
+        }
+        if (hasEarlierIncompleteBlock) return
         viewModelScope.launch {
             try {
                 workoutSessionRepository.resumeSessionExercise(sessionExerciseId)

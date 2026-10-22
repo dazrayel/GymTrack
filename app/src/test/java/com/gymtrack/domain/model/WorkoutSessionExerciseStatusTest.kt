@@ -30,16 +30,29 @@ class WorkoutSessionExerciseStatusTest {
     }
 
     @Test
-    fun current_prefersInProgressEvenIfEarlierIsIncomplete() {
+    fun current_prefersInProgressWhenEarlierIncompleteIsSkipped() {
         val index = resolveCurrentExerciseIndex(
             listOf(
                 supino.copy(status = WorkoutSessionExerciseStatus.SKIPPED),
-                crucifixo,
+                crucifixo.copy(status = WorkoutSessionExerciseStatus.SKIPPED),
                 triceps.copy(status = WorkoutSessionExerciseStatus.IN_PROGRESS),
             ),
             mapOf(1L to emptyList(), 2L to emptyList(), 3L to listOf(set(3, 0))),
         )
         assertEquals(2, index)
+    }
+
+    @Test
+    fun current_ignoresInProgressOnLaterBlockWhileEarlierBlockHasPendingSets() {
+        val index = resolveCurrentExerciseIndex(
+            listOf(
+                supino,
+                crucifixo,
+                triceps.copy(status = WorkoutSessionExerciseStatus.IN_PROGRESS),
+            ),
+            mapOf(1L to emptyList(), 2L to emptyList(), 3L to listOf(set(3, 0))),
+        )
+        assertEquals(0, index)
     }
 
     @Test
@@ -464,6 +477,160 @@ class WorkoutSessionExerciseStatusTest {
         assertEquals(0, resolveCurrentExerciseIndex(exercises, mapOf(41L to listOf(set(41, 0)), 42L to listOf(set(42, 0)), 43L to listOf(set(43, 0)))))
     }
 
+    @Test
+    fun biSet_completingLastSetOfFirst_doesNotRestOrSkipSecondLastSet() {
+        val squat = sessionExercise(
+            id = 51, position = 0, plannedSets = 4, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 0, blockType = WorkoutBlockType.BI_SET,
+        )
+        val calf = sessionExercise(
+            id = 52, position = 1, plannedSets = 4, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 1, blockType = WorkoutBlockType.BI_SET,
+            status = WorkoutSessionExerciseStatus.IN_PROGRESS,
+        )
+        val next = sessionExercise(id = 53, position = 2, plannedSets = 2, restSeconds = 30, blockPosition = 1)
+        val exercises = listOf(squat, calf, next)
+        val setsAfterSquatLast = mapOf(
+            51L to listOf(set(51, 0), set(51, 1), set(51, 2)),
+            52L to listOf(set(52, 0), set(52, 1), set(52, 2)),
+            53L to emptyList(),
+        )
+
+        assertFalse(
+            shouldRestAfterCompletingSet(
+                completedExercise = squat,
+                completedSetCountAfter = 4,
+                exercises = exercises,
+                setsByExerciseId = setsAfterSquatLast,
+            ),
+        )
+        assertFalse(
+            isBlockRoundComplete(
+                block = listOf(squat, calf),
+                completedExerciseId = squat.id,
+                completedSetCountAfter = 4,
+                setsByExerciseId = setsAfterSquatLast,
+            ),
+        )
+
+        val afterComplete = setsAfterSquatLast + (
+            51L to listOf(set(51, 0), set(51, 1), set(51, 2), set(51, 3))
+            )
+        assertEquals(1, resolveCurrentExerciseIndex(exercises, afterComplete))
+        assertEquals(calf.id, exercises[resolveCurrentExerciseIndex(exercises, afterComplete)].id)
+    }
+
+    @Test
+    fun biSet_selectingSecondExercise_stillHonoursRoundOrder() {
+        val squat = sessionExercise(
+            id = 61, position = 0, plannedSets = 4, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 0, blockType = WorkoutBlockType.BI_SET,
+        )
+        val calf = sessionExercise(
+            id = 62, position = 1, plannedSets = 4, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 1, blockType = WorkoutBlockType.BI_SET,
+            status = WorkoutSessionExerciseStatus.IN_PROGRESS,
+        )
+        val exercises = listOf(squat, calf)
+        // Both owe round 4 (3 sets each); selection of calf must not make calf current.
+        val sets = mapOf(
+            61L to listOf(set(61, 0), set(61, 1), set(61, 2)),
+            62L to listOf(set(62, 0), set(62, 1), set(62, 2)),
+        )
+        assertEquals(0, resolveCurrentExerciseIndex(exercises, sets))
+    }
+
+    @Test
+    fun biSet_afterFullRoundRest_nextIsFirstExerciseOfNextRound() {
+        val squat = sessionExercise(
+            id = 71, position = 0, plannedSets = 4, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 0, blockType = WorkoutBlockType.BI_SET,
+        )
+        val calf = sessionExercise(
+            id = 72, position = 1, plannedSets = 4, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 1, blockType = WorkoutBlockType.BI_SET,
+        )
+        val exercises = listOf(squat, calf)
+        val afterRound3 = mapOf(
+            71L to listOf(set(71, 0), set(71, 1), set(71, 2)),
+            72L to listOf(set(72, 0), set(72, 1), set(72, 2)),
+        )
+        assertTrue(
+            shouldRestAfterCompletingSet(
+                completedExercise = calf,
+                completedSetCountAfter = 3,
+                exercises = exercises,
+                setsByExerciseId = mapOf(
+                    71L to listOf(set(71, 0), set(71, 1), set(71, 2)),
+                    72L to listOf(set(72, 0), set(72, 1)),
+                ),
+            ),
+        )
+        assertEquals(0, resolveCurrentExerciseIndex(exercises, afterRound3))
+    }
+
+    @Test
+    fun triSet_completingOneLastSet_doesNotEndRoundWhilePartnersPending() {
+        val a = sessionExercise(
+            id = 81, position = 0, plannedSets = 3, restSeconds = 45,
+            blockPosition = 0, positionInBlock = 0, blockType = WorkoutBlockType.TRI_SET,
+        )
+        val b = sessionExercise(
+            id = 82, position = 1, plannedSets = 3, restSeconds = 45,
+            blockPosition = 0, positionInBlock = 1, blockType = WorkoutBlockType.TRI_SET,
+            status = WorkoutSessionExerciseStatus.IN_PROGRESS,
+        )
+        val c = sessionExercise(
+            id = 83, position = 2, plannedSets = 3, restSeconds = 45,
+            blockPosition = 0, positionInBlock = 2, blockType = WorkoutBlockType.TRI_SET,
+        )
+        val exercises = listOf(a, b, c)
+        val sets = mapOf(
+            81L to listOf(set(81, 0), set(81, 1)),
+            82L to listOf(set(82, 0), set(82, 1)),
+            83L to listOf(set(83, 0), set(83, 1)),
+        )
+        assertFalse(
+            shouldRestAfterCompletingSet(
+                completedExercise = a,
+                completedSetCountAfter = 3,
+                exercises = exercises,
+                setsByExerciseId = sets,
+            ),
+        )
+        val afterA = sets + (81L to listOf(set(81, 0), set(81, 1), set(81, 2)))
+        assertEquals(1, resolveCurrentExerciseIndex(exercises, afterA))
+    }
+
+    @Test
+    fun skippedPartner_isNotTreatedAsPendingForRestOrResolve() {
+        val squat = sessionExercise(
+            id = 91, position = 0, plannedSets = 2, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 0, blockType = WorkoutBlockType.BI_SET,
+        )
+        val calf = sessionExercise(
+            id = 92, position = 1, plannedSets = 2, restSeconds = 60,
+            blockPosition = 0, positionInBlock = 1, blockType = WorkoutBlockType.BI_SET,
+            status = WorkoutSessionExerciseStatus.SKIPPED,
+        )
+        val next = sessionExercise(id = 93, position = 2, plannedSets = 1, restSeconds = 30, blockPosition = 1)
+        val exercises = listOf(squat, calf, next)
+        assertTrue(
+            shouldRestAfterCompletingSet(
+                completedExercise = squat,
+                completedSetCountAfter = 1,
+                exercises = exercises,
+                setsByExerciseId = mapOf(91L to emptyList(), 92L to emptyList(), 93L to emptyList()),
+            ),
+        )
+        val afterSquatDone = mapOf(
+            91L to listOf(set(91, 0), set(91, 1)),
+            92L to emptyList(),
+            93L to emptyList(),
+        )
+        assertEquals(2, resolveCurrentExerciseIndex(exercises, afterSquatDone))
+    }
+
     private fun sessionExercise(
         id: Long,
         position: Int,
@@ -472,6 +639,7 @@ class WorkoutSessionExerciseStatusTest {
         blockPosition: Int = position,
         positionInBlock: Int = 0,
         blockType: WorkoutBlockType = WorkoutBlockType.SINGLE,
+        status: WorkoutSessionExerciseStatus = WorkoutSessionExerciseStatus.PENDING,
     ) = WorkoutSessionExercise(
         id = id,
         sessionId = 1L,
@@ -484,6 +652,7 @@ class WorkoutSessionExerciseStatusTest {
         maxRepetitions = 12,
         plannedWeight = 40.0,
         restSeconds = restSeconds,
+        status = status,
         blockType = blockType,
         blockPosition = blockPosition,
         positionInBlock = positionInBlock,
