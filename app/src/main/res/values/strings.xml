@@ -330,6 +330,10 @@
     <string name="complete_set">Concluir série</string>
     <string name="current_set">Série %1$d de %2$d</string>
     <string name="reps_label">Repetições</string>
+    <string name="decrease_reps">Diminuir repetições</string>
+    <string name="increase_reps">Aumentar repetições</string>
+    <string name="decrease_weight">Diminuir carga</string>
+    <string name="increase_weight">Aumentar carga</string>
     <string name="execution_reps_target">Meta: %1$s reps</string>
     <string name="validation_reps_min">As repetições devem ser pelo menos 1</string>
     <string name="rest_title">Descanso</string>

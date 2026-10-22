@@ -199,6 +199,7 @@ class WorkoutExecutionViewModel @Inject constructor(
                 exercise = currentExercise,
                 completedHistory = completedHistory,
                 previous = current.progressionSuggestion,
+                workoutId = session?.workoutId,
             )
             val canApply = canApplyProgressionToTemplate(
                 sessionExercise = workingExercise,
@@ -297,12 +298,13 @@ class WorkoutExecutionViewModel @Inject constructor(
         exercise: WorkoutSessionExercise?,
         completedHistory: List<CompletedSetRecord>,
         previous: ProgressionSuggestion?,
+        workoutId: Long?,
     ): ProgressionSuggestion? {
         if (exercise == null) {
             lastProgressionExerciseKey = null
             return null
         }
-        val key = progressionCacheKey(exercise, completedHistory)
+        val key = progressionCacheKey(exercise, completedHistory, workoutId)
         if (key == lastProgressionExerciseKey && previous != null) {
             return previous
         }
@@ -316,6 +318,7 @@ class WorkoutExecutionViewModel @Inject constructor(
                 history = completedHistory,
                 exerciseName = exercise.exerciseName,
                 excludeSessionId = sessionId,
+                workoutId = workoutId,
             ),
         )
     }
@@ -323,15 +326,21 @@ class WorkoutExecutionViewModel @Inject constructor(
     private fun progressionCacheKey(
         exercise: WorkoutSessionExercise,
         completedHistory: List<CompletedSetRecord>,
+        workoutId: Long?,
     ): String {
         val historyFingerprint = completedHistory
             .asSequence()
-            .filter { it.exerciseName == exercise.exerciseName && it.sessionId != sessionId }
-            .map { "${it.sessionId}:${it.occurredAtMillis}:${it.reps}:${it.weight}" }
+            .filter {
+                it.exerciseName == exercise.exerciseName &&
+                    it.sessionId != sessionId &&
+                    (workoutId == null || it.workoutId == workoutId)
+            }
+            .map { "${it.sessionId}:${it.occurredAtMillis}:${it.reps}:${it.weight}:${it.setIndex}" }
             .joinToString("|")
         return listOf(
             exercise.id.toString(),
             exercise.exerciseName,
+            workoutId?.toString().orEmpty(),
             exercise.plannedWeight.toString(),
             exercise.minRepetitions.toString(),
             exercise.maxRepetitions.toString(),
@@ -550,6 +559,18 @@ class WorkoutExecutionViewModel @Inject constructor(
             )
         }
         persistCurrentDraft()
+    }
+
+    fun adjustRepsBy(delta: Int) {
+        val state = _uiState.value
+        if (state.phase != WorkoutExecutionPhase.WORKING) return
+        onRepsChanged(adjustRepsInput(state.repsInput, delta))
+    }
+
+    fun adjustWeightBy(deltaKg: Double) {
+        val state = _uiState.value
+        if (state.phase != WorkoutExecutionPhase.WORKING) return
+        onWeightChanged(adjustWeightInput(state.weightInput, deltaKg))
     }
 
     private fun persistCurrentDraft() {

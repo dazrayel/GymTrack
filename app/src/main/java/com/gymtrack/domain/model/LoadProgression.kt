@@ -100,18 +100,22 @@ fun evaluateLoadProgression(
 
 /**
  * Picks sets from the latest COMPLETED session that includes [exerciseName],
- * excluding [excludeSessionId] (typically the in-progress session).
- * Does not mix sessions. Indices within the session are assigned in list order
- * (history rows for one session share the same [CompletedSetRecord.occurredAtMillis]).
+ * scoped to [workoutId] when non-null so the same exercise in different templates
+ * keeps independent progression histories.
+ *
+ * Excludes [excludeSessionId] (typically the in-progress session).
+ * Does not mix sessions. Uses persisted [CompletedSetRecord.setIndex] when present.
  */
 fun lastCompletedSessionSetsForExercise(
     history: List<CompletedSetRecord>,
     exerciseName: String,
     excludeSessionId: Long? = null,
+    workoutId: Long? = null,
 ): List<ProgressionPerformedSet> {
     val relevant = history.filter { record ->
         record.exerciseName == exerciseName &&
-            (excludeSessionId == null || record.sessionId != excludeSessionId)
+            (excludeSessionId == null || record.sessionId != excludeSessionId) &&
+            (workoutId == null || record.workoutId == workoutId)
     }
     if (relevant.isEmpty()) return emptyList()
 
@@ -123,9 +127,10 @@ fun lastCompletedSessionSetsForExercise(
 
     return relevant
         .filter { it.sessionId == lastSessionId }
-        .mapIndexed { index, record ->
+        .sortedBy { it.setIndex }
+        .map { record ->
             ProgressionPerformedSet(
-                setIndex = index,
+                setIndex = record.setIndex,
                 reps = record.reps,
                 weight = record.weight,
             )

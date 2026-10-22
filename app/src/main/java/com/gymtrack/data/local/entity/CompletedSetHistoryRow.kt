@@ -6,4 +6,6 @@ data class CompletedSetHistoryRow(
     val exerciseName: String,
     val reps: Int,
     val weight: Double,
+    val workoutId: Long? = null,
+    val setIndex: Int = 0,
 )

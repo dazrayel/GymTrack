@@ -1336,6 +1336,52 @@ class WorkoutExecutionViewModelTest {
     }
 
     @Test
+    fun adjustWeight_incrementsAndDecrementsByStep_withoutCompletingSet() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.onWeightChanged("40")
+
+        viewModel.adjustWeightBy(WEIGHT_ADJUST_STEP_KG)
+        assertEquals("42.5", viewModel.uiState.value.weightInput)
+        viewModel.adjustWeightBy(WEIGHT_ADJUST_STEP_KG)
+        assertEquals("45", viewModel.uiState.value.weightInput)
+        viewModel.adjustWeightBy(-WEIGHT_ADJUST_STEP_KG)
+        assertEquals("42.5", viewModel.uiState.value.weightInput)
+
+        assertTrue(fakeRepo.completeSetCalls.isEmpty())
+        assertEquals(WorkoutExecutionPhase.WORKING, viewModel.uiState.value.phase)
+        assertEquals("42.5", draftStore.get(SESSION_ID, exerciseA.id)?.weightInput)
+    }
+
+    @Test
+    fun adjustReps_incrementsAndDecrementsByOne_withoutCompletingSet() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.onRepsChanged("10")
+
+        viewModel.adjustRepsBy(1)
+        assertEquals("11", viewModel.uiState.value.repsInput)
+        viewModel.adjustRepsBy(-1)
+        assertEquals("10", viewModel.uiState.value.repsInput)
+
+        assertTrue(fakeRepo.completeSetCalls.isEmpty())
+        assertEquals(WorkoutExecutionPhase.WORKING, viewModel.uiState.value.phase)
+        assertEquals("10", draftStore.get(SESSION_ID, exerciseA.id)?.repsInput)
+    }
+
+    @Test
+    fun adjustWeight_respectsMinimumAndKeepsManualEditsSynced() = runTest(testDispatcher) {
+        emitSessionWithExercises()
+        viewModel.onWeightChanged("1")
+        viewModel.adjustWeightBy(-WEIGHT_ADJUST_STEP_KG)
+        assertEquals("0", viewModel.uiState.value.weightInput)
+
+        viewModel.onWeightChanged("37.5")
+        assertEquals("37.5", viewModel.uiState.value.weightInput)
+        viewModel.adjustWeightBy(WEIGHT_ADJUST_STEP_KG)
+        assertEquals("40", viewModel.uiState.value.weightInput)
+        assertTrue(fakeRepo.completeSetCalls.isEmpty())
+    }
+
+    @Test
     fun progression_noHistory_returnsNoHistory() {
         val target = exerciseA.copy(plannedWeight = 80.0)
         fakeRepo.emitSession(session)
@@ -1345,6 +1391,36 @@ class WorkoutExecutionViewModelTest {
         val suggestion = viewModel.uiState.value.progressionSuggestion
         assertEquals(ProgressionAction.NO_HISTORY, suggestion!!.action)
         assertNull(suggestion.suggestedWeight)
+    }
+
+    @Test
+    fun progression_sameExerciseDifferentWorkouts_usesOwnHistory() {
+        val target = exerciseA.copy(plannedWeight = 60.0, minRepetitions = 6, maxRepetitions = 6, plannedSets = 1)
+        fakeRepo.emitSession(session.copy(workoutId = 1L, workoutName = "Peito"))
+        fakeRepo.emitExercises(listOf(target))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(6), 60.0, workoutId = 1L) +
+                historySets(60L, 6_000L, "Supino", listOf(12), 45.0, workoutId = 2L),
+        )
+
+        val suggestion = viewModel.uiState.value.progressionSuggestion!!
+        assertEquals(ProgressionAction.INCREASE_WEIGHT, suggestion.action)
+        assertEquals(62.5, suggestion.suggestedWeight!!, 0.001)
+        assertEquals(60.0, suggestion.lastSessionSets.single().weight, 0.001)
+    }
+
+    @Test
+    fun progression_otherWorkoutHistory_isNotUsedAsFallback() {
+        val target = exerciseA.copy(plannedWeight = 45.0, minRepetitions = 12, maxRepetitions = 12, plannedSets = 1)
+        fakeRepo.emitSession(session.copy(workoutId = 2L, workoutName = "Ombro"))
+        fakeRepo.emitExercises(listOf(target))
+        fakeRepo.emitCompletedHistory(
+            historySets(50L, 5_000L, "Supino", listOf(6), 60.0, workoutId = 1L),
+        )
+
+        val suggestion = viewModel.uiState.value.progressionSuggestion!!
+        assertEquals(ProgressionAction.NO_HISTORY, suggestion.action)
+        assertTrue(suggestion.lastSessionSets.isEmpty())
     }
 
     @Test
@@ -2138,13 +2214,16 @@ class WorkoutExecutionViewModelTest {
         name: String,
         reps: List<Int>,
         weight: Double,
-    ): List<CompletedSetRecord> = reps.map { rep ->
+        workoutId: Long? = session.workoutId,
+    ): List<CompletedSetRecord> = reps.mapIndexed { index, rep ->
         CompletedSetRecord(
             sessionId = sessionId,
             occurredAtMillis = occurredAt,
             exerciseName = name,
             reps = rep,
             weight = weight,
+            workoutId = workoutId,
+            setIndex = index,
         )
     }
 

@@ -6,6 +6,10 @@ data class CompletedSetRecord(
     val exerciseName: String,
     val reps: Int,
     val weight: Double,
+    /** Template workout that owned the completed session; null if the workout was deleted. */
+    val workoutId: Long? = null,
+    /** Persisted set order within the session exercise; used for progression reference load. */
+    val setIndex: Int = 0,
 )
 
 data class SessionExerciseStats(

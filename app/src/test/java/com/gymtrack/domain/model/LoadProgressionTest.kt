@@ -442,6 +442,91 @@ class LoadProgressionTest {
         assertNull(referenceWeightFromProgressionSets(emptyList()))
     }
 
+    @Test
+    fun lastCompleted_sameExerciseDifferentWorkouts_areIndependent() {
+        val chest = history(sessionId = 10L, workoutId = 1L, weight = 60.0, setIndex = 0)
+        val shoulder = history(sessionId = 20L, workoutId = 2L, weight = 45.0, setIndex = 0)
+
+        val chestSets = lastCompletedSessionSetsForExercise(
+            history = listOf(chest, shoulder),
+            exerciseName = "Supino",
+            workoutId = 1L,
+        )
+        val shoulderSets = lastCompletedSessionSetsForExercise(
+            history = listOf(chest, shoulder),
+            exerciseName = "Supino",
+            workoutId = 2L,
+        )
+
+        assertEquals(1, chestSets.size)
+        assertEquals(60.0, chestSets.single().weight, 0.001)
+        assertEquals(1, shoulderSets.size)
+        assertEquals(45.0, shoulderSets.single().weight, 0.001)
+    }
+
+    @Test
+    fun lastCompleted_doesNotFallBackToOtherWorkoutHistory() {
+        val chestOnly = history(sessionId = 10L, workoutId = 1L, weight = 60.0, setIndex = 0)
+
+        val shoulderSets = lastCompletedSessionSetsForExercise(
+            history = listOf(chestOnly),
+            exerciseName = "Supino",
+            workoutId = 2L,
+        )
+
+        assertTrue(shoulderSets.isEmpty())
+    }
+
+    @Test
+    fun lastCompleted_sameWorkoutUsesMostRecentSession() {
+        val older = history(sessionId = 10L, workoutId = 1L, weight = 55.0, setIndex = 0, at = 1_000L)
+        val newer = history(sessionId = 11L, workoutId = 1L, weight = 60.0, setIndex = 0, at = 2_000L)
+
+        val sets = lastCompletedSessionSetsForExercise(
+            history = listOf(older, newer),
+            exerciseName = "Supino",
+            workoutId = 1L,
+        )
+
+        assertEquals(1, sets.size)
+        assertEquals(60.0, sets.single().weight, 0.001)
+    }
+
+    @Test
+    fun lastCompleted_preservesPersistedSetIndexForReferenceWeight() {
+        val history = listOf(
+            history(sessionId = 10L, workoutId = 1L, weight = 40.0, setIndex = 0, reps = 12),
+            history(sessionId = 10L, workoutId = 1L, weight = 50.0, setIndex = 1, reps = 10),
+            history(sessionId = 10L, workoutId = 1L, weight = 60.0, setIndex = 2, reps = 8),
+        )
+
+        val sets = lastCompletedSessionSetsForExercise(
+            history = history,
+            exerciseName = "Supino",
+            workoutId = 1L,
+        )
+
+        assertEquals(60.0, referenceWeightFromProgressionSets(sets)!!, 0.001)
+        assertEquals(listOf(0, 1, 2), sets.map { it.setIndex })
+    }
+
+    private fun history(
+        sessionId: Long,
+        workoutId: Long?,
+        weight: Double,
+        setIndex: Int,
+        reps: Int = 8,
+        at: Long = 1_000L,
+    ) = CompletedSetRecord(
+        sessionId = sessionId,
+        occurredAtMillis = at,
+        exerciseName = "Supino",
+        reps = reps,
+        weight = weight,
+        workoutId = workoutId,
+        setIndex = setIndex,
+    )
+
     private fun evaluate(
         plannedWeight: Double,
         min: Int,

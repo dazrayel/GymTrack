@@ -139,6 +139,8 @@ class WorkoutSessionRepositoryImpl @Inject constructor(
                     exerciseName = row.exerciseName,
                     reps = row.reps,
                     weight = row.weight,
+                    workoutId = row.workoutId,
+                    setIndex = row.setIndex,
                 )
             }
         }

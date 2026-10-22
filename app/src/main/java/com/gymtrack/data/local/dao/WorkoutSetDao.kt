@@ -42,16 +42,19 @@ interface WorkoutSetDao {
         """
         SELECT
             s.id AS sessionId,
+            s.workoutId AS workoutId,
             COALESCE(s.endedAtMillis, s.startedAtMillis) AS occurredAtMillis,
             se.exerciseName AS exerciseName,
             ws.reps AS reps,
-            ws.weight AS weight
+            ws.weight AS weight,
+            ws.setIndex AS setIndex
         FROM workout_sets AS ws
         INNER JOIN workout_session_exercises AS se
             ON ws.sessionExerciseId = se.id
         INNER JOIN workout_sessions AS s
             ON se.sessionId = s.id
         WHERE s.status = :status
+        ORDER BY s.id ASC, se.position ASC, ws.setIndex ASC
         """,
     )
     fun observeCompletedSetHistory(

@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -36,7 +35,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -120,6 +118,10 @@ fun WorkoutExecutionScreen(
         onNavigateBack = onNavigateBack,
         onRepsChanged = viewModel::onRepsChanged,
         onWeightChanged = viewModel::onWeightChanged,
+        onDecrementReps = { viewModel.adjustRepsBy(-1) },
+        onIncrementReps = { viewModel.adjustRepsBy(1) },
+        onDecrementWeight = { viewModel.adjustWeightBy(-WEIGHT_ADJUST_STEP_KG) },
+        onIncrementWeight = { viewModel.adjustWeightBy(WEIGHT_ADJUST_STEP_KG) },
         onCompleteSet = viewModel::completeCurrentSet,
         onPauseRest = viewModel::pauseRest,
         onResumeRest = viewModel::resumeRest,
@@ -146,6 +148,10 @@ fun WorkoutExecutionScreen(
     onNavigateBack: () -> Unit,
     onRepsChanged: (String) -> Unit = {},
     onWeightChanged: (String) -> Unit = {},
+    onDecrementReps: () -> Unit = {},
+    onIncrementReps: () -> Unit = {},
+    onDecrementWeight: () -> Unit = {},
+    onIncrementWeight: () -> Unit = {},
     onCompleteSet: () -> Unit = {},
     onPauseRest: () -> Unit = {},
     onResumeRest: () -> Unit = {},
@@ -171,6 +177,10 @@ fun WorkoutExecutionScreen(
         onNavigateBack = onNavigateBack,
         onRepsChanged = onRepsChanged,
         onWeightChanged = onWeightChanged,
+        onDecrementReps = onDecrementReps,
+        onIncrementReps = onIncrementReps,
+        onDecrementWeight = onDecrementWeight,
+        onIncrementWeight = onIncrementWeight,
         onCompleteSet = onCompleteSet,
         onPauseRest = onPauseRest,
         onResumeRest = onResumeRest,
@@ -199,6 +209,10 @@ private fun WorkoutExecutionContent(
     onNavigateBack: () -> Unit,
     onRepsChanged: (String) -> Unit,
     onWeightChanged: (String) -> Unit,
+    onDecrementReps: () -> Unit,
+    onIncrementReps: () -> Unit,
+    onDecrementWeight: () -> Unit,
+    onIncrementWeight: () -> Unit,
     onCompleteSet: () -> Unit,
     onPauseRest: () -> Unit,
     onResumeRest: () -> Unit,
@@ -370,6 +384,10 @@ private fun WorkoutExecutionContent(
                                     weightError = uiState.weightError,
                                     onRepsChanged = onRepsChanged,
                                     onWeightChanged = onWeightChanged,
+                                    onDecrementReps = onDecrementReps,
+                                    onIncrementReps = onIncrementReps,
+                                    onDecrementWeight = onDecrementWeight,
+                                    onIncrementWeight = onIncrementWeight,
                                     onCompleteSet = onCompleteSet,
                                     onRequestSkip = onRequestSkip,
                                     onOpenSessionExercises = { showSessionExercises = true },
@@ -650,6 +668,10 @@ private fun ActiveSetContent(
     weightError: Int?,
     onRepsChanged: (String) -> Unit,
     onWeightChanged: (String) -> Unit,
+    onDecrementReps: () -> Unit,
+    onIncrementReps: () -> Unit,
+    onDecrementWeight: () -> Unit,
+    onIncrementWeight: () -> Unit,
     onCompleteSet: () -> Unit,
     onRequestSkip: () -> Unit,
     onOpenSessionExercises: () -> Unit,
@@ -834,31 +856,37 @@ private fun ActiveSetContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(GymSpacing.Md),
             ) {
-                OutlinedTextField(
+                AdjustableOutlinedNumberField(
                     value = repsInput,
                     onValueChange = onRepsChanged,
-                    label = { Text(stringResource(R.string.reps_label)) },
+                    onDecrement = onDecrementReps,
+                    onIncrement = onIncrementReps,
+                    label = stringResource(R.string.reps_label),
+                    decreaseContentDescription = stringResource(R.string.decrease_reps),
+                    increaseContentDescription = stringResource(R.string.increase_reps),
+                    keyboardType = KeyboardType.Number,
                     isError = repsError != null,
                     supportingText = repsError?.let { resId -> { Text(stringResource(resId)) } },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    shape = RoundedCornerShape(GymShapeTokens.Medium),
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("reps_field"),
+                    fieldTestTag = "reps_field",
+                    decreaseTestTag = "reps_decrease",
+                    increaseTestTag = "reps_increase",
+                    modifier = Modifier.weight(1f),
                 )
-                OutlinedTextField(
+                AdjustableOutlinedNumberField(
                     value = weightInput,
                     onValueChange = onWeightChanged,
-                    label = { Text(stringResource(R.string.weight_label)) },
+                    onDecrement = onDecrementWeight,
+                    onIncrement = onIncrementWeight,
+                    label = stringResource(R.string.weight_label),
+                    decreaseContentDescription = stringResource(R.string.decrease_weight),
+                    increaseContentDescription = stringResource(R.string.increase_weight),
+                    keyboardType = KeyboardType.Decimal,
                     isError = weightError != null,
                     supportingText = weightError?.let { resId -> { Text(stringResource(resId)) } },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true,
-                    shape = RoundedCornerShape(GymShapeTokens.Medium),
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("weight_field"),
+                    fieldTestTag = "weight_field",
+                    decreaseTestTag = "weight_decrease",
+                    increaseTestTag = "weight_increase",
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
