@@ -349,32 +349,32 @@ class ExerciseCatalogImporterTest {
     }
 
     @Test
-    fun realAsset_importIsIdempotentForPublishedV21Catalog() = runBlocking {
-        // Stage 4.9: published pack is MAIN_CATALOG_V2_1 (136). Stage 2.5
-        // 876/777/99 remains on the full archive, not on the Android asset.
+    fun realAsset_importIsIdempotentForPublishedV23Catalog() = runBlocking {
+        // V2.3 published pack = V2.2 (172) + Wave 2 (11) = 183.
+        // Stage 2.5 876/777/99 remains on the full archive, not on the Android asset.
         val first = importer.importDefaultAsset()
-        assertEquals(136, first.inputCount)
-        assertEquals(136, first.importableCount)
+        assertEquals(183, first.inputCount)
+        assertEquals(183, first.importableCount)
         assertEquals(0, first.rejected)
-        assertEquals(136, first.inserted)
+        assertEquals(183, first.inserted)
         assertEquals(0, first.updated)
         assertEquals(0, first.unchanged)
         assertEquals(0, first.errors)
-        assertEquals(136, db.exerciseDao().countByExternalSource("free-exercise-db"))
+        assertEquals(183, db.exerciseDao().countByExternalSource("free-exercise-db"))
 
         val second = importer.importDefaultAsset()
         assertEquals(0, second.inserted)
         assertEquals(0, second.updated)
-        assertEquals(136, second.unchanged)
+        assertEquals(183, second.unchanged)
         assertEquals(0, second.rejected)
-        assertEquals(136, db.exerciseDao().countByExternalSource("free-exercise-db"))
+        assertEquals(183, db.exerciseDao().countByExternalSource("free-exercise-db"))
 
         val third = importer.importDefaultAsset()
         assertEquals(0, third.inserted)
-        assertEquals(136, third.unchanged)
-        assertEquals(136, db.exerciseDao().countByExternalSource("free-exercise-db"))
+        assertEquals(183, third.unchanged)
+        assertEquals(183, db.exerciseDao().countByExternalSource("free-exercise-db"))
         assertEquals(
-            136,
+            183,
             db.exerciseDao().getAll().first().count { it.externalSource == "free-exercise-db" },
         )
     }

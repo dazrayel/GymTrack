@@ -125,19 +125,36 @@ class ExerciseCatalogImportPolicyTest {
     }
 
     @Test
-    fun classify_publishedV21Catalog_isExactly136Importable() {
+    fun classify_publishedV23Catalog_isExactly183Importable() {
+        // V2.3 = V2.2 (172) + Wave 2 (11). Historical V2.1/V2.2 reports remain unchanged.
         val json = javaClass.getResourceAsStream("/exercises/gymtrack-exercises.json")!!
             .bufferedReader()
             .use { it.readText() }
         val records = NormalizedExerciseCatalogParser.parse(json)
         ExerciseCatalogImportPolicy.validatePack(records)
         val classified = ExerciseCatalogImportPolicy.classify(records)
-        assertEquals(136, records.size)
-        assertEquals(136, classified.importable.size)
+        assertEquals(183, records.size)
+        assertEquals(183, classified.importable.size)
         assertEquals(0, classified.rejected.size)
         assertTrue(classified.importable.all { it.externalSource == "free-exercise-db" })
         assertTrue(classified.importable.all { it.externalId.isNotBlank() })
-        assertEquals(136, classified.importable.map { it.externalId }.distinct().size)
+        assertEquals(183, classified.importable.map { it.externalId }.distinct().size)
+
+        val ids = classified.importable.map { it.externalId }.toSet()
+        val wave1Pending = setOf(
+            "Spider_Curl",
+            "Dumbbell_Scaption",
+            "Machine_Triceps_Extension",
+            "Seated_One-arm_Cable_Pulley_Rows",
+        )
+        assertTrue(ids.intersect(wave1Pending).isEmpty())
+        assertTrue(!ids.contains("High_Cable_Curls"))
+        assertTrue(ids.contains("Dumbbell_Bench_Press"))
+        assertTrue(ids.contains("Mountain_Climbers"))
+        assertTrue(ids.contains("Inverted_Row"))
+        assertTrue(ids.contains("Smith_Machine_Incline_Bench_Press"))
+        assertTrue(ids.contains("Zottman_Curl"))
+        assertTrue(ids.contains("Split_Squat_with_Dumbbells"))
     }
 
     private fun assertTrue(value: Boolean) {

@@ -17,29 +17,47 @@ Cópia empacotada no app (artefacto, não a fonte canónica do pipeline):
 app/src/main/assets/exercises/gymtrack-exercises.json
 ```
 
-### Catálogo publicado V2.1 (Etapa 4.9)
+### Catálogo publicado V2.3 (Wave 2)
 
-Fonte de seleção: `analysis/MAIN_CATALOG_V2_1.json` (**136** exercícios).
+Fonte de seleção atual: `analysis/MAIN_CATALOG_V2_3.json` (**183** exercícios = V2.2 **172** + Wave 2 **11**).
 
 | Camada | Quantidade |
 | --- | ---: |
 | Free Exercise DB original | 876 |
 | Stage 2.5 importáveis | 777 |
 | Stage 2.5 rejeitados | 99 |
-| Curadoria V2.1 selecionados | 136 |
-| Importáveis não selecionados (fora do pacote) | 641 |
-| **Pack publicado no app** | **136** |
+| Curadoria V2.1 (histórica) | 136 |
+| Wave 1 adicionados | 36 |
+| Pack V2.2 (histórico) | 172 |
+| Pendentes Wave 1 (mídia) | 4 |
+| Wave 2 adicionados | 11 |
+| Excluído Wave 2 (`High_Cable_Curls`) | 1 |
+| **Pack publicado no app** | **183** |
 
-O arquivo completo normalizado fica em `output/free-exercise-db/gymtrack-exercises-full-876.json` (análise / Stage 2.5 / traduções). Os 641 importáveis não selecionados **não** são rejeitados — apenas ficam fora do pacote. Os 99 rejeitados Stage 2.5 continuam conceitualmente separados.
+Relatórios históricos V2.1/V2.2 (`MAIN_CATALOG_V2_1.*`, `PUBLISHED_CATALOG_V2_1.md`, `MAIN_CATALOG_V2_2.json`, `PUBLISHED_CATALOG_V2_2.md`) permanecem e **não** foram reescritos.
 
-Publicar (determinístico; valida mídia `0.jpg`/`1.jpg` já adquirida):
+O arquivo completo normalizado fica em `output/free-exercise-db/gymtrack-exercises-full-876.json` (análise / Stage 2.5 / traduções). Os importáveis não selecionados **não** são rejeitados — apenas ficam fora do pacote.
+
+Publicar V2.1 (histórico; não sobrescreve V2.3 sem cuidado):
 
 ```text
 py -3 tools/exercise-import/curation/publish_main_catalog_v2_1.py
 py -3 -m unittest discover -s tools/exercise-import/curation -p "test_publish_main_catalog_v2_1.py"
 ```
 
-Relatório: `analysis/PUBLISHED_CATALOG_V2_1.md`. O pacote contém **136** exercícios com mídia (272 JPG).
+Publicar Wave 1 / V2.2 (histórico; staging Wave 1 em `%TEMP%`):
+
+```text
+py -3 tools/exercise-import/curation/publish_wave1_v2_2.py
+```
+
+Publicar Wave 2 / V2.3 (requer staging de mídia aprovado em `%TEMP%\gymtrack_v22_wave2_media`):
+
+```text
+py -3 tools/exercise-import/curation/publish_wave2_v2_3.py
+```
+
+Relatório atual: `analysis/PUBLISHED_CATALOG_V2_3.md`. O pacote contém **183** exercícios com mídia (**366** JPG).
 
 Imagens da fonte não são descarregadas nesta etapa. Nomes pt-BR já aplicados na Etapa 4.8. Instruções/imagens **não** entram no Room.
 
@@ -72,7 +90,7 @@ Código: `ExerciseCatalogImporter` (`importJson` / `importDefaultAsset`). **Não
 
 Política (Etapa 2.5, arquivo completo): **876** → **777** importáveis + **99** recusados (primário neck/abductors/adductors, ou `equipment` JSON `null`). Não inventar `Outro` para equipamento desconhecido.
 
-Pacote Android publicado (Etapa 4.9): **136** importáveis, **0** recusados no JSON do asset (os 99 rejeitados e os 641 não selecionados não entram no pack).
+Pacote Android publicado (V2.3): **183** importáveis, **0** recusados no JSON do asset (os 99 rejeitados Stage 2.5 e os não selecionados não entram no pack).
 
 Fallback **no importador** (não no JSON): medicine/exercise ball e foam roll → `Outro`; e-z curl bar → `Barra`.
 

@@ -38,16 +38,20 @@ O app empacota um catálogo curado a partir do [Free Exercise DB](https://github
 | Dataset original | **876** exercícios |
 | Importáveis (Stage 2.5) | **777** |
 | Rejeitados (Stage 2.5) | **99** |
-| **Publicados no APK (curadoria V2.1)** | **136** |
+| Curadoria V2.1 (histórica) | **136** |
+| Wave 1 adicionados | **36** |
+| Pack V2.2 (histórico) | **172** |
+| Wave 2 adicionados | **11** |
+| **Publicados no APK (V2.3)** | **183** |
 
-Cada um dos **136** exercícios publicados inclui dois frames locais:
+Cada um dos **183** exercícios publicados inclui dois frames locais:
 
 ```text
 app/src/main/assets/exercises/<externalId>/0.jpg
 app/src/main/assets/exercises/<externalId>/1.jpg
 ```
 
-Total: **272** imagens JPG. A UI alterna esses dois frames como demonstração animada (não é GIF nem vídeo; não há download em runtime).
+Total: **366** imagens JPG. A UI alterna esses dois frames como demonstração animada (não é GIF nem vídeo; não há download em runtime).
 
 Nomes de apresentação estão em pt-BR. A importação para o Room é **explícita** (`ExerciseCatalogImporter`; em builds debug, via Configurações) — sem seed automático na abertura do banco. O arquivo completo de 876 permanece no pipeline offline (`tools/exercise-import/`) para análise e testes, não como asset de produção.
 
@@ -235,7 +239,7 @@ Testes instrumentados (emulador ligado):
 
 ## 📋 Estado atual
 
-O núcleo de catálogo, montagem de treinos, execução (incluindo skip, ordem livre e rascunhos), persistência Room 9 (identidade externa; pack publicado V2.1 com **136** exercícios e **272** JPG; importador explícito do Free Exercise DB, sem seed automático), histórico (incluindo exclusão de sessões concluídas) e estatísticas básicas **está implementado e coberto por testes**.
+O núcleo de catálogo, montagem de treinos, execução (incluindo skip, ordem livre e rascunhos), persistência Room 9 (identidade externa; pack publicado V2.3 com **183** exercícios e **366** JPG; importador explícito do Free Exercise DB, sem seed automático), histórico (incluindo exclusão de sessões concluídas) e estatísticas básicas **está implementado e coberto por testes**.
 
 Ainda é um projeto em evolução: não há sincronização remota; a conta Google é opcional e só para personalização local. O **Painel** (Dashboard) reutiliza estatísticas, conquistas, PRs e recomendações já existentes, sem persistência adicional.
 
