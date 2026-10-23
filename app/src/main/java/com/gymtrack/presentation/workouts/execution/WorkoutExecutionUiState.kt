@@ -85,19 +85,14 @@ data class WorkoutExecutionUiState(
             return exercises.map { exercise ->
                 val completedSets = setsByExerciseId[exercise.id]?.size ?: 0
                 val isComplete = completedSets >= exercise.plannedSets
-                val hasEarlierIncompleteBlock = exercises.any { other ->
-                    other.blockPosition < exercise.blockPosition &&
-                        other.status != WorkoutSessionExerciseStatus.SKIPPED &&
-                        (setsByExerciseId[other.id]?.size ?: 0) < other.plannedSets
-                }
                 SessionExerciseRow(
                     exercise = exercise,
                     completedSets = completedSets,
                     isCurrent = exercise.id == currentId,
                     isComplete = isComplete,
-                    canSelectNow = !isComplete &&
-                        exercise.id != currentId &&
-                        !hasEarlierIncompleteBlock,
+                    // Any incomplete non-current exercise can be selected from Exercícios,
+                    // including out of order. BI/TRI round order is enforced by resolve.
+                    canSelectNow = !isComplete && exercise.id != currentId,
                 )
             }
         }

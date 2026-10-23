@@ -730,15 +730,8 @@ class WorkoutExecutionViewModel @Inject constructor(
         ) {
             return
         }
-        // Do not jump past incomplete earlier blocks — that deferred partner sets in BI/TRI
-        // until much later. Same-block selection remains allowed; round order is enforced by
-        // resolveCurrentExerciseIndex.
-        val hasEarlierIncompleteBlock = state.exercises.any { exercise ->
-            exercise.blockPosition < target.blockPosition &&
-                exercise.status != WorkoutSessionExerciseStatus.SKIPPED &&
-                (state.setsByExerciseId[exercise.id]?.size ?: 0) < exercise.plannedSets
-        }
-        if (hasEarlierIncompleteBlock) return
+        // Out-of-order selection is allowed from Exercícios. Round order inside BI/TRI blocks
+        // remains enforced by resolveCurrentExerciseIndex (nextInBlock), not by blocking resume.
         viewModelScope.launch {
             try {
                 workoutSessionRepository.resumeSessionExercise(sessionExerciseId)

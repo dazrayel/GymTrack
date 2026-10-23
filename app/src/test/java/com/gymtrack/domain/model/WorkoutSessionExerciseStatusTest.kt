@@ -43,7 +43,7 @@ class WorkoutSessionExerciseStatusTest {
     }
 
     @Test
-    fun current_ignoresInProgressOnLaterBlockWhileEarlierBlockHasPendingSets() {
+    fun current_honoursInProgressOnLaterBlock_forOutOfOrderSelection() {
         val index = resolveCurrentExerciseIndex(
             listOf(
                 supino,
@@ -52,6 +52,19 @@ class WorkoutSessionExerciseStatusTest {
             ),
             mapOf(1L to emptyList(), 2L to emptyList(), 3L to listOf(set(3, 0))),
         )
+        assertEquals(2, index)
+    }
+
+    @Test
+    fun current_biSetInProgressOnSecond_stillHonoursFirstForSameRound() {
+        val a = sessionExercise(id = 11, position = 0, plannedSets = 4, blockPosition = 0, positionInBlock = 0)
+        val b = sessionExercise(id = 12, position = 1, plannedSets = 4, blockPosition = 0, positionInBlock = 1)
+            .copy(status = WorkoutSessionExerciseStatus.IN_PROGRESS)
+        val index = resolveCurrentExerciseIndex(
+            listOf(a, b),
+            mapOf(11L to listOf(set(11, 0), set(11, 1), set(11, 2)), 12L to listOf(set(12, 0), set(12, 1), set(12, 2))),
+        )
+        // Both owe round 4; selection of B must keep A current for that round.
         assertEquals(0, index)
     }
 

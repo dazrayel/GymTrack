@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -680,12 +679,10 @@ private fun ActiveSetContent(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    // Single IME consumer: padding the outer column avoids a second inset on the action bar
-    // (edge-to-edge + local imePadding previously left a keyboard-sized empty gap).
+    // Do not apply imePadding here: NavGraph Scaffold already pads content with
+    // WindowInsets.safeDrawing (includes IME). A second imePadding left a keyboard-sized gap.
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .imePadding(),
+        modifier = modifier.fillMaxSize(),
     ) {
         Column(
             modifier = Modifier

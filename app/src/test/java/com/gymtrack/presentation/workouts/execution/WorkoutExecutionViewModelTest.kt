@@ -672,18 +672,22 @@ class WorkoutExecutionViewModelTest {
     }
 
     @Test
-    fun selectPendingLaterExercise_isIgnoredWhileEarlierBlocksHavePendingSets() = runTest(testDispatcher) {
+    fun selectPendingLaterExercise_isAvailableWithoutSkippingCurrent() = runTest(testDispatcher) {
         fakeRepo.emitSession(session)
         fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
+
+        assertTrue(
+            viewModel.uiState.value.sessionExerciseRows
+                .first { it.exercise.id == exerciseC.id }
+                .canSelectNow,
+        )
 
         viewModel.resumeExercise(exerciseC.id)
 
         val state = viewModel.uiState.value
-        // Must not jump to C and leave A/B pending — that deferred partner sets in BI/TRI.
-        assertEquals(exerciseA.id, state.currentExercise?.id)
-        assertTrue(state.exercises.none { it.status == WorkoutSessionExerciseStatus.IN_PROGRESS })
+        assertEquals(exerciseC.id, state.currentExercise?.id)
+        assertEquals(WorkoutSessionExerciseStatus.IN_PROGRESS, state.exercises[2].status)
         assertEquals(0, state.currentSetIndex)
-        assertTrue(state.setsByExerciseId.values.all { it.isEmpty() })
         assertTrue(fakeRepo.completeSetCalls.isEmpty())
     }
 
@@ -727,30 +731,26 @@ class WorkoutExecutionViewModelTest {
         )
         fakeRepo.emitSets(exerciseB.id, listOf(set(exerciseB.id, 0)))
 
-        viewModel.resumeExercise(exerciseC.id) // blocked while B pending
-        assertEquals(exerciseB.id, viewModel.uiState.value.currentExercise?.id)
-        assertEquals(1, viewModel.uiState.value.setsByExerciseId[exerciseB.id]?.size)
-
-        fakeRepo.emitSets(
-            exerciseB.id,
-            listOf(set(exerciseB.id, 0), set(exerciseB.id, 1)),
-        )
         viewModel.resumeExercise(exerciseC.id)
         assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
         assertEquals(0, viewModel.uiState.value.currentSetIndex)
+        assertEquals(1, viewModel.uiState.value.setsByExerciseId[exerciseB.id]?.size)
+
+        viewModel.resumeExercise(exerciseB.id)
+        assertEquals(exerciseB.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(1, viewModel.uiState.value.currentSetIndex)
+        assertTrue(fakeRepo.completeSetCalls.isEmpty())
     }
 
     @Test
-    fun selectBlockedLaterExercise_preservesDraftOfCurrentExercise() = runTest(testDispatcher) {
+    fun selectLaterExercise_preservesDraftOfPreviousExercise() = runTest(testDispatcher) {
         fakeRepo.emitSession(session)
         fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
         viewModel.onRepsChanged("12")
         viewModel.onWeightChanged("77")
 
-        viewModel.resumeExercise(exerciseC.id) // ignored
-        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
-        assertEquals("12", viewModel.uiState.value.repsInput)
-        assertEquals("77", viewModel.uiState.value.weightInput)
+        viewModel.resumeExercise(exerciseC.id)
+        assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
         assertEquals("12", draftStore.get(SESSION_ID, exerciseA.id)?.repsInput)
         assertEquals("77", draftStore.get(SESSION_ID, exerciseA.id)?.weightInput)
     }
@@ -787,7 +787,7 @@ class WorkoutExecutionViewModelTest {
     }
 
     @Test
-    fun recreatingViewModel_ignoresStaleInProgressOnLaterBlock() {
+    fun recreatingViewModel_honoursInProgressOnLaterBlock() {
         fakeRepo.emitSession(session)
         fakeRepo.emitExercises(
             listOf(
@@ -796,8 +796,7 @@ class WorkoutExecutionViewModelTest {
                 exerciseC.copy(status = WorkoutSessionExerciseStatus.IN_PROGRESS),
             ),
         )
-        // Stale IN_PROGRESS on C must not skip incomplete A/B.
-        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
 
         buildViewModel()
         fakeRepo.emitSession(session)
@@ -809,7 +808,7 @@ class WorkoutExecutionViewModelTest {
             ),
         )
 
-        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
+        assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
     }
 
     @Test
@@ -834,45 +833,29 @@ class WorkoutExecutionViewModelTest {
     }
 
     @Test
-    fun selectChain_blockedUntilEarlierBlocksComplete() = runTest(testDispatcher) {
+    fun selectChain_allowsOutOfOrderThenReturn() = runTest(testDispatcher) {
         fakeRepo.emitSession(session)
         fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
 
-        viewModel.resumeExercise(exerciseC.id)
-        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
-        assertFalse(
+        assertTrue(
             viewModel.uiState.value.sessionExerciseRows
                 .first { it.exercise.id == exerciseC.id }
                 .canSelectNow,
         )
+        viewModel.resumeExercise(exerciseC.id)
+        assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
 
         viewModel.resumeExercise(exerciseB.id)
-        assertEquals(exerciseA.id, viewModel.uiState.value.currentExercise?.id)
-
-        fakeRepo.emitSets(
-            exerciseA.id,
-            listOf(set(exerciseA.id, 0), set(exerciseA.id, 1), set(exerciseA.id, 2)),
-        )
-        fakeRepo.emitSets(
-            exerciseB.id,
-            listOf(set(exerciseB.id, 0), set(exerciseB.id, 1)),
-        )
-        // Resolve advances to C automatically; resume is a no-op while already current.
-        val state = viewModel.uiState.value
-        assertEquals(exerciseC.id, state.currentExercise?.id)
+        assertEquals(exerciseB.id, viewModel.uiState.value.currentExercise?.id)
         assertEquals(
-            SessionExerciseListStatus.IN_PROGRESS,
-            state.sessionExerciseRows.first { it.exercise.id == exerciseC.id }.listStatus,
-        )
-        assertTrue(
-            state.sessionExerciseRows.first { it.exercise.id == exerciseC.id }.canSelectNow ||
-                state.currentExercise?.id == exerciseC.id,
+            WorkoutSessionExerciseStatus.PENDING,
+            viewModel.uiState.value.exercises.first { it.id == exerciseC.id }.status,
         )
         assertTrue(fakeRepo.completeSetCalls.isEmpty())
     }
 
     @Test
-    fun selectSwap_preservesPartialSetsWhenEarlierBlocksAllow() = runTest(testDispatcher) {
+    fun selectSwap_preservesPartialSetsOnBothExercises() = runTest(testDispatcher) {
         fakeRepo.emitSession(session)
         fakeRepo.emitExercises(listOf(exerciseA, exerciseB, exerciseC))
         fakeRepo.emitSets(
@@ -883,10 +866,11 @@ class WorkoutExecutionViewModelTest {
         fakeRepo.emitSets(exerciseC.id, listOf(set(exerciseC.id, 0), set(exerciseC.id, 1)))
         assertEquals(exerciseB.id, viewModel.uiState.value.currentExercise?.id)
 
-        viewModel.resumeExercise(exerciseC.id) // blocked — B incomplete
-        assertEquals(exerciseB.id, viewModel.uiState.value.currentExercise?.id)
+        viewModel.resumeExercise(exerciseC.id)
+        assertEquals(exerciseC.id, viewModel.uiState.value.currentExercise?.id)
         assertEquals(1, viewModel.uiState.value.setsByExerciseId[exerciseB.id]?.size)
         assertEquals(2, viewModel.uiState.value.setsByExerciseId[exerciseC.id]?.size)
+        assertEquals(2, viewModel.uiState.value.currentSetIndex)
 
         fakeRepo.emitSets(
             exerciseB.id,

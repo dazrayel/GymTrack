@@ -27,9 +27,9 @@ fun areAllSessionExercisesComplete(
  * Picks the next exercise respecting block rounds:
  * within a bi/tri-set, finish the current round across all slots before starting the next round.
  *
- * An [WorkoutSessionExerciseStatus.IN_PROGRESS] mark (e.g. from the exercise list) must not skip
- * incomplete work in an earlier block or an earlier slot of the same round — otherwise the last
- * set of a BI/TRI partner can be deferred until much later in the session.
+ * An [WorkoutSessionExerciseStatus.IN_PROGRESS] mark (e.g. from Exercícios) allows intentional
+ * out-of-order work on another block, but within the selected block round order is always
+ * honoured — selecting partner B must not skip A's owed set in the same BI/TRI round.
  */
 fun resolveCurrentExerciseIndex(
     exercises: List<WorkoutSessionExercise>,
@@ -53,26 +53,18 @@ fun resolveCurrentExerciseIndex(
     }
     if (inProgress >= 0) {
         val current = exercises[inProgress]
-        val hasEarlierIncompleteBlock = exercises.any { exercise ->
-            exercise.blockPosition < current.blockPosition &&
-                exercise.status != WorkoutSessionExerciseStatus.SKIPPED &&
-                !isComplete(exercise)
-        }
-        if (!hasEarlierIncompleteBlock) {
-            val block = exercises
-                .filter {
-                    it.blockPosition == current.blockPosition &&
-                        it.status != WorkoutSessionExerciseStatus.SKIPPED
-                }
-                .sortedBy { it.positionInBlock }
-            // Always honour round order inside the block — never stay on a later slot while an
-            // earlier slot still owes the current round (selection of B must not skip A's set).
-            val sameRound = nextInBlock(block)
-            if (sameRound != null) {
-                return exercises.indexOfFirst { it.id == sameRound.id }
+        val block = exercises
+            .filter {
+                it.blockPosition == current.blockPosition &&
+                    it.status != WorkoutSessionExerciseStatus.SKIPPED
             }
+            .sortedBy { it.positionInBlock }
+        // Honour round order inside the selected block — selecting BI/TRI partner B must not
+        // skip A's owed set in the same round. Out-of-order selection of another block is OK.
+        val sameRound = nextInBlock(block)
+        if (sameRound != null) {
+            return exercises.indexOfFirst { it.id == sameRound.id }
         }
-        // Stale IN_PROGRESS on a later block: ignore and fall through to ordered resolution.
     }
 
     val blockPositions = exercises
