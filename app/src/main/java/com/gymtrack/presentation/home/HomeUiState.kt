@@ -16,7 +16,13 @@ data class HomeUiState(
     val inProgressSession: WorkoutSession? = null,
     val selectedPeriod: DashboardPeriod = DashboardPeriod.WEEK,
     val periodStats: PeriodDashboardStats = PeriodDashboardStats.Empty,
+    /** Distinct trained days in the selected dashboard period (frequency card). */
     val trainedDayCount: Int = 0,
+    /**
+     * Current workout streak for the Home fire chip: distinct trained days in the
+     * contiguous streak, allowing up to two complete idle days without breaking.
+     */
+    val streakDays: Int = 0,
     val activityWeekDays: List<HomeActivityDay> = emptyList(),
     val records: List<ExercisePersonalRecords> = emptyList(),
     val levelProgress: LevelProgress? = null,

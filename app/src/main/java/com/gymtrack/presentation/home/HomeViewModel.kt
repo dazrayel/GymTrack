@@ -17,6 +17,7 @@ import com.gymtrack.domain.model.homeActivityWeek
 import com.gymtrack.domain.model.periodBounds
 import com.gymtrack.domain.model.recommendNextWorkout
 import com.gymtrack.domain.model.trainedDayCount
+import com.gymtrack.domain.model.workoutStreakDays
 import com.gymtrack.domain.model.MissionStatus
 import com.gymtrack.domain.repository.GamificationRepository
 import com.gymtrack.domain.repository.GoogleIdentityRepository
@@ -112,6 +113,15 @@ class HomeViewModel @Inject constructor(
                                 0
                             } else {
                                 trainedDayCount(emission.sessions, bounds, zoneId)
+                            },
+                            streakDays = if (emptyHistory) {
+                                0
+                            } else {
+                                workoutStreakDays(
+                                    sessions = emission.sessions,
+                                    nowMillis = nowMillis,
+                                    zoneId = zoneId,
+                                )
                             },
                             activityWeekDays = homeActivityWeek(
                                 sessions = emission.sessions,

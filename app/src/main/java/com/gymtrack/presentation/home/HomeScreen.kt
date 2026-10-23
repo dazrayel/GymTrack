@@ -184,7 +184,7 @@ fun HomeScreen(
                             verticalArrangement = Arrangement.spacedBy(GymSpacing.CardSpacing),
                         ) {
                             HomeHeroHeader(
-                                trainedDayCount = uiState.trainedDayCount,
+                                streakDays = uiState.streakDays,
                                 userDisplayName = uiState.userDisplayName,
                             )
                             uiState.levelProgress?.let { progress ->
@@ -223,7 +223,7 @@ fun HomeScreen(
                             verticalArrangement = Arrangement.spacedBy(GymSpacing.SectionSpacing),
                         ) {
                             HomeHeroHeader(
-                                trainedDayCount = uiState.trainedDayCount,
+                                streakDays = uiState.streakDays,
                                 userDisplayName = uiState.userDisplayName,
                             )
                             HomeActivityWeekStrip(days = uiState.activityWeekDays)
@@ -287,7 +287,7 @@ fun HomeScreen(
 
 @Composable
 private fun HomeHeroHeader(
-    trainedDayCount: Int,
+    streakDays: Int,
     userDisplayName: String? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -315,7 +315,7 @@ private fun HomeHeroHeader(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             GymLabel(text = stringResource(R.string.app_name))
-            if (trainedDayCount > 0) {
+            if (streakDays > 0) {
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(GymShapeTokens.Chip))
@@ -331,7 +331,7 @@ private fun HomeHeroHeader(
                         modifier = Modifier.size(14.dp),
                     )
                     Text(
-                        text = stringResource(R.string.home_trained_days_chip, trainedDayCount),
+                        text = stringResource(R.string.home_trained_days_chip, streakDays),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSecondary,
                     )
@@ -1221,6 +1221,7 @@ private fun HomeScreenPreview() {
                     distinctExerciseCount = 8,
                 ),
                 trainedDayCount = 3,
+                streakDays = 3,
                 activityWeekDays = listOf(
                     HomeActivityDay(1_756_512_000_000L, DayOfWeek.MONDAY, trained = true, isToday = false),
                     HomeActivityDay(1_756_598_400_000L, DayOfWeek.TUESDAY, trained = true, isToday = false),

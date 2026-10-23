@@ -154,6 +154,7 @@ class HomeViewModelTest {
         assertEquals(2, viewModel.uiState.value.periodStats.distinctExerciseCount)
         assertEquals(DashboardPeriod.WEEK, viewModel.uiState.value.selectedPeriod)
         assertEquals(2, viewModel.uiState.value.trainedDayCount)
+        assertEquals(2, viewModel.uiState.value.streakDays)
         assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
         assertEquals(2, viewModel.uiState.value.activityWeekDays.count { it.trained })
         assertEquals(
@@ -209,6 +210,7 @@ class HomeViewModelTest {
 
         assertEquals(0, viewModel.uiState.value.periodStats.sessionCount)
         assertEquals(0, viewModel.uiState.value.trainedDayCount)
+        assertEquals(0, viewModel.uiState.value.streakDays)
         assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
         assertEquals(0, viewModel.uiState.value.activityWeekDays.count { it.trained })
         assertEquals(local("2026-08-31T00:00:00"), viewModel.uiState.value.activityWeekDays.first().dayStartMillis)
@@ -468,8 +470,39 @@ class HomeViewModelTest {
         assertEquals(1L, viewModel.uiState.value.recentWorkout?.sessionId)
         assertEquals(0, viewModel.uiState.value.periodStats.sessionCount)
         assertEquals(0, viewModel.uiState.value.trainedDayCount)
+        assertEquals(0, viewModel.uiState.value.streakDays)
         assertEquals(7, viewModel.uiState.value.activityWeekDays.size)
         assertEquals(listOf("Supino"), viewModel.uiState.value.records.map { it.exerciseName })
+    }
+
+    @Test
+    fun streak_lastWorkoutThreeDaysAgo_isZeroWhilePeriodFrequencyMayStillCount() = runTest(testDispatcher) {
+        // ISO week Mon 24–Sun 30; today Friday 28; last workout Tuesday 25 → 3 idle days.
+        clock.now = local("2026-08-28T12:00:00")
+        val session = item(sessionId = 1L, occurredAt = local("2026-08-25T10:00:00"), volume = 40.0)
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(listOf(session))
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+
+        assertEquals(1, viewModel.uiState.value.trainedDayCount)
+        assertEquals(0, viewModel.uiState.value.streakDays)
+    }
+
+    @Test
+    fun streak_allowsUpToTwoIdleDaysBetweenTrainedDays() = runTest(testDispatcher) {
+        clock.now = local("2026-08-30T12:00:00")
+        val sessions = listOf(
+            item(sessionId = 1L, occurredAt = local("2026-08-24T10:00:00"), volume = 40.0),
+            item(sessionId = 2L, occurredAt = local("2026-08-27T10:00:00"), volume = 40.0),
+            item(sessionId = 3L, occurredAt = local("2026-08-30T10:00:00"), volume = 40.0),
+        )
+        val viewModel = createViewModel()
+        sessionRepository.emitSessions(sessions)
+        sessionRepository.emitSets(emptyList())
+        advanceUntilIdle()
+
+        assertEquals(3, viewModel.uiState.value.streakDays)
     }
 
     @Test
